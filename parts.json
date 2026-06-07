@@ -1,0 +1,131 @@
+{
+  "schema_version": 2,
+  "metadata": {
+    "description": "Known Scalextric / slot-car track inventory entered in Phase 2. Geometry remains unverified until measured or sourced.",
+    "unmapped_reference_codes": [
+      "C8205",
+      "C8006",
+      "C8005",
+      "C8031",
+      "C8009",
+      "C156",
+      "C151",
+      "C8010",
+      "C154",
+      "C153",
+      "C8235",
+      "C8236",
+      "C8200",
+      "C8207"
+    ]
+  },
+  "parts": [
+    {
+      "id": "C160",
+      "name": "Scalextric Classic straight, approximately 350 mm",
+      "type": "straight",
+      "count": 39,
+      "geometry": null,
+      "verified_geometry": false,
+      "notes": "Approx. 350 mm straight; exact geometry not verified in this repository."
+    },
+    {
+      "id": "00686_111117_CROSSOVER",
+      "name": "Crossover track piece",
+      "type": "crossover",
+      "count": 2,
+      "geometry": null,
+      "verified_geometry": false,
+      "notes": "Marked/identified as 00686 / 111117 in earlier inventory."
+    },
+    {
+      "id": "C178",
+      "name": "Scalextric skid chicane",
+      "type": "chicane",
+      "count": 2,
+      "geometry": null,
+      "verified_geometry": false
+    },
+    {
+      "id": "PT174",
+      "name": "Chicane side piece",
+      "type": "chicane",
+      "count": 2,
+      "geometry": null,
+      "verified_geometry": false
+    },
+    {
+      "id": "PT175",
+      "name": "Chicane middle piece",
+      "type": "chicane",
+      "count": 1,
+      "geometry": null,
+      "verified_geometry": false
+    },
+    {
+      "id": "C151",
+      "name": "Scalextric R2 45 degree curve",
+      "type": "curve",
+      "count": 8,
+      "geometry": null,
+      "verified_geometry": false,
+      "notes": "Angle and radius should remain unverified until measured or sourced."
+    },
+    {
+      "id": "PT56",
+      "name": "Inner 90 degree curve",
+      "type": "curve",
+      "count": 7,
+      "geometry": null,
+      "verified_geometry": false,
+      "notes": "Exact radius not verified."
+    },
+    {
+      "id": "HORNBY_SCX_22_5_STANDARD",
+      "name": "Hornby/SCX 22.5 degree curve, standard group",
+      "type": "curve",
+      "count": 26,
+      "geometry": null,
+      "verified_geometry": false,
+      "alternative_markings": [
+        "001360",
+        "18900"
+      ],
+      "notes": "Grouped because markings/part codes vary. Exact radius not verified."
+    },
+    {
+      "id": "LONG_22_5_CURVE",
+      "name": "Long 22.5 degree curve",
+      "type": "curve",
+      "count": 7,
+      "geometry": null,
+      "verified_geometry": false
+    },
+    {
+      "id": "C179",
+      "name": "Scalextric 22.5 degree squeeze / narrowing track",
+      "type": "curve_special",
+      "count": 3,
+      "geometry": null,
+      "verified_geometry": false,
+      "notes": "Previously described as prejspår / squeeze track."
+    },
+    {
+      "id": "C187",
+      "name": "Scalextric 45 degree banked curve",
+      "type": "banked_curve",
+      "count": 7,
+      "geometry": null,
+      "verified_geometry": false
+    },
+    {
+      "id": "SMALL_JOINERS",
+      "name": "Small joiners or minor connector pieces",
+      "type": "accessory",
+      "count": null,
+      "geometry": null,
+      "verified_geometry": false,
+      "notes": "Known to exist in the inventory, but exact count is not yet confirmed. Do not include this item in calculated track-piece totals unless count is numeric."
+    }
+  ]
+}
