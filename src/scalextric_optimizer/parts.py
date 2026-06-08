@@ -9,6 +9,7 @@ from typing import Any, Literal
 
 
 REQUIRED_PART_FIELDS = {"id", "name", "type", "count", "verified_geometry", "geometry"}
+UNKNOWN_COUNT_ACCESSORY_IDS = {"SMALL_JOINERS"}
 
 
 class PartValidationError(ValueError):
@@ -117,10 +118,10 @@ def _require_string(raw_part: dict[str, Any], field: str, index: int) -> str:
 
 def _parse_count(raw_count: Any, part_id: str, part_type: str) -> int | None:
     if raw_count is None:
-        if part_id == "SMALL_JOINERS" and part_type == "accessory":
+        if part_id in UNKNOWN_COUNT_ACCESSORY_IDS and part_type == "accessory":
             return None
         raise PartValidationError(
-            f"part '{part_id}' field 'count' may only be null for unknown accessory counts"
+            f"part '{part_id}' field 'count' may only be null for known unknown-count accessories"
         )
     if isinstance(raw_count, bool) or not isinstance(raw_count, int):
         raise PartValidationError(f"part '{part_id}' field 'count' must be a non-negative integer")

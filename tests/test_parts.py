@@ -129,7 +129,7 @@ def test_null_count_is_only_allowed_for_unknown_accessory_counts(tmp_path):
         encoding="utf-8",
     )
 
-    with pytest.raises(PartValidationError, match="may only be null"):
+    with pytest.raises(PartValidationError, match="known unknown-count accessories"):
         load_parts(inventory)
 
 
