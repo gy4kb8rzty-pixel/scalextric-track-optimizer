@@ -1,0 +1,925 @@
+[
+  {
+    "part_code": "C151",
+    "aliases": [
+      "C151",
+      "c151"
+    ],
+    "source_xlsx_rows": [
+      {
+        "workbook": "ZIPed-file for Codex/Monza_Version1_optimering_overskott.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet4.xml",
+          "xl/worksheets/sheet5.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_108_matt_kontext.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_med_matt.xlsx",
+        "xml_members_containing_code": [
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Masterkatalog_Allomfattande.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet7.xml",
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Monza_layout_108.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet3.xml",
+          "xl/worksheets/sheet4.xml"
+        ]
+      }
+    ],
+    "source_directx_meshes": [
+      "ZIPed-file for Codex/Data/x/c151l.x",
+      "ZIPed-file for Codex/Data/x/c151lp.x",
+      "ZIPed-file for Codex/Data/x/c151r.x",
+      "ZIPed-file for Codex/Data/x/c151rp.x"
+    ],
+    "source_bmp_files": [
+      "c151r.bmp",
+      "c151lp.bmp",
+      "ZIPed-file for Codex/Data/buttons/c151button.bmp",
+      "ZIPed-file for Codex/Data/buttons/c151buttongrey.bmp"
+    ],
+    "source_working_lay_references": [
+      "Classic, Sport and Sport Digital.lay"
+    ],
+    "geometry_confidence": "medium",
+    "mesh_confidence": "high",
+    "fallback_status": "mesh-evidence-selected; envelope output pending binary DirectX transform importer"
+  },
+  {
+    "part_code": "C153",
+    "aliases": [
+      "C153",
+      "c153"
+    ],
+    "source_xlsx_rows": [
+      {
+        "workbook": "ZIPed-file for Codex/Monza_Version1_optimering_overskott.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet4.xml",
+          "xl/worksheets/sheet5.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_108_matt_kontext.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_med_matt.xlsx",
+        "xml_members_containing_code": [
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Masterkatalog_Allomfattande.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet7.xml",
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Monza_layout_108.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet3.xml",
+          "xl/worksheets/sheet4.xml"
+        ]
+      }
+    ],
+    "source_directx_meshes": [
+      "ZIPed-file for Codex/Data/x/c153l.x",
+      "ZIPed-file for Codex/Data/x/c153lp.x",
+      "ZIPed-file for Codex/Data/x/c153r.x",
+      "ZIPed-file for Codex/Data/x/c153rp.x"
+    ],
+    "source_bmp_files": [
+      "c153lp.bmp",
+      "c153rp.bmp",
+      "ZIPed-file for Codex/Data/buttons/c153button.bmp",
+      "ZIPed-file for Codex/Data/buttons/c153buttongrey.bmp"
+    ],
+    "source_working_lay_references": [],
+    "geometry_confidence": "medium",
+    "mesh_confidence": "high",
+    "fallback_status": "mesh-evidence-selected; envelope output pending binary DirectX transform importer"
+  },
+  {
+    "part_code": "C154",
+    "aliases": [
+      "C154",
+      "c154"
+    ],
+    "source_xlsx_rows": [
+      {
+        "workbook": "ZIPed-file for Codex/Monza_Version1_optimering_overskott.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet4.xml",
+          "xl/worksheets/sheet5.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_108_matt_kontext.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_med_matt.xlsx",
+        "xml_members_containing_code": [
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Masterkatalog_Allomfattande.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet7.xml",
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Monza_layout_108.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet3.xml",
+          "xl/worksheets/sheet4.xml"
+        ]
+      }
+    ],
+    "source_directx_meshes": [
+      "ZIPed-file for Codex/Data/x/c154l.x",
+      "ZIPed-file for Codex/Data/x/c154lp.x",
+      "ZIPed-file for Codex/Data/x/c154r.x",
+      "ZIPed-file for Codex/Data/x/c154rp.x"
+    ],
+    "source_bmp_files": [
+      "c154lp.bmp",
+      "c154rp.bmp",
+      "ZIPed-file for Codex/Data/buttons/c154button.bmp",
+      "ZIPed-file for Codex/Data/buttons/c154buttongrey.bmp"
+    ],
+    "source_working_lay_references": [],
+    "geometry_confidence": "medium",
+    "mesh_confidence": "high",
+    "fallback_status": "mesh-evidence-selected; envelope output pending binary DirectX transform importer"
+  },
+  {
+    "part_code": "C156",
+    "aliases": [
+      "C156",
+      "c156"
+    ],
+    "source_xlsx_rows": [
+      {
+        "workbook": "ZIPed-file for Codex/Monza_Version1_optimering_overskott.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet4.xml",
+          "xl/worksheets/sheet5.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_108_matt_kontext.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_med_matt.xlsx",
+        "xml_members_containing_code": [
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Masterkatalog_Allomfattande.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet7.xml",
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Monza_layout_108.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet3.xml",
+          "xl/worksheets/sheet4.xml"
+        ]
+      }
+    ],
+    "source_directx_meshes": [
+      "ZIPed-file for Codex/Data/x/c156l.x",
+      "ZIPed-file for Codex/Data/x/c156lp.x",
+      "ZIPed-file for Codex/Data/x/c156r.x",
+      "ZIPed-file for Codex/Data/x/c156rp.x"
+    ],
+    "source_bmp_files": [
+      "c156rp.bmp",
+      "c156lp.bmp",
+      "ZIPed-file for Codex/Data/buttons/c156button.bmp",
+      "ZIPed-file for Codex/Data/buttons/c156buttongrey.bmp"
+    ],
+    "source_working_lay_references": [
+      "Classic, Sport and Sport Digital.lay"
+    ],
+    "geometry_confidence": "medium",
+    "mesh_confidence": "high",
+    "fallback_status": "mesh-evidence-selected; envelope output pending binary DirectX transform importer"
+  },
+  {
+    "part_code": "C187",
+    "aliases": [
+      "C187",
+      "c187"
+    ],
+    "source_xlsx_rows": [
+      {
+        "workbook": "ZIPed-file for Codex/Monza_Version1_optimering_overskott.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet3.xml",
+          "xl/worksheets/sheet5.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_108_matt_kontext.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_med_matt.xlsx",
+        "xml_members_containing_code": [
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Masterkatalog_Allomfattande.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet7.xml",
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Monza_layout_108.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet3.xml",
+          "xl/worksheets/sheet4.xml"
+        ]
+      }
+    ],
+    "source_directx_meshes": [],
+    "source_bmp_files": [
+      "ZIPed-file for Codex/Data/buttons/c187button.bmp",
+      "ZIPed-file for Codex/Data/buttons/c187buttongrey.bmp"
+    ],
+    "source_working_lay_references": [],
+    "geometry_confidence": "low",
+    "mesh_confidence": "none",
+    "fallback_status": "parametric documented fallback"
+  },
+  {
+    "part_code": "C8005",
+    "aliases": [
+      "C8005",
+      "c8005"
+    ],
+    "source_xlsx_rows": [
+      {
+        "workbook": "ZIPed-file for Codex/Monza_Version1_optimering_overskott.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet4.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_108_matt_kontext.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_med_matt.xlsx",
+        "xml_members_containing_code": [
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Masterkatalog_Allomfattande.xlsx",
+        "xml_members_containing_code": [
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Monza_layout_108.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet3.xml"
+        ]
+      }
+    ],
+    "source_directx_meshes": [
+      "ZIPed-file for Codex/Data/x/c8005.x",
+      "ZIPed-file for Codex/Data/x/c8005p.x"
+    ],
+    "source_bmp_files": [
+      "c8005p.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8005button.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8005buttongrey.bmp"
+    ],
+    "source_working_lay_references": [
+      "Classic, Sport and Sport Digital.lay"
+    ],
+    "geometry_confidence": "medium",
+    "mesh_confidence": "high",
+    "fallback_status": "mesh-evidence-selected; envelope output pending binary DirectX transform importer"
+  },
+  {
+    "part_code": "C8006",
+    "aliases": [
+      "C8006",
+      "c8006"
+    ],
+    "source_xlsx_rows": [
+      {
+        "workbook": "ZIPed-file for Codex/Monza_Version1_optimering_overskott.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet4.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_108_matt_kontext.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_med_matt.xlsx",
+        "xml_members_containing_code": [
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Masterkatalog_Allomfattande.xlsx",
+        "xml_members_containing_code": [
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Monza_layout_108.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet3.xml",
+          "xl/worksheets/sheet4.xml"
+        ]
+      }
+    ],
+    "source_directx_meshes": [
+      "ZIPed-file for Codex/Data/x/c8006.x",
+      "ZIPed-file for Codex/Data/x/c8006p.x"
+    ],
+    "source_bmp_files": [
+      "c8006p.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8006button.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8006buttongrey.bmp"
+    ],
+    "source_working_lay_references": [
+      "Classic, Sport and Sport Digital.lay"
+    ],
+    "geometry_confidence": "medium",
+    "mesh_confidence": "high",
+    "fallback_status": "mesh-evidence-selected; envelope output pending binary DirectX transform importer"
+  },
+  {
+    "part_code": "C8010",
+    "aliases": [
+      "C8010",
+      "c8010"
+    ],
+    "source_xlsx_rows": [
+      {
+        "workbook": "ZIPed-file for Codex/Monza_Version1_optimering_overskott.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet4.xml",
+          "xl/worksheets/sheet5.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_108_matt_kontext.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_med_matt.xlsx",
+        "xml_members_containing_code": [
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Masterkatalog_Allomfattande.xlsx",
+        "xml_members_containing_code": [
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Monza_layout_108.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet3.xml"
+        ]
+      }
+    ],
+    "source_directx_meshes": [
+      "ZIPed-file for Codex/Data/x/c8010l.x",
+      "ZIPed-file for Codex/Data/x/c8010lp.x",
+      "ZIPed-file for Codex/Data/x/c8010r.x",
+      "ZIPed-file for Codex/Data/x/c8010rp.x"
+    ],
+    "source_bmp_files": [
+      "c8010r.bmp",
+      "c8010lp.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8010button.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8010buttongrey.bmp"
+    ],
+    "source_working_lay_references": [
+      "Classic, Sport and Sport Digital.lay"
+    ],
+    "geometry_confidence": "medium",
+    "mesh_confidence": "high",
+    "fallback_status": "mesh-evidence-selected; envelope output pending binary DirectX transform importer"
+  },
+  {
+    "part_code": "C8031",
+    "aliases": [
+      "C8031",
+      "c8031"
+    ],
+    "source_xlsx_rows": [
+      {
+        "workbook": "ZIPed-file for Codex/Monza_Version1_optimering_overskott.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet4.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_108_matt_kontext.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_med_matt.xlsx",
+        "xml_members_containing_code": [
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Masterkatalog_Allomfattande.xlsx",
+        "xml_members_containing_code": [
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Monza_layout_108.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet3.xml",
+          "xl/worksheets/sheet4.xml"
+        ]
+      }
+    ],
+    "source_directx_meshes": [
+      "ZIPed-file for Codex/Data/x/c8031a.x",
+      "ZIPed-file for Codex/Data/x/c8031ap.x",
+      "ZIPed-file for Codex/Data/x/c8031b.x",
+      "ZIPed-file for Codex/Data/x/c8031bp.x"
+    ],
+    "source_bmp_files": [
+      "c8031p.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8031button.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8031buttongrey.bmp"
+    ],
+    "source_working_lay_references": [
+      "Classic, Sport and Sport Digital.lay"
+    ],
+    "geometry_confidence": "medium",
+    "mesh_confidence": "high",
+    "fallback_status": "mesh-evidence-selected; envelope output pending binary DirectX transform importer"
+  },
+  {
+    "part_code": "C8200",
+    "aliases": [
+      "C8200",
+      "c8200"
+    ],
+    "source_xlsx_rows": [
+      {
+        "workbook": "ZIPed-file for Codex/Monza_Version1_optimering_overskott.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet4.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_108_matt_kontext.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_med_matt.xlsx",
+        "xml_members_containing_code": [
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Masterkatalog_Allomfattande.xlsx",
+        "xml_members_containing_code": [
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Monza_layout_108.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet3.xml",
+          "xl/worksheets/sheet4.xml"
+        ]
+      }
+    ],
+    "source_directx_meshes": [
+      "ZIPed-file for Codex/Data/x/c8200.x",
+      "ZIPed-file for Codex/Data/x/c8200p.x"
+    ],
+    "source_bmp_files": [
+      "c8200p.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8200button.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8200buttongrey.bmp"
+    ],
+    "source_working_lay_references": [
+      "Maximum amount of track in area available.lay",
+      "Oval with a twist.lay",
+      "Cool track in tight area (6ft x 4ft).lay",
+      "Pseudo Brands Hatch.lay",
+      "Tight and Twisting (8ft x 4ft).lay",
+      "WRC 2005 Super Special Stage (Greece).lay",
+      "Silverstone.lay"
+    ],
+    "geometry_confidence": "medium",
+    "mesh_confidence": "high",
+    "fallback_status": "mesh-evidence-selected; envelope output pending binary DirectX transform importer"
+  },
+  {
+    "part_code": "C8205",
+    "aliases": [
+      "C8205",
+      "c8205"
+    ],
+    "source_xlsx_rows": [
+      {
+        "workbook": "ZIPed-file for Codex/Monza_Version1_optimering_overskott.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet4.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_108_matt_kontext.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_med_matt.xlsx",
+        "xml_members_containing_code": [
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Masterkatalog_Allomfattande.xlsx",
+        "xml_members_containing_code": [
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Monza_layout_108.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet3.xml",
+          "xl/worksheets/sheet4.xml"
+        ]
+      }
+    ],
+    "source_directx_meshes": [
+      "ZIPed-file for Codex/Data/x/c8205.x",
+      "ZIPed-file for Codex/Data/x/c8205model.x",
+      "ZIPed-file for Codex/Data/x/c8205p.x",
+      "ZIPed-file for Codex/Data/x/c8205text.x",
+      "ZIPed-file for Codex/Data/x/c8205x2.x"
+    ],
+    "source_bmp_files": [
+      "c8205.bmp",
+      "c8205test.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8205-16-abutton.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8205-16-abuttongrey.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8205-16-bbutton.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8205-16button.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8205-16buttongrey.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8205button.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8205buttongrey.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8205x2button.bmp"
+    ],
+    "source_working_lay_references": [
+      "TVR Challenge X3.lay",
+      "Formula One X4.lay",
+      "Maximum amount of track in area available.lay",
+      "X-treme X3.lay",
+      "Oval with a twist.lay",
+      "9 Lane change sections.lay",
+      "Grand Prix Set X1 (Oval).lay",
+      "Cool track in tight area (6ft x 4ft).lay",
+      "Pseudo Brands Hatch.lay",
+      "Daytona.lay",
+      "Creating your first layout.lay",
+      "Hot Pursuit X2.lay",
+      "Tight and Twisting (8ft x 4ft).lay",
+      "Creating a layout with a bridge or crossover.lay",
+      "WRC 2005 Super Special Stage (Greece).lay",
+      "Silverstone.lay",
+      "Monaco.lay"
+    ],
+    "geometry_confidence": "medium",
+    "mesh_confidence": "high",
+    "fallback_status": "mesh-evidence-selected; envelope output pending binary DirectX transform importer"
+  },
+  {
+    "part_code": "C8207",
+    "aliases": [
+      "C8207",
+      "c8207"
+    ],
+    "source_xlsx_rows": [
+      {
+        "workbook": "ZIPed-file for Codex/Monza_Version1_optimering_overskott.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet4.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_108_matt_kontext.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_med_matt.xlsx",
+        "xml_members_containing_code": [
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Masterkatalog_Allomfattande.xlsx",
+        "xml_members_containing_code": [
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Monza_layout_108.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet3.xml",
+          "xl/worksheets/sheet4.xml"
+        ]
+      }
+    ],
+    "source_directx_meshes": [
+      "ZIPed-file for Codex/Data/x/c8207.x",
+      "ZIPed-file for Codex/Data/x/c8207p.x",
+      "ZIPed-file for Codex/Data/x/c8207x2.x"
+    ],
+    "source_bmp_files": [
+      "c8207p.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8207-16-abutton.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8207-16-abuttongrey.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8207-16-bbutton.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8207-16button.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8207-16buttongrey.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8207button.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8207buttongrey.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8207x2button.bmp"
+    ],
+    "source_working_lay_references": [
+      "TVR Challenge X3.lay",
+      "Maximum amount of track in area available.lay",
+      "X-treme X3.lay",
+      "Grand Prix Set X1 (Crossover).lay",
+      "Classic, Sport and Sport Digital.lay",
+      "Oval with a twist.lay",
+      "9 Lane change sections.lay",
+      "Grand Prix Set X1 (Oval).lay",
+      "Cool track in tight area (6ft x 4ft).lay",
+      "Pseudo Brands Hatch.lay",
+      "Daytona.lay",
+      "Creating your first layout.lay",
+      "Hot Pursuit X2.lay",
+      "Tight and Twisting (8ft x 4ft).lay",
+      "Creating a layout with a bridge or crossover.lay",
+      "WRC 2005 Super Special Stage (Greece).lay",
+      "Silverstone.lay",
+      "Monaco.lay"
+    ],
+    "geometry_confidence": "medium",
+    "mesh_confidence": "high",
+    "fallback_status": "mesh-evidence-selected; envelope output pending binary DirectX transform importer"
+  },
+  {
+    "part_code": "C8235",
+    "aliases": [
+      "C8235",
+      "c8235"
+    ],
+    "source_xlsx_rows": [
+      {
+        "workbook": "ZIPed-file for Codex/Monza_Version1_optimering_overskott.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet4.xml",
+          "xl/worksheets/sheet5.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_108_matt_kontext.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_med_matt.xlsx",
+        "xml_members_containing_code": [
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Masterkatalog_Allomfattande.xlsx",
+        "xml_members_containing_code": [
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Monza_layout_108.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet3.xml",
+          "xl/worksheets/sheet4.xml"
+        ]
+      }
+    ],
+    "source_directx_meshes": [
+      "ZIPed-file for Codex/Data/x/c8235l.x",
+      "ZIPed-file for Codex/Data/x/c8235lp.x",
+      "ZIPed-file for Codex/Data/x/c8235r.x",
+      "ZIPed-file for Codex/Data/x/c8235rp.x"
+    ],
+    "source_bmp_files": [
+      "c8235rp.bmp",
+      "c8235lp.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8235button.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8235buttongrey.bmp"
+    ],
+    "source_working_lay_references": [
+      "9 Lane change sections.lay",
+      "Tight and Twisting (8ft x 4ft).lay",
+      "WRC 2005 Super Special Stage (Greece).lay",
+      "Monaco.lay"
+    ],
+    "geometry_confidence": "medium",
+    "mesh_confidence": "high",
+    "fallback_status": "mesh-evidence-selected; envelope output pending binary DirectX transform importer"
+  },
+  {
+    "part_code": "C8236",
+    "aliases": [
+      "C8236",
+      "c8236"
+    ],
+    "source_xlsx_rows": [
+      {
+        "workbook": "ZIPed-file for Codex/Monza_Version1_optimering_overskott.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet4.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_108_matt_kontext.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_bandelar_med_matt.xlsx",
+        "xml_members_containing_code": [
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Masterkatalog_Allomfattande.xlsx",
+        "xml_members_containing_code": [
+          "xl/sharedStrings.xml"
+        ]
+      },
+      {
+        "workbook": "ZIPed-file for Codex/Scalextric_Monza_layout_108.xlsx",
+        "xml_members_containing_code": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet3.xml",
+          "xl/worksheets/sheet4.xml"
+        ]
+      }
+    ],
+    "source_directx_meshes": [
+      "ZIPed-file for Codex/Data/x/c8236.x",
+      "ZIPed-file for Codex/Data/x/c8236p.x"
+    ],
+    "source_bmp_files": [
+      "c8236p.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8236button.bmp",
+      "ZIPed-file for Codex/Data/buttons/c8236buttongrey.bmp"
+    ],
+    "source_working_lay_references": [
+      "Formula One X4.lay",
+      "Classic, Sport and Sport Digital.lay",
+      "Oval with a twist.lay",
+      "Daytona.lay",
+      "Tight and Twisting (8ft x 4ft).lay",
+      "WRC 2005 Super Special Stage (Greece).lay"
+    ],
+    "geometry_confidence": "medium",
+    "mesh_confidence": "high",
+    "fallback_status": "mesh-evidence-selected; envelope output pending binary DirectX transform importer"
+  }
+]

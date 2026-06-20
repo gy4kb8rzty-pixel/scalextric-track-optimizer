@@ -1,0 +1,542 @@
+[
+  {
+    "index": 1,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 2,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 3,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 4,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 5,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 6,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 7,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 8,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 9,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 10,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 11,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 12,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 13,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 14,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 15,
+    "part_code": "C8006",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 16,
+    "part_code": "C8005",
+    "orientation": "LEFT"
+  },
+  {
+    "index": 17,
+    "part_code": "C8031",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 18,
+    "part_code": "C153",
+    "orientation": "LEFT"
+  },
+  {
+    "index": 19,
+    "part_code": "C153",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 20,
+    "part_code": "C154",
+    "orientation": "LEFT"
+  },
+  {
+    "index": 21,
+    "part_code": "C154",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 22,
+    "part_code": "C8200",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 23,
+    "part_code": "C8235",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 24,
+    "part_code": "C8235",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 25,
+    "part_code": "C8235",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 26,
+    "part_code": "C8235",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 27,
+    "part_code": "C8235",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 28,
+    "part_code": "C153",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 29,
+    "part_code": "C153",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 30,
+    "part_code": "C153",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 31,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 32,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 33,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 34,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 35,
+    "part_code": "C8005",
+    "orientation": "LEFT"
+  },
+  {
+    "index": 36,
+    "part_code": "C8031",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 37,
+    "part_code": "C8010",
+    "orientation": "LEFT"
+  },
+  {
+    "index": 38,
+    "part_code": "C151",
+    "orientation": "LEFT"
+  },
+  {
+    "index": 39,
+    "part_code": "C151",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 40,
+    "part_code": "C8207",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 41,
+    "part_code": "C153",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 42,
+    "part_code": "C153",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 43,
+    "part_code": "C153",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 44,
+    "part_code": "C153",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 45,
+    "part_code": "C153",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 46,
+    "part_code": "C153",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 47,
+    "part_code": "C153",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 48,
+    "part_code": "C153",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 49,
+    "part_code": "C151",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 50,
+    "part_code": "C151",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 51,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 52,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 53,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 54,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 55,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 56,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 57,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 58,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 59,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 60,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 61,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 62,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 63,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 64,
+    "part_code": "C8006",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 65,
+    "part_code": "C8031",
+    "orientation": "LEFT"
+  },
+  {
+    "index": 66,
+    "part_code": "C151",
+    "orientation": "LEFT"
+  },
+  {
+    "index": 67,
+    "part_code": "C151",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 68,
+    "part_code": "C151",
+    "orientation": "LEFT"
+  },
+  {
+    "index": 69,
+    "part_code": "C153",
+    "orientation": "LEFT"
+  },
+  {
+    "index": 70,
+    "part_code": "C153",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 71,
+    "part_code": "C153",
+    "orientation": "LEFT"
+  },
+  {
+    "index": 72,
+    "part_code": "C153",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 73,
+    "part_code": "C8236",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 74,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 75,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 76,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 77,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 78,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 79,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 80,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 81,
+    "part_code": "C8205",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 82,
+    "part_code": "C187",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 83,
+    "part_code": "C187",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 84,
+    "part_code": "C187",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 85,
+    "part_code": "C187",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 86,
+    "part_code": "C187",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 87,
+    "part_code": "C187",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 88,
+    "part_code": "C187",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 89,
+    "part_code": "C156",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 90,
+    "part_code": "C156",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 91,
+    "part_code": "C156",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 92,
+    "part_code": "C156",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 93,
+    "part_code": "C156",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 94,
+    "part_code": "C156",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 95,
+    "part_code": "C156",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 96,
+    "part_code": "C151",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 97,
+    "part_code": "C151",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 98,
+    "part_code": "C151",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 99,
+    "part_code": "C151",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 100,
+    "part_code": "C153",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 101,
+    "part_code": "C153",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 102,
+    "part_code": "C153",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 103,
+    "part_code": "C153",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 104,
+    "part_code": "C153",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 105,
+    "part_code": "C153",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 106,
+    "part_code": "C153",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 107,
+    "part_code": "C153",
+    "orientation": "RIGHT"
+  },
+  {
+    "index": 108,
+    "part_code": "C153",
+    "orientation": "RIGHT"
+  }
+]
