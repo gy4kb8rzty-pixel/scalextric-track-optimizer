@@ -1,0 +1,19 @@
+{
+  "rank": 1,
+  "name": "closed_reference_4c",
+  "score": 137416.0,
+  "piece_count": 52,
+  "closed": true,
+  "closure_error_mm": 0.0,
+  "heading_error_degrees": 0.0,
+  "lane_continuity": "preserved by connector-to-connector placement; closed candidate also returns to origin",
+  "monza_similarity_score": 57,
+  "inventory_usage": {
+    "C8205": 36,
+    "C153": 16
+  },
+  "inventory_utilization_percent": 48.15,
+  "c187_reconstruction": false,
+  "placement_table": "candidate_01_placement_table.csv",
+  "svg": "candidate_01_overlay.svg"
+}
