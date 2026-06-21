@@ -1,0 +1,3657 @@
+{
+  "source_zip": "all_x_3mf_rotated_full_parser.zip",
+  "source_xlsx": "Scalextric_Masterkatalog_Allomfattande_med_3MF.xlsx",
+  "models_indexed": 230,
+  "catalog_rows_read": 457,
+  "missing_3mf_codes_in_monza_sequence": [
+    "C187"
+  ],
+  "parts": [
+    {
+      "track_code": "C151",
+      "source_3mf": "c151l.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c151l.3mf",
+      "vertex_count": 480,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          151.321,
+          -3.75
+        ],
+        "max_mm": [
+          261.63,
+          370.0,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 261.63,
+        "width": 218.679,
+        "height": 9.0,
+        "x": 261.63,
+        "y": 218.679,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            260.66,
+            0.75
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            261.63,
+            260.66,
+            0.75
+          ]
+        }
+      ],
+      "part_classification": "curve_or_lane_change",
+      "catalog_rows": 4
+    },
+    {
+      "track_code": "C152",
+      "source_3mf": "c152l.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c152l.3mf",
+      "vertex_count": 480,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          41.012,
+          -4.25
+        ],
+        "max_mm": [
+          151.321,
+          214.0,
+          4.75
+        ]
+      },
+      "dimensions_mm": {
+        "length": 172.988,
+        "width": 151.321,
+        "height": 9.0,
+        "x": 151.321,
+        "y": 172.988,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            75.66,
+            41.012,
+            0.25
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            75.66,
+            214.0,
+            0.25
+          ]
+        }
+      ],
+      "part_classification": "curve_or_lane_change",
+      "catalog_rows": 0
+    },
+    {
+      "track_code": "C153",
+      "source_3mf": "c153l.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c153l.3mf",
+      "vertex_count": 280,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          341.836,
+          -4.25
+        ],
+        "max_mm": [
+          201.292,
+          526.0,
+          4.75
+        ]
+      },
+      "dimensions_mm": {
+        "length": 201.292,
+        "width": 184.164,
+        "height": 9.0,
+        "x": 201.292,
+        "y": 184.164,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            433.918,
+            0.25
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            201.292,
+            433.918,
+            0.25
+          ]
+        }
+      ],
+      "part_classification": "curve_or_lane_change",
+      "catalog_rows": 4
+    },
+    {
+      "track_code": "C154",
+      "source_3mf": "c154l.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c154l.3mf",
+      "vertex_count": 280,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          197.71,
+          -3.75
+        ],
+        "max_mm": [
+          141.593,
+          370.0,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 172.29,
+        "width": 141.593,
+        "height": 9.0,
+        "x": 141.593,
+        "y": 172.29,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            70.797,
+            197.71,
+            0.75
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            70.797,
+            370.0,
+            0.75
+          ]
+        }
+      ],
+      "part_classification": "curve_or_lane_change",
+      "catalog_rows": 4
+    },
+    {
+      "track_code": "C156",
+      "source_3mf": "c156l.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c156l.3mf",
+      "vertex_count": 880,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -0.0,
+          -3.75
+        ],
+        "max_mm": [
+          214.0,
+          214.0,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 214.0,
+        "width": 214.0,
+        "height": 9.0,
+        "x": 214.0,
+        "y": 214.0,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            107.0,
+            0.75
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            214.0,
+            107.0,
+            0.75
+          ]
+        }
+      ],
+      "part_classification": "curve_or_lane_change",
+      "catalog_rows": 3
+    },
+    {
+      "track_code": "C157",
+      "source_3mf": "c157.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c157.3mf",
+      "vertex_count": 120,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -78.0,
+          -3.75
+        ],
+        "max_mm": [
+          78.0,
+          78.0,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 156.0,
+        "width": 78.0,
+        "height": 9.0,
+        "x": 78.0,
+        "y": 156.0,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            39.0,
+            -78.0,
+            0.75
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            39.0,
+            78.0,
+            0.75
+          ]
+        }
+      ],
+      "part_classification": "curve_or_lane_change",
+      "catalog_rows": 5
+    },
+    {
+      "track_code": "C158",
+      "source_3mf": "c158.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c158.3mf",
+      "vertex_count": 120,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -78.0,
+          -3.75
+        ],
+        "max_mm": [
+          87.0,
+          78.0,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 156.0,
+        "width": 87.0,
+        "height": 9.0,
+        "x": 87.0,
+        "y": 156.0,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            43.5,
+            -78.0,
+            0.75
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            43.5,
+            78.0,
+            0.75
+          ]
+        }
+      ],
+      "part_classification": "curve_or_lane_change",
+      "catalog_rows": 5
+    },
+    {
+      "track_code": "C159",
+      "source_3mf": "c159.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c159.3mf",
+      "vertex_count": 120,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -78.0,
+          -3.75
+        ],
+        "max_mm": [
+          175.0,
+          78.0,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 175.0,
+        "width": 156.0,
+        "height": 9.0,
+        "x": 175.0,
+        "y": 156.0,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            0.0,
+            0.75
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            175.0,
+            0.0,
+            0.75
+          ]
+        }
+      ],
+      "part_classification": "curve_or_lane_change",
+      "catalog_rows": 6
+    },
+    {
+      "track_code": "C160",
+      "source_3mf": "c160.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c160.3mf",
+      "vertex_count": 120,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -78.0,
+          -3.75
+        ],
+        "max_mm": [
+          350.0,
+          78.0,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 350.0,
+        "width": 156.0,
+        "height": 9.0,
+        "x": 350.0,
+        "y": 156.0,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            0.0,
+            0.75
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            350.0,
+            0.0,
+            0.75
+          ]
+        }
+      ],
+      "part_classification": "standard_straight",
+      "catalog_rows": 6
+    },
+    {
+      "track_code": "C164",
+      "source_3mf": "c164.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c164.3mf",
+      "vertex_count": 1405,
+      "bbox": {
+        "min_mm": [
+          0.0,
+          -124.492,
+          -3.75
+        ],
+        "max_mm": [
+          350.0,
+          126.512,
+          7.792
+        ]
+      },
+      "dimensions_mm": {
+        "length": 350.0,
+        "width": 251.004,
+        "height": 11.542,
+        "x": 350.0,
+        "y": 251.004,
+        "z": 11.542
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            0.0,
+            1.01,
+            2.021
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            350.0,
+            1.01,
+            2.021
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C177",
+      "source_3mf": "c177.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c177.3mf",
+      "vertex_count": 968,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -126.5,
+          -3.75
+        ],
+        "max_mm": [
+          525.0,
+          78.0,
+          530.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 525.0,
+        "width": 204.5,
+        "height": 534.0,
+        "x": 525.0,
+        "y": 204.5,
+        "z": 534.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            -24.25,
+            263.25
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            525.0,
+            -24.25,
+            263.25
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C191",
+      "source_3mf": "c191.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c191.3mf",
+      "vertex_count": 456,
+      "bbox": {
+        "min_mm": [
+          -140.0,
+          -78.0,
+          -3.75
+        ],
+        "max_mm": [
+          350.0,
+          234.0,
+          5.251
+        ]
+      },
+      "dimensions_mm": {
+        "length": 490.0,
+        "width": 312.0,
+        "height": 9.001,
+        "x": 490.0,
+        "y": 312.0,
+        "z": 9.001
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -140.0,
+            78.0,
+            0.75
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            350.0,
+            78.0,
+            0.75
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C248",
+      "source_3mf": "c248.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c248.3mf",
+      "vertex_count": 11544,
+      "bbox": {
+        "min_mm": [
+          -214.239,
+          -89.768,
+          -172.521
+        ],
+        "max_mm": [
+          343.916,
+          89.768,
+          179.098
+        ]
+      },
+      "dimensions_mm": {
+        "length": 558.154,
+        "width": 179.535,
+        "height": 351.619,
+        "x": 558.154,
+        "y": 179.535,
+        "z": 351.619
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -214.239,
+            0.0,
+            3.289
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            343.916,
+            0.0,
+            3.289
+          ]
+        }
+      ],
+      "part_classification": "standard_straight",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C7000",
+      "source_3mf": "c7000.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c7000.3mf",
+      "vertex_count": 592,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -78.0,
+          -3.75
+        ],
+        "max_mm": [
+          175.0,
+          78.0,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 175.0,
+        "width": 156.0,
+        "height": 9.0,
+        "x": 175.0,
+        "y": 156.0,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            -0.0,
+            0.75
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            175.0,
+            -0.0,
+            0.75
+          ]
+        }
+      ],
+      "part_classification": "curve_or_lane_change",
+      "catalog_rows": 5
+    },
+    {
+      "track_code": "C7004",
+      "source_3mf": "c7004.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c7004.3mf",
+      "vertex_count": 5763,
+      "bbox": {
+        "min_mm": [
+          0.0,
+          -233.465,
+          -3.805
+        ],
+        "max_mm": [
+          175.0,
+          78.0,
+          36.2
+        ]
+      },
+      "dimensions_mm": {
+        "length": 311.465,
+        "width": 175.0,
+        "height": 40.006,
+        "x": 175.0,
+        "y": 311.465,
+        "z": 40.006
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            87.5,
+            -233.465,
+            16.197
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            87.5,
+            78.0,
+            16.197
+          ]
+        }
+      ],
+      "part_classification": "standard_straight",
+      "catalog_rows": 6
+    },
+    {
+      "track_code": "C7007",
+      "source_3mf": "c7007-17.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c7007-17.3mf",
+      "vertex_count": 2420,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -292.0,
+          -4.75
+        ],
+        "max_mm": [
+          622.085,
+          317.047,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 622.085,
+        "width": 609.048,
+        "height": 10.0,
+        "x": 622.085,
+        "y": 609.048,
+        "z": 10.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            12.523,
+            0.25
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            622.085,
+            12.523,
+            0.25
+          ]
+        }
+      ],
+      "part_classification": "curve_or_lane_change",
+      "catalog_rows": 9
+    },
+    {
+      "track_code": "C7008",
+      "source_3mf": "c7008-17.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c7008-17.3mf",
+      "vertex_count": 2420,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -317.047,
+          -4.75
+        ],
+        "max_mm": [
+          622.085,
+          292.0,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 622.085,
+        "width": 609.048,
+        "height": 10.0,
+        "x": 622.085,
+        "y": 609.048,
+        "z": 10.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            -12.523,
+            0.25
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            622.085,
+            -12.523,
+            0.25
+          ]
+        }
+      ],
+      "part_classification": "curve_or_lane_change",
+      "catalog_rows": 7
+    },
+    {
+      "track_code": "C7009",
+      "source_3mf": "c7009-17.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c7009-17.3mf",
+      "vertex_count": 2420,
+      "bbox": {
+        "min_mm": [
+          -286.585,
+          -636.255,
+          -4.75
+        ],
+        "max_mm": [
+          622.085,
+          156.0,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 908.67,
+        "width": 792.255,
+        "height": 10.0,
+        "x": 908.67,
+        "y": 792.255,
+        "z": 10.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -286.585,
+            -240.128,
+            0.25
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            622.085,
+            -240.128,
+            0.25
+          ]
+        }
+      ],
+      "part_classification": "curve_or_lane_change",
+      "catalog_rows": 7
+    },
+    {
+      "track_code": "C7010",
+      "source_3mf": "c7010-18.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c7010-18.3mf",
+      "vertex_count": 2420,
+      "bbox": {
+        "min_mm": [
+          -286.585,
+          -156.0,
+          -4.75
+        ],
+        "max_mm": [
+          622.085,
+          636.255,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 908.67,
+        "width": 792.255,
+        "height": 10.0,
+        "x": 908.67,
+        "y": 792.255,
+        "z": 10.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -286.585,
+            240.128,
+            0.25
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            622.085,
+            240.128,
+            0.25
+          ]
+        }
+      ],
+      "part_classification": "curve_or_lane_change",
+      "catalog_rows": 9
+    },
+    {
+      "track_code": "C7014",
+      "source_3mf": "c7014-15-a.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c7014-15-a.3mf",
+      "vertex_count": 1620,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -156.0,
+          -3.75
+        ],
+        "max_mm": [
+          525.0,
+          156.0,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 525.0,
+        "width": 312.0,
+        "height": 9.0,
+        "x": 525.0,
+        "y": 312.0,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            -0.0,
+            0.75
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            525.0,
+            -0.0,
+            0.75
+          ]
+        }
+      ],
+      "part_classification": "curve_or_lane_change",
+      "catalog_rows": 10
+    },
+    {
+      "track_code": "C7015",
+      "source_3mf": "c7015-16-a.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c7015-16-a.3mf",
+      "vertex_count": 1026,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -156.0,
+          -3.75
+        ],
+        "max_mm": [
+          525.0,
+          78.0,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 525.0,
+        "width": 234.0,
+        "height": 9.0,
+        "x": 525.0,
+        "y": 234.0,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            -39.0,
+            0.75
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            525.0,
+            -39.0,
+            0.75
+          ]
+        }
+      ],
+      "part_classification": "curve_or_lane_change",
+      "catalog_rows": 6
+    },
+    {
+      "track_code": "C7016",
+      "source_3mf": "c7016.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c7016.3mf",
+      "vertex_count": 88,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -0.0,
+          -3.75
+        ],
+        "max_mm": [
+          175.0,
+          78.0,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 175.0,
+        "width": 78.0,
+        "height": 9.0,
+        "x": 175.0,
+        "y": 78.0,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            39.0,
+            0.75
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            175.0,
+            39.0,
+            0.75
+          ]
+        }
+      ],
+      "part_classification": "curve_or_lane_change",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C7017",
+      "source_3mf": "c7017l.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c7017l.3mf",
+      "vertex_count": 208,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          341.835,
+          -3.75
+        ],
+        "max_mm": [
+          171.092,
+          447.029,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 171.092,
+        "width": 105.194,
+        "height": 9.0,
+        "x": 171.092,
+        "y": 105.194,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            394.432,
+            0.75
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            171.092,
+            394.432,
+            0.75
+          ]
+        }
+      ],
+      "part_classification": "curve_or_lane_change",
+      "catalog_rows": 0
+    },
+    {
+      "track_code": "C7018",
+      "source_3mf": "c7018.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c7018.3mf",
+      "vertex_count": 280,
+      "bbox": {
+        "min_mm": [
+          -0.083,
+          -78.0,
+          -3.75
+        ],
+        "max_mm": [
+          175.0,
+          78.0,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 175.083,
+        "width": 156.0,
+        "height": 9.0,
+        "x": 175.083,
+        "y": 156.0,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.083,
+            0.0,
+            0.75
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            175.0,
+            0.0,
+            0.75
+          ]
+        }
+      ],
+      "part_classification": "curve_or_lane_change",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C7019",
+      "source_3mf": "c7019l.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c7019l.3mf",
+      "vertex_count": 25622,
+      "bbox": {
+        "min_mm": [
+          -0.01,
+          412.987,
+          1.5
+        ],
+        "max_mm": [
+          191.481,
+          510.068,
+          28.013
+        ]
+      },
+      "dimensions_mm": {
+        "length": 191.491,
+        "width": 97.081,
+        "height": 26.513,
+        "x": 191.491,
+        "y": 97.081,
+        "z": 26.513
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.01,
+            461.527,
+            14.756
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            191.481,
+            461.527,
+            14.756
+          ]
+        }
+      ],
+      "part_classification": "curve_or_lane_change",
+      "catalog_rows": 0
+    },
+    {
+      "track_code": "C7036",
+      "source_3mf": "c7036.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c7036.3mf",
+      "vertex_count": 1664,
+      "bbox": {
+        "min_mm": [
+          -0.038,
+          -78.0,
+          -3.75
+        ],
+        "max_mm": [
+          525.0,
+          78.0,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 525.038,
+        "width": 156.0,
+        "height": 9.0,
+        "x": 525.038,
+        "y": 156.0,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.038,
+            0.0,
+            0.75
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            525.0,
+            0.0,
+            0.75
+          ]
+        }
+      ],
+      "part_classification": "standard_straight",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C7039",
+      "source_3mf": "c7039.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c7039.3mf",
+      "vertex_count": 498,
+      "bbox": {
+        "min_mm": [
+          0.0,
+          -78.0,
+          3.199
+        ],
+        "max_mm": [
+          175.0,
+          171.264,
+          25.927
+        ]
+      },
+      "dimensions_mm": {
+        "length": 249.263,
+        "width": 175.0,
+        "height": 22.728,
+        "x": 175.0,
+        "y": 249.263,
+        "z": 22.728
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            87.5,
+            -78.0,
+            14.563
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            87.5,
+            171.264,
+            14.563
+          ]
+        }
+      ],
+      "part_classification": "standard_straight",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C70411",
+      "source_3mf": "C70411.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/C70411.3mf",
+      "vertex_count": 12844,
+      "bbox": {
+        "min_mm": [
+          -124.375,
+          -127.99,
+          -40.345
+        ],
+        "max_mm": [
+          222.228,
+          173.6,
+          237.92
+        ]
+      },
+      "dimensions_mm": {
+        "length": 346.603,
+        "width": 301.59,
+        "height": 278.265,
+        "x": 346.603,
+        "y": 301.59,
+        "z": 278.265
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -124.375,
+            22.805,
+            98.788
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            222.228,
+            22.805,
+            98.788
+          ]
+        }
+      ],
+      "part_classification": "curve_or_lane_change",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C70412",
+      "source_3mf": "C70412.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/C70412.3mf",
+      "vertex_count": 12844,
+      "bbox": {
+        "min_mm": [
+          -120.0,
+          -188.231,
+          -231.026
+        ],
+        "max_mm": [
+          203.375,
+          207.01,
+          237.08
+        ]
+      },
+      "dimensions_mm": {
+        "length": 395.241,
+        "width": 323.375,
+        "height": 468.105,
+        "x": 323.375,
+        "y": 395.241,
+        "z": 468.105
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            41.687,
+            -188.231,
+            3.027
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            41.687,
+            207.01,
+            3.027
+          ]
+        }
+      ],
+      "part_classification": "curve_or_lane_change",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C70413",
+      "source_3mf": "C70413.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/C70413.3mf",
+      "vertex_count": 12844,
+      "bbox": {
+        "min_mm": [
+          -118.427,
+          -104.386,
+          -87.905
+        ],
+        "max_mm": [
+          175.0,
+          173.601,
+          237.08
+        ]
+      },
+      "dimensions_mm": {
+        "length": 293.427,
+        "width": 277.986,
+        "height": 324.985,
+        "x": 293.427,
+        "y": 277.986,
+        "z": 324.985
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -118.427,
+            34.607,
+            74.587
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            175.0,
+            34.607,
+            74.587
+          ]
+        }
+      ],
+      "part_classification": "curve_or_lane_change",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C70414",
+      "source_3mf": "C70414.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/C70414.3mf",
+      "vertex_count": 12844,
+      "bbox": {
+        "min_mm": [
+          -175.0,
+          -178.01,
+          -40.345
+        ],
+        "max_mm": [
+          272.248,
+          224.658,
+          284.822
+        ]
+      },
+      "dimensions_mm": {
+        "length": 447.248,
+        "width": 402.668,
+        "height": 325.167,
+        "x": 447.248,
+        "y": 402.668,
+        "z": 325.167
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -175.0,
+            23.324,
+            122.238
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            272.248,
+            23.324,
+            122.238
+          ]
+        }
+      ],
+      "part_classification": "curve_or_lane_change",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C7444",
+      "source_3mf": "c7444.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c7444.3mf",
+      "vertex_count": 6443,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -217.708,
+          -10.249
+        ],
+        "max_mm": [
+          175.001,
+          78.0,
+          26.584
+        ]
+      },
+      "dimensions_mm": {
+        "length": 295.708,
+        "width": 175.001,
+        "height": 36.832,
+        "x": 175.001,
+        "y": 295.708,
+        "z": 36.832
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            87.5,
+            -217.708,
+            8.168
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            87.5,
+            78.0,
+            8.168
+          ]
+        }
+      ],
+      "part_classification": "standard_straight",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C8004",
+      "source_3mf": "c8004.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8004.3mf",
+      "vertex_count": 264,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -78.0,
+          -3.75
+        ],
+        "max_mm": [
+          350.0,
+          78.0,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 350.0,
+        "width": 156.0,
+        "height": 9.0,
+        "x": 350.0,
+        "y": 156.0,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            0.0,
+            0.75
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            350.0,
+            0.0,
+            0.75
+          ]
+        }
+      ],
+      "part_classification": "standard_straight",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C8005",
+      "source_3mf": "c8005.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8005.3mf",
+      "vertex_count": 2807,
+      "bbox": {
+        "min_mm": [
+          -0.281,
+          -78.0,
+          -3.75
+        ],
+        "max_mm": [
+          349.718,
+          78.0,
+          17.963
+        ]
+      },
+      "dimensions_mm": {
+        "length": 349.999,
+        "width": 156.0,
+        "height": 21.713,
+        "x": 349.999,
+        "y": 156.0,
+        "z": 21.713
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.281,
+            0.0,
+            7.107
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            349.718,
+            0.0,
+            7.107
+          ]
+        }
+      ],
+      "part_classification": "standard_straight",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C8006",
+      "source_3mf": "c8006.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8006.3mf",
+      "vertex_count": 312,
+      "bbox": {
+        "min_mm": [
+          -319.765,
+          -78.0,
+          -3.75
+        ],
+        "max_mm": [
+          350.0,
+          89.01,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 669.765,
+        "width": 167.01,
+        "height": 9.0,
+        "x": 669.765,
+        "y": 167.01,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -319.765,
+            5.505,
+            0.75
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            350.0,
+            5.505,
+            0.75
+          ]
+        }
+      ],
+      "part_classification": "standard_straight",
+      "catalog_rows": 4
+    },
+    {
+      "track_code": "C8009",
+      "source_3mf": "c8009.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8009.3mf",
+      "vertex_count": 120,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -78.0,
+          -3.75
+        ],
+        "max_mm": [
+          350.0,
+          78.0,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 350.0,
+        "width": 156.0,
+        "height": 9.0,
+        "x": 350.0,
+        "y": 156.0,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            0.0,
+            0.75
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            350.0,
+            0.0,
+            0.75
+          ]
+        }
+      ],
+      "part_classification": "standard_straight",
+      "catalog_rows": 4
+    },
+    {
+      "track_code": "C8010",
+      "source_3mf": "c8010l.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8010l.3mf",
+      "vertex_count": 480,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          151.321,
+          -3.75
+        ],
+        "max_mm": [
+          261.63,
+          370.0,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 261.63,
+        "width": 218.679,
+        "height": 9.0,
+        "x": 261.63,
+        "y": 218.679,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            260.66,
+            0.75
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            261.63,
+            260.66,
+            0.75
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 0
+    },
+    {
+      "track_code": "C8031",
+      "source_3mf": "c8031a.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8031a.3mf",
+      "vertex_count": 248,
+      "bbox": {
+        "min_mm": [
+          -700.0,
+          -78.0,
+          -2.5
+        ],
+        "max_mm": [
+          -287.258,
+          78.0,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 412.742,
+        "width": 156.0,
+        "height": 7.75,
+        "x": 412.742,
+        "y": 156.0,
+        "z": 7.75
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -700.0,
+            0.0,
+            1.375
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            -287.258,
+            0.0,
+            1.375
+          ]
+        }
+      ],
+      "part_classification": "standard_straight",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C8200",
+      "source_3mf": "c8200.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8200.3mf",
+      "vertex_count": 136,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -78.0,
+          -2.5
+        ],
+        "max_mm": [
+          87.0,
+          78.0,
+          3.5
+        ]
+      },
+      "dimensions_mm": {
+        "length": 156.0,
+        "width": 87.0,
+        "height": 6.0,
+        "x": 87.0,
+        "y": 156.0,
+        "z": 6.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            43.5,
+            -78.0,
+            0.5
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            43.5,
+            78.0,
+            0.5
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 4
+    },
+    {
+      "track_code": "C8201",
+      "source_3mf": "c8201bl.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8201bl.3mf",
+      "vertex_count": 220,
+      "bbox": {
+        "min_mm": [
+          0.0,
+          -0.0,
+          -4.5
+        ],
+        "max_mm": [
+          58.0,
+          58.0,
+          4.5
+        ]
+      },
+      "dimensions_mm": {
+        "length": 58.0,
+        "width": 58.0,
+        "height": 9.0,
+        "x": 58.0,
+        "y": 58.0,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            29.0,
+            -0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            29.0,
+            58.0,
+            0.0
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 3
+    },
+    {
+      "track_code": "C8202",
+      "source_3mf": "c8202bl.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8202bl.3mf",
+      "vertex_count": 110,
+      "bbox": {
+        "min_mm": [
+          0.0,
+          3.536,
+          -4.5
+        ],
+        "max_mm": [
+          41.012,
+          58.0,
+          4.5
+        ]
+      },
+      "dimensions_mm": {
+        "length": 54.464,
+        "width": 41.012,
+        "height": 9.0,
+        "x": 41.012,
+        "y": 54.464,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            20.506,
+            3.536,
+            -0.0
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            20.506,
+            58.0,
+            -0.0
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 3
+    },
+    {
+      "track_code": "C8203",
+      "source_3mf": "c8203.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8203.3mf",
+      "vertex_count": 728,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -0.0,
+          -2.5
+        ],
+        "max_mm": [
+          351.09,
+          348.853,
+          3.5
+        ]
+      },
+      "dimensions_mm": {
+        "length": 351.09,
+        "width": 348.853,
+        "height": 6.0,
+        "x": 351.09,
+        "y": 348.853,
+        "z": 6.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            174.427,
+            0.5
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            351.09,
+            174.427,
+            0.5
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 5
+    },
+    {
+      "track_code": "C8204",
+      "source_3mf": "c8204l.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8204l.3mf",
+      "vertex_count": 328,
+      "bbox": {
+        "min_mm": [
+          0.0,
+          341.835,
+          -2.5
+        ],
+        "max_mm": [
+          201.292,
+          526.0,
+          3.5
+        ]
+      },
+      "dimensions_mm": {
+        "length": 201.292,
+        "width": 184.165,
+        "height": 6.0,
+        "x": 201.292,
+        "y": 184.165,
+        "z": 6.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            0.0,
+            433.918,
+            0.5
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            201.292,
+            433.918,
+            0.5
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 1
+    },
+    {
+      "track_code": "C8205",
+      "source_3mf": "c8205.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8205.3mf",
+      "vertex_count": 168,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -78.0,
+          -2.5
+        ],
+        "max_mm": [
+          350.0,
+          78.0,
+          3.5
+        ]
+      },
+      "dimensions_mm": {
+        "length": 350.0,
+        "width": 156.0,
+        "height": 6.0,
+        "x": 350.0,
+        "y": 156.0,
+        "z": 6.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            0.0,
+            0.5
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            350.0,
+            0.0,
+            0.5
+          ]
+        }
+      ],
+      "part_classification": "standard_straight",
+      "catalog_rows": 4
+    },
+    {
+      "track_code": "C8205M",
+      "source_3mf": "c8205model.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8205model.3mf",
+      "vertex_count": 136,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -78.0,
+          -2.5
+        ],
+        "max_mm": [
+          350.0,
+          78.0,
+          3.5
+        ]
+      },
+      "dimensions_mm": {
+        "length": 350.0,
+        "width": 156.0,
+        "height": 6.0,
+        "x": 350.0,
+        "y": 156.0,
+        "z": 6.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            0.0,
+            0.5
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            350.0,
+            0.0,
+            0.5
+          ]
+        }
+      ],
+      "part_classification": "standard_straight",
+      "catalog_rows": 0
+    },
+    {
+      "track_code": "C8205T",
+      "source_3mf": "c8205text.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8205text.3mf",
+      "vertex_count": 24,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -78.0,
+          -3.75
+        ],
+        "max_mm": [
+          350.0,
+          78.0,
+          3.75
+        ]
+      },
+      "dimensions_mm": {
+        "length": 350.0,
+        "width": 156.0,
+        "height": 7.5,
+        "x": 350.0,
+        "y": 156.0,
+        "z": 7.5
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            350.0,
+            0.0,
+            0.0
+          ]
+        }
+      ],
+      "part_classification": "standard_straight",
+      "catalog_rows": 0
+    },
+    {
+      "track_code": "C8205X",
+      "source_3mf": "c8205x2.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8205x2.3mf",
+      "vertex_count": 240,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -156.0,
+          -3.75
+        ],
+        "max_mm": [
+          350.0,
+          156.0,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 350.0,
+        "width": 312.0,
+        "height": 9.0,
+        "x": 350.0,
+        "y": 312.0,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            0.0,
+            0.75
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            350.0,
+            0.0,
+            0.75
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 0
+    },
+    {
+      "track_code": "C8206",
+      "source_3mf": "c8206l.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8206l.3mf",
+      "vertex_count": 568,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          151.321,
+          -2.5
+        ],
+        "max_mm": [
+          261.63,
+          370.0,
+          3.5
+        ]
+      },
+      "dimensions_mm": {
+        "length": 261.63,
+        "width": 218.679,
+        "height": 6.0,
+        "x": 261.63,
+        "y": 218.679,
+        "z": 6.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            260.66,
+            0.5
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            261.63,
+            260.66,
+            0.5
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C8206T",
+      "source_3mf": "c8206textr.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8206textr.3mf",
+      "vertex_count": 96,
+      "bbox": {
+        "min_mm": [
+          0.0,
+          -370.0,
+          -2.5
+        ],
+        "max_mm": [
+          261.63,
+          -151.321,
+          2.5
+        ]
+      },
+      "dimensions_mm": {
+        "length": 261.63,
+        "width": 218.679,
+        "height": 5.0,
+        "x": 261.63,
+        "y": 218.679,
+        "z": 5.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            0.0,
+            -260.66,
+            0.0
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            261.63,
+            -260.66,
+            0.0
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 0
+    },
+    {
+      "track_code": "C8207",
+      "source_3mf": "c8207.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8207.3mf",
+      "vertex_count": 136,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -78.0,
+          -2.5
+        ],
+        "max_mm": [
+          175.0,
+          78.0,
+          3.5
+        ]
+      },
+      "dimensions_mm": {
+        "length": 175.0,
+        "width": 156.0,
+        "height": 6.0,
+        "x": 175.0,
+        "y": 156.0,
+        "z": 6.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            0.0,
+            0.5
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            175.0,
+            0.0,
+            0.5
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 3
+    },
+    {
+      "track_code": "C8207X",
+      "source_3mf": "c8207x2.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8207x2.3mf",
+      "vertex_count": 240,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -156.0,
+          -3.75
+        ],
+        "max_mm": [
+          175.0,
+          156.0,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 312.0,
+        "width": 175.0,
+        "height": 9.0,
+        "x": 175.0,
+        "y": 312.0,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            87.5,
+            -156.0,
+            0.75
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            87.5,
+            156.0,
+            0.75
+          ]
+        }
+      ],
+      "part_classification": "standard_straight",
+      "catalog_rows": 0
+    },
+    {
+      "track_code": "C8210",
+      "source_3mf": "c8210.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8210.3mf",
+      "vertex_count": 662,
+      "bbox": {
+        "min_mm": [
+          -160.5,
+          -540.5,
+          -4.5
+        ],
+        "max_mm": [
+          499.0,
+          117.0,
+          4.54
+        ]
+      },
+      "dimensions_mm": {
+        "length": 659.5,
+        "width": 657.5,
+        "height": 9.04,
+        "x": 659.5,
+        "y": 657.5,
+        "z": 9.04
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -160.5,
+            -211.75,
+            0.02
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            499.0,
+            -211.75,
+            0.02
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 5
+    },
+    {
+      "track_code": "C82101",
+      "source_3mf": "c82101.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c82101.3mf",
+      "vertex_count": 56,
+      "bbox": {
+        "min_mm": [
+          0.0,
+          -292.0,
+          3.7
+        ],
+        "max_mm": [
+          409.0,
+          117.0,
+          4.0
+        ]
+      },
+      "dimensions_mm": {
+        "length": 409.0,
+        "width": 409.0,
+        "height": 0.3,
+        "x": 409.0,
+        "y": 409.0,
+        "z": 0.3
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            0.0,
+            -87.5,
+            3.85
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            409.0,
+            -87.5,
+            3.85
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C82102",
+      "source_3mf": "c82102.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c82102.3mf",
+      "vertex_count": 56,
+      "bbox": {
+        "min_mm": [
+          0.0,
+          -292.0,
+          3.7
+        ],
+        "max_mm": [
+          409.0,
+          117.0,
+          4.0
+        ]
+      },
+      "dimensions_mm": {
+        "length": 409.0,
+        "width": 409.0,
+        "height": 0.3,
+        "x": 409.0,
+        "y": 409.0,
+        "z": 0.3
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            204.5,
+            -292.0,
+            3.85
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            204.5,
+            117.0,
+            3.85
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C82103",
+      "source_3mf": "c82103.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c82103.3mf",
+      "vertex_count": 56,
+      "bbox": {
+        "min_mm": [
+          0.0,
+          -117.0,
+          3.7
+        ],
+        "max_mm": [
+          409.0,
+          292.0,
+          4.0
+        ]
+      },
+      "dimensions_mm": {
+        "length": 409.0,
+        "width": 409.0,
+        "height": 0.3,
+        "x": 409.0,
+        "y": 409.0,
+        "z": 0.3
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            0.0,
+            87.5,
+            3.85
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            409.0,
+            87.5,
+            3.85
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C82104",
+      "source_3mf": "c82104.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c82104.3mf",
+      "vertex_count": 56,
+      "bbox": {
+        "min_mm": [
+          0.0,
+          -117.0,
+          3.7
+        ],
+        "max_mm": [
+          409.0,
+          292.0,
+          4.0
+        ]
+      },
+      "dimensions_mm": {
+        "length": 409.0,
+        "width": 409.0,
+        "height": 0.3,
+        "x": 409.0,
+        "y": 409.0,
+        "z": 0.3
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            204.5,
+            -117.0,
+            3.85
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            204.5,
+            292.0,
+            3.85
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C8211",
+      "source_3mf": "c8211.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8211.3mf",
+      "vertex_count": 24,
+      "bbox": {
+        "min_mm": [
+          0.0,
+          -78.0,
+          2.567
+        ],
+        "max_mm": [
+          350.262,
+          78.0,
+          15.633
+        ]
+      },
+      "dimensions_mm": {
+        "length": 350.262,
+        "width": 156.0,
+        "height": 13.066,
+        "x": 350.262,
+        "y": 156.0,
+        "z": 13.066
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            0.0,
+            0.0,
+            9.1
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            350.262,
+            0.0,
+            9.1
+          ]
+        }
+      ],
+      "part_classification": "standard_straight",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C8217",
+      "source_3mf": "c8217.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8217.3mf",
+      "vertex_count": 369,
+      "bbox": {
+        "min_mm": [
+          -0.001,
+          -115.276,
+          -9.044
+        ],
+        "max_mm": [
+          175.0,
+          78.897,
+          11.223
+        ]
+      },
+      "dimensions_mm": {
+        "length": 194.173,
+        "width": 175.0,
+        "height": 20.266,
+        "x": 175.0,
+        "y": 194.173,
+        "z": 20.266
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            87.5,
+            -115.276,
+            1.089
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            87.5,
+            78.897,
+            1.089
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 3
+    },
+    {
+      "track_code": "C8222",
+      "source_3mf": "c8222.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8222.3mf",
+      "vertex_count": 120,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -78.0,
+          -3.75
+        ],
+        "max_mm": [
+          175.0,
+          78.0,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 175.0,
+        "width": 156.0,
+        "height": 9.0,
+        "x": 175.0,
+        "y": 156.0,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            0.0,
+            0.75
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            175.0,
+            0.0,
+            0.75
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C8223I",
+      "source_3mf": "c8223i.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8223i.3mf",
+      "vertex_count": 24,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -142.0,
+          -3.75
+        ],
+        "max_mm": [
+          174.999,
+          -78.0,
+          3.75
+        ]
+      },
+      "dimensions_mm": {
+        "length": 174.999,
+        "width": 64.0,
+        "height": 7.5,
+        "x": 174.999,
+        "y": 64.0,
+        "z": 7.5
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            -110.0,
+            0.0
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            174.999,
+            -110.0,
+            0.0
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C8223O",
+      "source_3mf": "c8223o.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8223o.3mf",
+      "vertex_count": 24,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          78.0,
+          -3.75
+        ],
+        "max_mm": [
+          174.999,
+          142.0,
+          3.75
+        ]
+      },
+      "dimensions_mm": {
+        "length": 174.999,
+        "width": 64.0,
+        "height": 7.5,
+        "x": 174.999,
+        "y": 64.0,
+        "z": 7.5
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            110.0,
+            -0.0
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            174.999,
+            110.0,
+            -0.0
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C8224",
+      "source_3mf": "c8224.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8224.3mf",
+      "vertex_count": 5913,
+      "bbox": {
+        "min_mm": [
+          -0.01,
+          485.793,
+          -4.5
+        ],
+        "max_mm": [
+          225.783,
+          590.0,
+          28.013
+        ]
+      },
+      "dimensions_mm": {
+        "length": 225.793,
+        "width": 104.207,
+        "height": 32.513,
+        "x": 225.793,
+        "y": 104.207,
+        "z": 32.513
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.01,
+            537.897,
+            11.756
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            225.783,
+            537.897,
+            11.756
+          ]
+        }
+      ],
+      "part_classification": "standard_straight",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C8225",
+      "source_3mf": "c8225.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8225.3mf",
+      "vertex_count": 7803,
+      "bbox": {
+        "min_mm": [
+          -17.551,
+          106.066,
+          -7.313
+        ],
+        "max_mm": [
+          151.321,
+          214.0,
+          28.0
+        ]
+      },
+      "dimensions_mm": {
+        "length": 168.872,
+        "width": 107.934,
+        "height": 35.313,
+        "x": 168.872,
+        "y": 107.934,
+        "z": 35.313
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -17.551,
+            160.033,
+            10.344
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            151.321,
+            160.033,
+            10.344
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C8228",
+      "source_3mf": "c8228.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8228.3mf",
+      "vertex_count": 8313,
+      "bbox": {
+        "min_mm": [
+          -0.01,
+          261.551,
+          -4.5
+        ],
+        "max_mm": [
+          306.884,
+          434.0,
+          28.013
+        ]
+      },
+      "dimensions_mm": {
+        "length": 306.894,
+        "width": 172.449,
+        "height": 32.513,
+        "x": 306.894,
+        "y": 172.449,
+        "z": 32.513
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.01,
+            347.775,
+            11.756
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            306.884,
+            347.775,
+            11.756
+          ]
+        }
+      ],
+      "part_classification": "standard_straight",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C8233I",
+      "source_3mf": "c8233ii.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8233ii.3mf",
+      "vertex_count": 562,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -91.0,
+          1.5
+        ],
+        "max_mm": [
+          350.0,
+          -78.0,
+          5.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 350.0,
+        "width": 13.0,
+        "height": 3.75,
+        "x": 350.0,
+        "y": 13.0,
+        "z": 3.75
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            -84.5,
+            3.375
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            350.0,
+            -84.5,
+            3.375
+          ]
+        }
+      ],
+      "part_classification": "standard_straight",
+      "catalog_rows": 0
+    },
+    {
+      "track_code": "C8233O",
+      "source_3mf": "c8233o.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8233o.3mf",
+      "vertex_count": 7622,
+      "bbox": {
+        "min_mm": [
+          -10.217,
+          78.0,
+          -356.642
+        ],
+        "max_mm": [
+          350.146,
+          142.392,
+          28.014
+        ]
+      },
+      "dimensions_mm": {
+        "length": 360.364,
+        "width": 64.392,
+        "height": 384.656,
+        "x": 360.364,
+        "y": 64.392,
+        "z": 384.656
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -10.217,
+            110.196,
+            -164.314
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            350.146,
+            110.196,
+            -164.314
+          ]
+        }
+      ],
+      "part_classification": "standard_straight",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C8234",
+      "source_3mf": "c8234l.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8234l.3mf",
+      "vertex_count": 328,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          197.71,
+          -2.5
+        ],
+        "max_mm": [
+          141.593,
+          370.0,
+          3.5
+        ]
+      },
+      "dimensions_mm": {
+        "length": 172.29,
+        "width": 141.593,
+        "height": 6.0,
+        "x": 141.593,
+        "y": 172.29,
+        "z": 6.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            70.797,
+            197.71,
+            0.5
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            70.797,
+            370.0,
+            0.5
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 3
+    },
+    {
+      "track_code": "C8235",
+      "source_3mf": "c8235l.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8235l.3mf",
+      "vertex_count": 328,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          485.96,
+          -2.5
+        ],
+        "max_mm": [
+          260.991,
+          682.0,
+          3.5
+        ]
+      },
+      "dimensions_mm": {
+        "length": 260.991,
+        "width": 196.04,
+        "height": 6.0,
+        "x": 260.991,
+        "y": 196.04,
+        "z": 6.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            583.98,
+            0.5
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            260.991,
+            583.98,
+            0.5
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 4
+    },
+    {
+      "track_code": "C8236",
+      "source_3mf": "c8236.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8236.3mf",
+      "vertex_count": 136,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -78.0,
+          -2.5
+        ],
+        "max_mm": [
+          78.0,
+          78.0,
+          3.5
+        ]
+      },
+      "dimensions_mm": {
+        "length": 156.0,
+        "width": 78.0,
+        "height": 6.0,
+        "x": 78.0,
+        "y": 156.0,
+        "z": 6.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            39.0,
+            -78.0,
+            0.5
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            39.0,
+            78.0,
+            0.5
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 4
+    },
+    {
+      "track_code": "C8238",
+      "source_3mf": "c8238.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8238.3mf",
+      "vertex_count": 7108,
+      "bbox": {
+        "min_mm": [
+          -0.01,
+          629.513,
+          -4.5
+        ],
+        "max_mm": [
+          285.482,
+          746.0,
+          28.013
+        ]
+      },
+      "dimensions_mm": {
+        "length": 285.492,
+        "width": 116.487,
+        "height": 32.513,
+        "x": 285.492,
+        "y": 116.487,
+        "z": 32.513
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.01,
+            687.756,
+            11.756
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            285.482,
+            687.756,
+            11.756
+          ]
+        }
+      ],
+      "part_classification": "standard_straight",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C8239",
+      "source_3mf": "c8239.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8239.3mf",
+      "vertex_count": 3958,
+      "bbox": {
+        "min_mm": [
+          -0.01,
+          341.807,
+          -4.5
+        ],
+        "max_mm": [
+          166.085,
+          434.0,
+          28.013
+        ]
+      },
+      "dimensions_mm": {
+        "length": 166.095,
+        "width": 92.193,
+        "height": 32.513,
+        "x": 166.095,
+        "y": 92.193,
+        "z": 32.513
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.01,
+            387.903,
+            11.756
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            166.085,
+            387.903,
+            11.756
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C8240",
+      "source_3mf": "c8240.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8240.3mf",
+      "vertex_count": 424,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -58.0,
+          -4.5
+        ],
+        "max_mm": [
+          58.0,
+          58.0,
+          4.5
+        ]
+      },
+      "dimensions_mm": {
+        "length": 116.0,
+        "width": 58.0,
+        "height": 9.0,
+        "x": 58.0,
+        "y": 116.0,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            29.0,
+            -58.0,
+            0.0
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            29.0,
+            58.0,
+            0.0
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C8246",
+      "source_3mf": "c8246al.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8246al.3mf",
+      "vertex_count": 606,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -78.0,
+          -3.0
+        ],
+        "max_mm": [
+          350.0,
+          78.0,
+          3.0
+        ]
+      },
+      "dimensions_mm": {
+        "length": 350.0,
+        "width": 156.0,
+        "height": 6.0,
+        "x": 350.0,
+        "y": 156.0,
+        "z": 6.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.0,
+            -0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            350.0,
+            -0.0,
+            0.0
+          ]
+        }
+      ],
+      "part_classification": "standard_straight",
+      "catalog_rows": 0
+    },
+    {
+      "track_code": "C8278",
+      "source_3mf": "c8278l.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8278l.3mf",
+      "vertex_count": 328,
+      "bbox": {
+        "min_mm": [
+          0.0,
+          53.585,
+          -2.5
+        ],
+        "max_mm": [
+          81.894,
+          214.0,
+          3.5
+        ]
+      },
+      "dimensions_mm": {
+        "length": 160.415,
+        "width": 81.894,
+        "height": 6.0,
+        "x": 81.894,
+        "y": 160.415,
+        "z": 6.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            40.947,
+            53.585,
+            0.5
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            40.947,
+            214.0,
+            0.5
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 0
+    },
+    {
+      "track_code": "C8279",
+      "source_3mf": "c8279.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8279.3mf",
+      "vertex_count": 424,
+      "bbox": {
+        "min_mm": [
+          -0.0,
+          -58.0,
+          -4.5
+        ],
+        "max_mm": [
+          58.0,
+          58.0,
+          4.5
+        ]
+      },
+      "dimensions_mm": {
+        "length": 116.0,
+        "width": 58.0,
+        "height": 9.0,
+        "x": 58.0,
+        "y": 116.0,
+        "z": 9.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            29.0,
+            -58.0,
+            0.0
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            29.0,
+            58.0,
+            0.0
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C8280",
+      "source_3mf": "c8280.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8280.3mf",
+      "vertex_count": 4207,
+      "bbox": {
+        "min_mm": [
+          -17.551,
+          138.582,
+          -7.313
+        ],
+        "max_mm": [
+          81.894,
+          214.0,
+          28.0
+        ]
+      },
+      "dimensions_mm": {
+        "length": 99.446,
+        "width": 75.418,
+        "height": 35.313,
+        "x": 99.446,
+        "y": 75.418,
+        "z": 35.313
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -17.551,
+            176.291,
+            10.344
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            81.894,
+            176.291,
+            10.344
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C8281",
+      "source_3mf": "c8281.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8281.3mf",
+      "vertex_count": 3612,
+      "bbox": {
+        "min_mm": [
+          -0.01,
+          283.041,
+          -4.5
+        ],
+        "max_mm": [
+          141.632,
+          370.0,
+          28.012
+        ]
+      },
+      "dimensions_mm": {
+        "length": 141.642,
+        "width": 86.959,
+        "height": 32.513,
+        "x": 141.642,
+        "y": 86.959,
+        "z": 32.513
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.01,
+            326.521,
+            11.756
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            141.632,
+            326.521,
+            11.756
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C8282",
+      "source_3mf": "c8282.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8282.3mf",
+      "vertex_count": 5028,
+      "bbox": {
+        "min_mm": [
+          -0.01,
+          426.832,
+          -4.5
+        ],
+        "max_mm": [
+          201.292,
+          526.0,
+          28.013
+        ]
+      },
+      "dimensions_mm": {
+        "length": 201.302,
+        "width": 99.168,
+        "height": 32.513,
+        "x": 201.302,
+        "y": 99.168,
+        "z": 32.513
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -0.01,
+            476.416,
+            11.756
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            201.292,
+            476.416,
+            11.756
+          ]
+        }
+      ],
+      "part_classification": "standard_straight",
+      "catalog_rows": 2
+    },
+    {
+      "track_code": "C8295",
+      "source_3mf": "c8295.3mf",
+      "extracted_3mf": "examples/phase_4b/3mf_library/c8295.3mf",
+      "vertex_count": 2974,
+      "bbox": {
+        "min_mm": [
+          -349.275,
+          -330.262,
+          -3.75
+        ],
+        "max_mm": [
+          310.95,
+          160.272,
+          75.25
+        ]
+      },
+      "dimensions_mm": {
+        "length": 660.225,
+        "width": 490.534,
+        "height": 79.0,
+        "x": 660.225,
+        "y": 490.534,
+        "z": 79.0
+      },
+      "connectors": [
+        {
+          "name": "A",
+          "position_mm": [
+            -349.275,
+            -84.995,
+            35.75
+          ]
+        },
+        {
+          "name": "B",
+          "position_mm": [
+            310.95,
+            -84.995,
+            35.75
+          ]
+        }
+      ],
+      "part_classification": "special_or_accessory",
+      "catalog_rows": 5
+    },
+    {
+      "track_code": "C187",
+      "source_3mf": null,
+      "extracted_3mf": null,
+      "vertex_count": 0,
+      "bbox": null,
+      "dimensions_mm": null,
+      "connectors": [],
+      "part_classification": "missing_3mf_fallback_required",
+      "catalog_rows": 3,
+      "status": "missing_3mf_geometry"
+    }
+  ]
+}
