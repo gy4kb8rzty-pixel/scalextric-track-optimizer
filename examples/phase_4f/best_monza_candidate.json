@@ -1,0 +1,19 @@
+{
+  "name": "40-60 realistic closed Monza",
+  "score": 96960.0,
+  "monza_resemblance_score": 96,
+  "closure_error_mm": 0.0,
+  "heading_error_degrees": 0.0,
+  "overlap_error_mm2": 0.0,
+  "inventory_utilization_percent": 44.44,
+  "piece_count": 48,
+  "inventory_usage": {
+    "C8205": 36,
+    "C187": 4,
+    "C153": 8
+  },
+  "c187_usage_count": 4,
+  "closure_tolerance_pass": true,
+  "heading_tolerance_pass": true,
+  "rank": 1
+}

@@ -1,0 +1,127 @@
+{
+  "base_commit": "2d17d8477fdf66e8ca74899bf6aa44b868bf53cd",
+  "phase_4f_commit": "9963725190bfdf2e1e8b43a23098f7c2635576cb",
+  "patch_includes_preview_handoff": true,
+  "file_count": 17,
+  "files": [
+    {
+      "path": "examples/phase_4e/c187_geometry_support.json",
+      "change": "added",
+      "file_type": "application/json",
+      "size_bytes": 693,
+      "text_safe": true
+    },
+    {
+      "path": "examples/phase_4e/phase_4e_c187_support_report.md",
+      "change": "added",
+      "file_type": "text/markdown",
+      "size_bytes": 365,
+      "text_safe": true
+    },
+    {
+      "path": "examples/phase_4f/best_monza_candidate.json",
+      "change": "added",
+      "file_type": "application/json",
+      "size_bytes": 428,
+      "text_safe": true
+    },
+    {
+      "path": "examples/phase_4f/c187_validation_report.md",
+      "change": "added",
+      "file_type": "text/markdown",
+      "size_bytes": 263,
+      "text_safe": true
+    },
+    {
+      "path": "examples/phase_4f/candidate_ranking_report.md",
+      "change": "added",
+      "file_type": "text/markdown",
+      "size_bytes": 543,
+      "text_safe": true
+    },
+    {
+      "path": "examples/phase_4f/inventory_usage_report.md",
+      "change": "added",
+      "file_type": "text/markdown",
+      "size_bytes": 321,
+      "text_safe": true
+    },
+    {
+      "path": "examples/phase_4f/monza_overlay.svg",
+      "change": "added",
+      "file_type": "image/svg+xml",
+      "size_bytes": 7747,
+      "text_safe": true
+    },
+    {
+      "path": "examples/phase_4f/monza_top_view.svg",
+      "change": "added",
+      "file_type": "image/svg+xml",
+      "size_bytes": 7521,
+      "text_safe": true
+    },
+    {
+      "path": "examples/phase_4f/optimization_report.md",
+      "change": "added",
+      "file_type": "text/markdown",
+      "size_bytes": 330,
+      "text_safe": true
+    },
+    {
+      "path": "examples/phase_4f/placement_table.csv",
+      "change": "added",
+      "file_type": "text/csv",
+      "size_bytes": 3809,
+      "text_safe": true
+    },
+    {
+      "path": "examples/phase_4f/placement_table.json",
+      "change": "added",
+      "file_type": "application/json",
+      "size_bytes": 15819,
+      "text_safe": true
+    },
+    {
+      "path": "examples/phase_4f/repository_audit_report.md",
+      "change": "added",
+      "file_type": "text/markdown",
+      "size_bytes": 855,
+      "text_safe": true
+    },
+    {
+      "path": "examples/phase_4f/top_20_candidates.json",
+      "change": "added",
+      "file_type": "application/json",
+      "size_bytes": 2372,
+      "text_safe": true
+    },
+    {
+      "path": "scripts/generate_phase_4e.py",
+      "change": "added",
+      "file_type": "text/x-python",
+      "size_bytes": 1710,
+      "text_safe": true
+    },
+    {
+      "path": "scripts/generate_phase_4f.py",
+      "change": "added",
+      "file_type": "text/x-python",
+      "size_bytes": 7661,
+      "text_safe": true
+    },
+    {
+      "path": "output/phase_4f_best_preview_3mf.base64.txt",
+      "change": "added",
+      "file_type": "text/plain",
+      "size_bytes": 7445,
+      "text_safe": true
+    },
+    {
+      "path": "output/README_decode_phase_4f_best_preview_3mf.md",
+      "change": "added",
+      "file_type": "text/markdown",
+      "size_bytes": 520,
+      "text_safe": true
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+[
+  {
+    "name": "40-60 realistic closed Monza",
+    "score": 96960.0,
+    "monza_resemblance_score": 96,
+    "closure_error_mm": 0.0,
+    "heading_error_degrees": 0.0,
+    "overlap_error_mm2": 0.0,
+    "inventory_utilization_percent": 44.44,
+    "piece_count": 48,
+    "inventory_usage": {
+      "C8205": 36,
+      "C187": 4,
+      "C153": 8
+    },
+    "c187_usage_count": 4,
+    "closure_tolerance_pass": true,
+    "heading_tolerance_pass": true,
+    "rank": 1
+  },
+  {
+    "name": "60-80 evaluated inventory-limited Monza",
+    "score": 94960.0,
+    "monza_resemblance_score": 94,
+    "closure_error_mm": 0.0,
+    "heading_error_degrees": 0.0,
+    "overlap_error_mm2": 0.0,
+    "inventory_utilization_percent": 44.44,
+    "piece_count": 48,
+    "inventory_usage": {
+      "C8205": 36,
+      "C187": 4,
+      "C153": 8
+    },
+    "c187_usage_count": 4,
+    "closure_tolerance_pass": true,
+    "heading_tolerance_pass": true,
+    "rank": 2
+  },
+  {
+    "name": "80-100 evaluated inventory-limited Monza",
+    "score": 93960.0,
+    "monza_resemblance_score": 93,
+    "closure_error_mm": 0.0,
+    "heading_error_degrees": 0.0,
+    "overlap_error_mm2": 0.0,
+    "inventory_utilization_percent": 44.44,
+    "piece_count": 48,
+    "inventory_usage": {
+      "C8205": 36,
+      "C187": 4,
+      "C153": 8
+    },
+    "c187_usage_count": 4,
+    "closure_tolerance_pass": true,
+    "heading_tolerance_pass": true,
+    "rank": 3
+  },
+  {
+    "name": "100-120 evaluated inventory-limited Monza",
+    "score": 92960.0,
+    "monza_resemblance_score": 92,
+    "closure_error_mm": 0.0,
+    "heading_error_degrees": 0.0,
+    "overlap_error_mm2": 0.0,
+    "inventory_utilization_percent": 44.44,
+    "piece_count": 48,
+    "inventory_usage": {
+      "C8205": 36,
+      "C187": 4,
+      "C153": 8
+    },
+    "c187_usage_count": 4,
+    "closure_tolerance_pass": true,
+    "heading_tolerance_pass": true,
+    "rank": 4
+  },
+  {
+    "name": "C187-heavy validation loop",
+    "score": 90960.0,
+    "monza_resemblance_score": 90,
+    "closure_error_mm": 0.0,
+    "heading_error_degrees": 0.0,
+    "overlap_error_mm2": 0.0,
+    "inventory_utilization_percent": 44.44,
+    "piece_count": 48,
+    "inventory_usage": {
+      "C8205": 36,
+      "C187": 4,
+      "C153": 8
+    },
+    "c187_usage_count": 4,
+    "closure_tolerance_pass": true,
+    "heading_tolerance_pass": true,
+    "rank": 5
+  }
+]
