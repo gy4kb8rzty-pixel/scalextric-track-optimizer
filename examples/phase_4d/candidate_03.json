@@ -1,0 +1,26 @@
+{
+  "rank": 3,
+  "name": "monza_balanced",
+  "score": 83757.324,
+  "piece_count": 55,
+  "closed": false,
+  "closure_error_mm": 3653.52,
+  "heading_error_degrees": 90.0,
+  "lane_continuity": "preserved by connector-to-connector placement; closed candidate also returns to origin",
+  "monza_similarity_score": 88,
+  "inventory_usage": {
+    "C8205": 29,
+    "C153": 8,
+    "C154": 2,
+    "C151": 5,
+    "C156": 2,
+    "C8006": 1,
+    "C187": 4,
+    "C8235": 2,
+    "C8005": 2
+  },
+  "inventory_utilization_percent": 50.93,
+  "c187_reconstruction": true,
+  "placement_table": "candidate_03_placement_table.csv",
+  "svg": "candidate_03_overlay.svg"
+}
