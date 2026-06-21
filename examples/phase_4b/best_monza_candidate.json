@@ -1,0 +1,45 @@
+{
+  "rank": 1,
+  "score": 8.226,
+  "scale": 0.96,
+  "mirror": 1,
+  "closure_error_mm": 10309.795,
+  "heading_error_degrees": 90.0,
+  "overlap_error_mm2": 46409.19,
+  "piece_count": 108,
+  "inventory_usage": {
+    "C8205": 39,
+    "C8006": 2,
+    "C8005": 2,
+    "C8031": 3,
+    "C153": 26,
+    "C154": 2,
+    "C8200": 1,
+    "C8235": 5,
+    "C8010": 1,
+    "C151": 11,
+    "C8207": 1,
+    "C8236": 1,
+    "C187": 7,
+    "C156": 7
+  },
+  "geometric_accuracy": "uses real 3MF mesh dimensions where mapped; missing 3MF codes are marked fallback-required and excluded from 3MF mesh preview",
+  "missing_3mf_codes": [
+    "C187"
+  ],
+  "data_sources": {
+    "geometry_database": "geometry_database.json",
+    "source_3mf_zip": "all_x_3mf_rotated_full_parser.zip",
+    "source_catalog": "Scalextric_Masterkatalog_Allomfattande_med_3MF.xlsx",
+    "monza_sequence": "examples/phase_4a/monza_candidate_context_from_lay/candidate_monza_002_sequence.json"
+  },
+  "generated_artifacts": [
+    "placement_table.csv",
+    "placement_table.json",
+    "monza_top_view.svg",
+    "monza_candidate_3mf_preview.3mf",
+    "monza_top_10_solutions.json",
+    "monza_optimization_report.md"
+  ],
+  "placement_table": "placement_table.json"
+}

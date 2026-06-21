@@ -1,0 +1,22 @@
+{
+  "tier": "45-60",
+  "piece_count": 52,
+  "score": 100000.0,
+  "closure_error_mm": 0.0,
+  "heading_error_degrees": 0.0,
+  "overlap_error_mm2": 0.0,
+  "monza_similarity_score": 100.0,
+  "buildable": true,
+  "non_buildable_reason": null,
+  "inventory_usage": {
+    "C8205": 36,
+    "C153": 16
+  },
+  "inventory_violations": {},
+  "excluded_parts": [
+    "C187"
+  ],
+  "rank": 1,
+  "placement_table": "best_closed_candidate_placement_table.csv",
+  "svg": "best_closed_candidate.svg"
+}
