@@ -1,0 +1,23 @@
+{
+  "user_id": "demo",
+  "display_name": "Default catalog quantities",
+  "parts": {
+    "C8205": 39,
+    "C8207": 16,
+    "C8200": 8,
+    "C8236": 12,
+    "C8204": 16,
+    "C8206": 12,
+    "C8235": 16,
+    "C187": 8,
+    "C8234": 8,
+    "C156": 8,
+    "C8010": 8
+  },
+  "detailing": {
+    "theme": "default",
+    "borders": false,
+    "barriers": false,
+    "elevation": false
+  }
+}
