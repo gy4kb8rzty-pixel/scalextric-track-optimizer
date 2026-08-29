@@ -33,7 +33,7 @@ from monza_optimizer.optimize.accuracy_levels import (
     target_length_for,
 )
 from monza_optimizer.reference import list_tracks, load_track_centreline, scale_centreline
-from monza_optimizer.export import build_track_3mf
+from monza_optimizer.export import build_track_3mf, build_output_pack, lay_payload, OUTPUT_MENU
 
 
 @dataclass
@@ -45,6 +45,7 @@ class OptimizeRequest:
     unlimited: bool | None = None
     accuracy_level: str = "detailed"
     parts_json: str = "parts.json"
+    outputs: list[str] | None = None
 
 
 @dataclass
@@ -57,6 +58,8 @@ class OptimizeResult:
     accuracy_level: str = "detailed"
     shopping: dict[str, Any] = field(default_factory=dict)
     profile: dict[str, Any] = field(default_factory=dict)
+    lay: dict[str, Any] = field(default_factory=dict)
+    outputs: dict[str, Any] = field(default_factory=dict)
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -68,6 +71,8 @@ class OptimizeResult:
             "metrics": dict(self.metrics),
             "shopping": dict(self.shopping),
             "profile": dict(self.profile),
+            "lay": dict(self.lay),
+            "outputs": dict(self.outputs),
         }
 
 
@@ -209,7 +214,6 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
     metrics["target_length_mm"] = target_mm
     metrics["n_pieces"] = len(seq)
     metrics["cover_frac"] = built / max(target_mm, 1.0)
-    # Bare Bones is a short official starter, not a 55% D-scale lap.
     floor_mm = 1200.0 if profile.letter == "0" else 0.55 * target_mm
     cover_need = 0.20 if profile.letter == "0" else 0.55
     if not seq or built < floor_mm or built < cover_need * target_mm:
@@ -222,6 +226,17 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
     if dialogue is not None:
         basket["join_dialogue"] = dialogue
 
+    title = f"{req.track_id} {profile.letter}"
+    lay = lay_payload(seq, get_part, title=f"Lay-list - {title}")
+    pack = build_output_pack(
+        seq,
+        get_part,
+        title=title,
+        wanted=req.outputs,
+        shopping=basket,
+        include_binary=bool(req.outputs),
+    )
+
     return OptimizeResult(
         sequence=seq,
         bom=bom,
@@ -230,6 +245,8 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
         strategy=strategy,
         accuracy_level=profile.level.value,
         shopping=basket,
+        lay=lay,
+        outputs=pack,
         profile={
             "id": profile.level.value,
             "letter": profile.letter,
@@ -279,3 +296,7 @@ def tracks_for_ui() -> list[dict]:
 
 def accuracy_levels_for_ui() -> list[dict]:
     return levels_for_ui()
+
+
+def outputs_for_ui() -> list[dict]:
+    return list(OUTPUT_MENU)
