@@ -17,7 +17,6 @@ from monza_optimizer.catalog.parts import base_id
 from monza_optimizer.geometry.pose import Pose
 from monza_optimizer.geometry.path import compute_track_path
 
-# Colour key (hex without #) — consistent across all renders
 PART_COLORS = {
     "C8205": "808890",
     "C8207": "B0B8C0",
@@ -36,15 +35,20 @@ GROUND_COLOR = "455A64"
 LEGEND_BG = "212121"
 
 
-def _part_angle(part) -> float:
+def _signed_angle(part, code: str) -> float:
     if not isinstance(part.geometry, CurveGeometry):
         return 0.0
     a = abs(part.geometry.angle_degrees)
-    return -a if part.id.endswith("R") else a
+    pid = code or getattr(part, "id", "")
+    if pid.endswith("R"):
+        return -a
+    if pid.endswith("L"):
+        return a
+    return float(part.geometry.angle_degrees)
 
 
-def _curve_mesh(part, half_w: float = 78.0, h: float = 8.0, steps: int = 4, z0: float = 10.0):
-    ang = _part_angle(part)
+def _curve_mesh(part, code: str, half_w: float = 78.0, h: float = 8.0, steps: int = 6, z0: float = 10.0):
+    ang = _signed_angle(part, code)
     R = part.geometry.radius
     n = max(3, steps)
     pose = Pose(0, 0, 0)
@@ -167,21 +171,10 @@ def build_track_3mf(
     tube_z: float = 30.0,
     include_legend: bool = True,
 ) -> Path:
-    """Write a 3MF file openable in Microsoft 3D Builder.
-
-    - Pieces at z=track_z, colour-coded by base part id
-    - Optional red outline tube at z=tube_z
-    - Lean ground plane (no dense checkerboard — avoids 3D Builder repair hangs)
-    """
     out_path = Path(out_path)
-    start = Pose(0, 0, 0)
-    # If first part placement should start at origin with heading 0; caller may
-    # pre-transform. For path following, recompute poses from sequence.
-    poses = [start]
-    p = start
-    for code in sequence:
-        p = compute_track_path([get_part(code)], start=p)[-1]
-        poses.append(p)
+    codes = [c for c in sequence if get_part(c) is not None]
+    parts = [get_part(c) for c in codes]
+    poses = compute_track_path(parts, start=Pose(0.0, 0.0, 0.0)) if parts else [Pose(0, 0, 0)]
 
     color_list: list[str] = []
     color_index: dict[str, int] = {}
@@ -195,7 +188,7 @@ def build_track_3mf(
     def color_for(code: str) -> str:
         return PART_COLORS.get(base_id(code), "7F8C8D")
 
-    for code in sequence:
+    for code in codes:
         ensure(color_for(code))
     ensure(OUTLINE_COLOR)
     ensure(GROUND_COLOR)
@@ -206,10 +199,11 @@ def build_track_3mf(
     items: list[str] = []
     oid = 2
 
-    for i, (code, pose0) in enumerate(zip(sequence, poses[:-1])):
-        part = get_part(code)
+    for i, code in enumerate(codes):
+        part = parts[i]
+        pose0 = poses[i]
         if isinstance(part.geometry, CurveGeometry):
-            lv, lt = _curve_mesh(part, z0=track_z)
+            lv, lt = _curve_mesh(part, code, z0=track_z)
         else:
             lv, lt = _straight_mesh(part, z0=track_z)
         wv = _xform(lv, pose0)
@@ -253,10 +247,9 @@ def build_track_3mf(
     oid += 1
 
     if include_legend:
-        used_bases = sorted({base_id(c) for c in sequence})
+        used_bases = sorted({base_id(c) for c in codes})
         legend = [(b, PART_COLORS.get(b, "888")) for b in used_bases]
-        legend.append(("OUTLINE", OUTLINE_COLOR))
-        n_leg = len(legend)
+        n_leg = max(len(legend), 1)
         sw, sh, gap, pad = 150.0, 50.0, 12.0, 24.0
         leg_h = pad * 2 + n_leg * (sh + gap) - gap
         leg_w = pad * 2 + sw + 20
@@ -293,8 +286,8 @@ def build_track_3mf(
         '<model unit="millimeter" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">'
         f'<metadata name="Title">{title}</metadata>'
         f'<resources><basematerials id="1">{bases}</basematerials>'
-        f'{"".join(objects)}</resources>'
-        f'<build>{"".join(items)}</build></model>'
+        f'{ "".join(objects) }</resources>'
+        f'<build>{ "".join(items) }</build></model>'
     )
     ct = (
         '<?xml version="1.0"?>'
