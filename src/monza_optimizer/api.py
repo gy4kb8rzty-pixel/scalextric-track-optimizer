@@ -38,8 +38,6 @@ from monza_optimizer.export import build_track_3mf
 
 @dataclass
 class OptimizeRequest:
-    """Input for one optimization run (serialisable for the wrapper)."""
-
     track_id: str = "monza"
     inventory: dict[str, int] = field(default_factory=dict)
     target_length_mm: float | None = None
@@ -142,7 +140,6 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
     user_inv = dict(req.inventory or {})
     shopping_inv = dict(user_inv)
     if profile.ignore_inventory:
-        # Empty-box starter: build from the official catalogue, then bill every piece.
         shopping_inv = {}
         user_inv = {}
 
@@ -212,7 +209,10 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
     metrics["target_length_mm"] = target_mm
     metrics["n_pieces"] = len(seq)
     metrics["cover_frac"] = built / max(target_mm, 1.0)
-    if not seq or built < 0.55 * target_mm:
+    # Bare Bones is a short official starter, not a 55% D-scale lap.
+    floor_mm = 1200.0 if profile.letter == "0" else 0.55 * target_mm
+    cover_need = 0.20 if profile.letter == "0" else 0.55
+    if not seq or built < floor_mm or built < cover_need * target_mm:
         metrics["collapsed"] = True
         metrics["closed"] = False
     else:
