@@ -18,8 +18,25 @@ class AccuracyLevel(str, Enum):
         if isinstance(value, cls):
             return value
         key = str(value).strip().lower().replace(" ", "_").replace("-", "_")
-        aliases = {"0": cls.BARE_BONES, "starter": cls.BARE_BONES, "bare": cls.BARE_BONES, "barebones": cls.BARE_BONES, "bare_bones": cls.BARE_BONES, "a": cls.LEAN_BUDGET, "lean": cls.LEAN_BUDGET, "leanbudget": cls.LEAN_BUDGET, "b": cls.BUDGET, "budget": cls.BUDGET, "c": cls.DETAILED, "detailed": cls.DETAILED, "d": cls.FULL_ACCURACY, "full": cls.FULL_ACCURACY, "fullaccuracy": cls.FULL_ACCURACY, "unlimited": cls.FULL_ACCURACY}
-        return aliases.get(key, cls(key))
+        aliases = {
+            "0": cls.BARE_BONES, "starter": cls.BARE_BONES, "bare": cls.BARE_BONES,
+            "barebones": cls.BARE_BONES, "bare_bones": cls.BARE_BONES,
+            "a": cls.LEAN_BUDGET, "lean": cls.LEAN_BUDGET, "leanbudget": cls.LEAN_BUDGET,
+            "lean_budget": cls.LEAN_BUDGET,
+            "b": cls.BUDGET, "budget": cls.BUDGET,
+            "c": cls.DETAILED, "detailed": cls.DETAILED,
+            "d": cls.FULL_ACCURACY, "full": cls.FULL_ACCURACY,
+            "fullaccuracy": cls.FULL_ACCURACY, "full_accuracy": cls.FULL_ACCURACY,
+            "unlimited": cls.FULL_ACCURACY,
+        }
+        # Do not pass cls(key) as dict.get default — Python evaluates it first
+        # and Enum rejects letter aliases like "0"/"a"/"d".
+        if key in aliases:
+            return aliases[key]
+        try:
+            return cls(key)
+        except ValueError as exc:
+            raise ValueError(f"{value!r} is not a valid AccuracyLevel") from exc
 
 @dataclass(frozen=True)
 class LevelProfile:
