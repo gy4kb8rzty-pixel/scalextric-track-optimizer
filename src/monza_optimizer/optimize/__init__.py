@@ -18,6 +18,17 @@ from monza_optimizer.optimize.corner_first import (
 )
 from monza_optimizer.optimize.sequential import sequential_follow, SequentialResult
 from monza_optimizer.optimize.coverage_fill import coverage_fill, coverage_distances, find_uncovered_segments
+from monza_optimizer.optimize.accuracy_levels import (
+    AccuracyLevel,
+    LevelProfile,
+    LEVELS,
+    get_profile,
+    candidates_for,
+    levels_for_ui,
+    shopping_list,
+    ShoppingList,
+    resolve_availability,
+)
 
 __all__ = [
     "hypervolume",
@@ -37,4 +48,13 @@ __all__ = [
     "coverage_fill",
     "coverage_distances",
     "find_uncovered_segments",
+    "AccuracyLevel",
+    "LevelProfile",
+    "LEVELS",
+    "get_profile",
+    "candidates_for",
+    "levels_for_ui",
+    "shopping_list",
+    "ShoppingList",
+    "resolve_availability",
 ]
