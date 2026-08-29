@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "series": "NASCAR Cup Series",
+  "source": "OpenStreetMap ODbL + official Cup lengths",
+  "note": "Projected lon/lat to local mm. COTA/Mexico reuse F1 files. San Diego 2026 street circuit has no OSM centreline. Texas oval is schematic. Watkins Glen stored as GP long course; Sonoma as SRO/full layout.",
+  "on_branch": ["daytona","atlanta","phoenix","las_vegas_ms","darlington","martinsville","bristol","kansas","talladega","texas","charlotte_oval","nashville","michigan_pending","pocono","sonoma_pending","chicagoland","north_wilkesboro","indianapolis_pending","iowa","richmond","new_hampshire","gateway","homestead","bowman_gray","dover","watkins_glen_pending","charlotte_roval_pending"],
+  "reuse_f1": ["cota","mexico"],
+  "missing_osm": ["san_diego"]
+}
