@@ -1,8 +1,4 @@
-"""Track profile registry for real circuits.
-
-Profiles are centreline polylines in metres (or mm). They can be scaled to
-match a Scalextric inventory path length for optimization.
-"""
+"""Track profile registry for real circuits."""
 
 from __future__ import annotations
 
@@ -13,7 +9,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
 
-# Package-relative data directory (repo data/tracks)
 _DATA = Path(__file__).resolve().parents[3] / "data" / "tracks"
 
 
@@ -22,7 +17,7 @@ class TrackProfile:
     id: str
     name: str
     official_length_m: float
-    points_m: list[tuple[float, float]]  # metres, closed or open
+    points_m: list[tuple[float, float]]
     source: str = ""
     notes: str = ""
 
@@ -38,83 +33,73 @@ class TrackProfile:
 
 
 def _load_csv_xy(path: Path, unit_scale: float = 1.0) -> list[tuple[float, float]]:
-    """Load x,y columns; unit_scale converts file units to metres."""
     pts: list[tuple[float, float]] = []
     with path.open(newline="") as f:
         reader = csv.reader(f)
-        header = next(reader, None)
+        next(reader, None)
         for row in reader:
             if len(row) < 2:
                 continue
             try:
-                x, y = float(row[0]), float(row[1])
+                pts.append((float(row[0]) * unit_scale, float(row[1]) * unit_scale))
             except ValueError:
                 continue
-            pts.append((x * unit_scale, y * unit_scale))
     return pts
 
 
+def _normalize_file(name: str | None) -> str | None:
+    if not name:
+        return None
+    return Path(name).name
+
+
 def list_tracks() -> list[dict]:
-    """Available track ids and metadata (for Lovable UI pickers)."""
-    catalog = [
-        {
-            "id": "monza",
-            "name": "Autodromo Nazionale Monza",
-            "official_length_m": 5793.0,
-            "file": "monza_centerline_m.csv",
-            "unit": "m",
-        },
-        {
-            "id": "silverstone",
-            "name": "Silverstone Circuit",
-            "official_length_m": 5891.0,
-            "file": "silverstone_centerline_mm.csv",
-            "unit": "mm",
-        },
-        {
-            "id": "monaco",
-            "name": "Circuit de Monaco",
-            "official_length_m": 3337.0,
-            "file": "monaco_centerline_mm.json",
-            "unit": "mm",
-        },
-        {
-            "id": "nordschleife",
-            "name": "Nürburgring Nordschleife",
-            "official_length_m": 20832.0,
-            "file": "nordschleife_outline_mm.json",
-            "unit": "mm",
-        },
-        {
-            "id": "charlotte_roval",
-            "name": "Charlotte Roval",
-            "official_length_m": 3700.0,
-            "file": "charlotte_roval_centerline_mm.json",
-            "unit": "mm",
-        },
-    ]
+    idx_path = _DATA / "CIRCUITS_INDEX.json"
+    if not idx_path.exists():
+        return []
+    raw = json.loads(idx_path.read_text())
+    aliases = raw.get("aliases") or {}
+    featured = set(raw.get("featured") or [])
     out = []
-    for t in catalog:
-        path = _DATA / t["file"]
-        out.append({**t, "available": path.exists()})
+    for t in raw.get("circuits") or []:
+        fn = _normalize_file(t.get("file"))
+        out.append({
+            "id": t["id"],
+            "name": t.get("name", t["id"]),
+            "official_length_m": float(t.get("official_length_m") or t.get("source_length_m") or 0),
+            "file": fn,
+            "unit": t.get("unit") or "mm",
+            "series": t.get("series"),
+            "kind": t.get("kind"),
+            "calendar": t.get("calendar") or [],
+            "featured": bool(t.get("featured") or t["id"] in featured),
+            "available": bool(fn) and (_DATA / fn).exists() if fn else False,
+            "quality": t.get("quality"),
+            "note": t.get("note"),
+        })
+    for alias, target in aliases.items():
+        if any(r["id"] == alias for r in out):
+            continue
+        src = next((r for r in out if r["id"] == target), None)
+        if src:
+            out.append({**src, "id": alias, "note": f"alias of {target}"})
+    out.sort(key=lambda r: (not r.get("featured"), r.get("series") or "", r["name"]))
     return out
 
 
 def load_track_centreline(track_id: str) -> TrackProfile:
-    """Load a named track centreline as a TrackProfile (metres)."""
     meta = {t["id"]: t for t in list_tracks()}
     if track_id not in meta:
         raise KeyError(f"Unknown track_id={track_id!r}. Known: {list(meta)}")
     t = meta[track_id]
+    if not t.get("file"):
+        raise FileNotFoundError(f"No centreline file for {track_id}")
     path = _DATA / t["file"]
     if not path.exists():
-        raise FileNotFoundError(
-            f"Track data missing: {path}. Add centreline CSV/JSON under data/tracks/."
-        )
+        raise FileNotFoundError(f"Track data missing: {path}")
     unit = t["unit"]
     if path.suffix.lower() == ".csv":
-        scale = 1.0 if unit == "m" else 0.001
-        pts = _load_csv_xy(path, unit_scale=scale)
+        pts = _load_csv_xy(path, unit_scale=1.0 if unit == "m" else 0.001)
     else:
         raw = json.loads(path.read_text())
         coords = raw.get("scaled") or raw.get("points") or raw.get("coordinates")
@@ -137,7 +122,6 @@ def scale_centreline(
     *,
     close: bool = False,
 ) -> list[tuple[float, float]]:
-    """Scale polyline so path length equals target_length_mm; origin at first point."""
     pts = list(points_m)
     if close and pts and math.hypot(pts[-1][0] - pts[0][0], pts[-1][1] - pts[0][1]) > 1e-6:
         pts = pts + [pts[0]]
@@ -147,7 +131,6 @@ def scale_centreline(
     )
     if length_m < 1e-9:
         return [(0.0, 0.0)]
-    # metres -> mm, then scale to target
     factor = (target_length_mm / 1000.0) / length_m
     scaled = [(x * factor * 1000.0, y * factor * 1000.0) for x, y in pts]
     sx, sy = scaled[0]
