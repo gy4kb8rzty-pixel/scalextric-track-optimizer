@@ -48,12 +48,18 @@ def load_parts(path: str | Path) -> list[TrackPart]:
     raw_parts = raw_inventory.get("parts")
     if not isinstance(raw_parts, list):
         raise PartValidationError("parts inventory must contain a 'parts' list")
-    return [_parse_part(raw_part, index) for index, raw_part in enumerate(raw_parts)]
+    parsed = [_parse_part(raw_part, index) for index, raw_part in enumerate(raw_parts)]
+    if not any(p.geometry is not None for p in parsed):
+        return builtin_sport_catalog()
+    return parsed
 
 
 def get_part_by_id(parts: list[TrackPart], part_id: str) -> TrackPart | None:
     for part in parts:
         if part.id == part_id or part_id in part.aliases:
+            return part
+    for part in parts:
+        if part.id == base_id(part_id) or base_id(part.id) == part_id:
             return part
     return None
 
@@ -100,3 +106,28 @@ def _parse_geometry(raw: Any, index: int) -> Geometry | None:
     if "radius" in raw and "angle_degrees" in raw:
         return CurveGeometry(radius=float(raw["radius"]), angle_degrees=float(raw["angle_degrees"]))
     raise PartValidationError(f"part at index {index}: unrecognized geometry")
+
+
+def builtin_sport_catalog() -> list[TrackPart]:
+    """Official Sport pieces used when parts.json has no geometry."""
+    raw = [
+        {"id": "C8205", "name": "Standard Straight", "type": "straight", "verified_geometry": True, "geometry": {"length": 350.0}},
+        {"id": "C8207", "name": "Half Straight", "type": "straight", "verified_geometry": True, "geometry": {"length": 175.0}},
+        {"id": "C8200", "name": "Quarter Straight", "type": "straight", "verified_geometry": True, "geometry": {"length": 87.0}},
+        {"id": "C8236", "name": "Short Straight", "type": "straight", "verified_geometry": True, "geometry": {"length": 78.0}},
+        {"id": "C8206L", "name": "R2 45 L", "type": "curve", "verified_geometry": True, "geometry": {"radius": 294.0, "angle_degrees": 45.0}},
+        {"id": "C8206R", "name": "R2 45 R", "type": "curve", "verified_geometry": True, "geometry": {"radius": 294.0, "angle_degrees": -45.0}},
+        {"id": "C8204L", "name": "R3 22.5 L", "type": "curve", "verified_geometry": True, "geometry": {"radius": 449.0, "angle_degrees": 22.5}},
+        {"id": "C8204R", "name": "R3 22.5 R", "type": "curve", "verified_geometry": True, "geometry": {"radius": 449.0, "angle_degrees": -22.5}},
+        {"id": "C8235L", "name": "R4 22.5 L", "type": "curve", "verified_geometry": True, "geometry": {"radius": 608.0, "angle_degrees": 22.5}},
+        {"id": "C8235R", "name": "R4 22.5 R", "type": "curve", "verified_geometry": True, "geometry": {"radius": 608.0, "angle_degrees": -22.5}},
+        {"id": "C156L", "name": "R1 90 L", "type": "curve", "verified_geometry": True, "geometry": {"radius": 137.0, "angle_degrees": 90.0}},
+        {"id": "C156R", "name": "R1 90 R", "type": "curve", "verified_geometry": True, "geometry": {"radius": 137.0, "angle_degrees": -90.0}},
+        {"id": "C8234L", "name": "R2 11.25 L", "type": "curve", "verified_geometry": True, "geometry": {"radius": 294.0, "angle_degrees": 11.25}},
+        {"id": "C8234R", "name": "R2 11.25 R", "type": "curve", "verified_geometry": True, "geometry": {"radius": 294.0, "angle_degrees": -11.25}},
+        {"id": "C187L", "name": "Banked 45 L", "type": "curve", "verified_geometry": True, "geometry": {"radius": 280.0, "angle_degrees": 45.0}},
+        {"id": "C187R", "name": "Banked 45 R", "type": "curve", "verified_geometry": True, "geometry": {"radius": 280.0, "angle_degrees": -45.0}},
+        {"id": "C8010L", "name": "Chicane 22.5 L", "type": "curve", "verified_geometry": True, "geometry": {"radius": 294.0, "angle_degrees": 22.5}},
+        {"id": "C8010R", "name": "Chicane 22.5 R", "type": "curve", "verified_geometry": True, "geometry": {"radius": 294.0, "angle_degrees": -22.5}},
+    ]
+    return [_parse_part(row, i) for i, row in enumerate(raw)]

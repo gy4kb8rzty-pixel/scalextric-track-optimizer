@@ -28,8 +28,9 @@ def test_empty_inventory_is_empty_box():
         "/optimize",
         json={"track_id": "monza", "inventory": {}, "accuracy_level": "0"},
     )
-    assert r.status_code == 200
+    assert r.status_code == 200, r.text
     body = r.json()
+    assert body["sequence"], body.get("metrics")
     assert body["shopping"]["missing_piece_count"] == len(body["sequence"])
     assert body["metrics"].get("collapsed") is not True
     if body["metrics"].get("closed") and body["profile"].get("letter") == "0":
