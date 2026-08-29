@@ -1,0 +1,27 @@
+name: api
+on:
+  push:
+    branches: [monza-optimizer-v1]
+  pull_request:
+    branches: [monza-optimizer-v1]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: pip install -e ".[api,dev]"
+      - name: Unit + contract
+        run: PYTHONPATH=src pytest tests/test_accuracy_levels.py tests/test_close_loop.py tests/test_server_contract.py -q
+      - name: Smoke Monza B
+        run: |
+          PYTHONPATH=src python - << 'PY'
+          from monza_optimizer.api import OptimizeRequest, optimize_layout
+          r = optimize_layout(OptimizeRequest(track_id="monza", inventory={}, accuracy_level="B", parts_json="parts.json"))
+          assert r.metrics.get("collapsed") is not True
+          print("ok", r.accuracy_level, len(r.sequence), r.metrics.get("closed"))
+          PY
