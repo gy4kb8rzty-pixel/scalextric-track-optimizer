@@ -17,7 +17,12 @@ uvicorn monza_optimizer.server:app --reload --port 8000
 | GET | `/health` | — |
 | GET | `/tracks` | featured + available flags |
 | GET | `/levels` | `0 A B C D` — no E |
-| POST | `/optimize` | JSON `OptimizeBody` |
+| GET | `/inventory-picker` | tick-box cards + Flying Start preset |
+| GET | `/part-art/{file}` | BMP silhouette for that SKU |
+| POST | `/inventory-from-ticks` | checkbox grid → inventory map |
+| POST | `/optimize` | JSON `OptimizeBody` (`inventory` and/or `ticks`) |
+
+See `docs/LOVABLE_INVENTORY_PICKER.md`.
 
 ### POST /optimize
 
@@ -35,14 +40,14 @@ Response includes `sequence`, `bom`, `metrics` (`closed`, `collapsed`, `cover_fr
 
 ## Pitch flow
 
-Inventory → Circuit → Ambition → Basket → Bare Bones join talk → Shop.
+Tick-box inventory (with part pictures) → Circuit → Ambition → Basket → Bare Bones join talk → Shop.
 
 Rules: official SKUs only. Closure beats score. Pinch is not a click. E (1:32 true scale) is not a shopper level.
 
 ## curl
 
 ```bash
-curl -s localhost:8000/levels | head
+curl -s localhost:8000/inventory-picker | head
 curl -s localhost:8000/optimize \
   -H 'content-type: application/json' \
   -d '{"track_id":"monza","inventory":{},"accuracy_level":"B"}'

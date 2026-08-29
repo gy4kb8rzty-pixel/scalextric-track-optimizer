@@ -16,7 +16,7 @@ jobs:
       - name: Install
         run: pip install -e ".[api,dev]"
       - name: Unit + contract
-        run: PYTHONPATH=src pytest tests/test_accuracy_levels.py tests/test_close_loop.py tests/test_server_contract.py tests/test_flying_start.py -q
+        run: PYTHONPATH=src pytest tests/test_accuracy_levels.py tests/test_close_loop.py tests/test_server_contract.py tests/test_flying_start.py tests/test_inventory_picker.py -q
       - name: Smoke Monza B with Flying Start pack
         run: |
           PYTHONPATH=src python - << 'PY'
@@ -28,9 +28,6 @@ jobs:
               accuracy_level="B",
               parts_json="parts.json",
           ))
-          # C1446M is an official ~4 m oval, not an 18 m Budget Monza.
-          # Smoke proves the pack builds Sport pieces; cover-frac vs the B
-          # target is a shopping-list conversation, not a CI collapse.
           assert r.sequence, r.metrics
           assert len(r.sequence) >= 8, r.metrics
           assert float(r.metrics.get("length_mm") or 0) >= 2000.0, r.metrics
