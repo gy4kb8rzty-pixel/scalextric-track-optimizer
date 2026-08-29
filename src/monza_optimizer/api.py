@@ -19,6 +19,7 @@ from monza_optimizer.optimize import (
 from monza_optimizer.optimize.sequential import sequential_follow
 from monza_optimizer.optimize.coverage_fill import coverage_fill
 from monza_optimizer.optimize.close_loop import close_loop
+from monza_optimizer.optimize.kit_loop import closed_kit_loop
 from monza_optimizer.geometry.pose import Pose
 from monza_optimizer.optimize.accuracy_levels import (
     get_profile,
@@ -206,10 +207,8 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
         "close_added": close_stats.get("added"),
     })
 
-    bom = dict(Counter(base_id(c) for c in seq))
-    shop_list = shopping_list(bom, shopping_inv, profile)
     from monza_optimizer.geometry.path import path_length as _plen
-    built = _plen([get_part(c) for c in seq if get_part(c)])
+    built = _plen([get_part(c) for c in seq if get_part(c)]) if seq else 0.0
     metrics["length_mm"] = built
     metrics["target_length_mm"] = target_mm
     metrics["n_pieces"] = len(seq)
@@ -221,10 +220,30 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
         metrics["closed"] = False
     else:
         metrics["collapsed"] = False
+
+    if metrics.get("collapsed") or not seq:
+        kit = closed_kit_loop(user_inv or shopping_inv, get_part)
+        if kit:
+            seq = kit
+            built = _plen([get_part(c) for c in seq if get_part(c)])
+            metrics["kit_loop"] = True
+            metrics["closed"] = True
+            metrics["n_pieces"] = len(seq)
+            metrics["length_mm"] = built
+            metrics["cover_frac"] = built / max(target_mm, 1.0)
+            metrics["kit_note"] = (
+                "Named-circuit follow collapsed. Lay-list and 3MF are the closed "
+                "official-kit oval from stock. Shopping list remains the gap to the named circuit."
+            )
+
+    bom = dict(Counter(base_id(c) for c in seq))
+    shop_list = shopping_list(bom, shopping_inv, profile)
     basket = shop_list.as_dict()
     dialogue = join_dialogue_for(profile, metrics)
     if dialogue is not None:
         basket["join_dialogue"] = dialogue
+    if metrics.get("kit_note"):
+        basket["kit_note"] = metrics["kit_note"]
 
     title = f"{req.track_id} {profile.letter}"
     lay = lay_payload(seq, get_part, title=f"Lay-list - {title}")
