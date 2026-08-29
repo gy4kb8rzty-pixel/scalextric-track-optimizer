@@ -7,21 +7,24 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, Field
 
 from monza_optimizer.api import (
     OptimizeRequest,
     accuracy_levels_for_ui,
     optimize_layout,
+    outputs_for_ui,
     tracks_for_ui,
 )
+from monza_optimizer.catalog import load_parts, get_part_by_id
+from monza_optimizer.export import build_output_pack
 from monza_optimizer.optimize.inventory_picker import picker_payload, ticks_to_inventory
 
 app = FastAPI(
     title="Scalextric Track Designer API",
-    version="1.1.0",
-    description="Inventory + circuit + ambition → official BOM and shop list.",
+    version="1.2.0",
+    description="Inventory + circuit + ambition → official BOM, lay-list, and files.",
 )
 app.add_middleware(
     CORSMiddleware,
@@ -32,7 +35,6 @@ app.add_middleware(
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-# Only the part-identification BMPs already in the repo root.
 _ALLOWED_ART = {
     "c8205.bmp",
     "c8206r.bmp",
@@ -62,10 +64,19 @@ class OptimizeBody(BaseModel):
     strategy: str | None = None
     unlimited: bool | None = None
     parts_json: str = "parts.json"
+    outputs: list[str] | None = None
 
 
 class TicksBody(BaseModel):
     ticks: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class ExportBody(BaseModel):
+    sequence: list[str]
+    track_id: str = "layout"
+    outputs: list[str] = Field(default_factory=lambda: ["lay", "svg"])
+    parts_json: str = "parts.json"
+    as_file: str | None = None
 
 
 @app.get("/health")
@@ -83,9 +94,17 @@ def levels() -> list[dict[str, Any]]:
     return accuracy_levels_for_ui()
 
 
+@app.get("/outputs")
+def outputs() -> dict[str, Any]:
+    return {
+        "title": "Choose how you want the layout delivered",
+        "default": ["shopping", "lay"],
+        "formats": outputs_for_ui(),
+    }
+
+
 @app.get("/inventory-picker")
 def inventory_picker() -> dict[str, Any]:
-    """Tick-box catalogue with part graphics for the Lovable inventory step."""
     return picker_payload()
 
 
@@ -94,12 +113,8 @@ def part_art(filename: str):
     key = filename.strip().lower()
     if key not in _ALLOWED_ART:
         raise HTTPException(status_code=404, detail="unknown part graphic")
-    # Preserve original casing on disk (c8205.bmp vs 512x512_C8206.bmp).
-    for candidate in (REPO_ROOT / filename, REPO_ROOT / filename.replace("C", "C")):
-        pass
     path = REPO_ROOT / filename
     if not path.is_file():
-        # Case-insensitive match among allowed names on disk.
         for child in REPO_ROOT.iterdir():
             if child.name.lower() == key and child.is_file():
                 path = child
@@ -130,6 +145,7 @@ def optimize(body: OptimizeBody) -> dict[str, Any]:
                 strategy=body.strategy,
                 unlimited=body.unlimited,
                 parts_json=body.parts_json,
+                outputs=body.outputs,
             )
         )
     except FileNotFoundError as exc:
@@ -139,3 +155,33 @@ def optimize(body: OptimizeBody) -> dict[str, Any]:
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     return result.as_dict()
+
+
+@app.post("/export")
+def export(body: ExportBody):
+    parts = load_parts(body.parts_json)
+
+    def get_part(c: str):
+        return get_part_by_id(parts, c)
+
+    if not body.sequence:
+        raise HTTPException(status_code=400, detail="sequence is empty")
+    pack = build_output_pack(
+        body.sequence,
+        get_part,
+        title=body.track_id,
+        wanted=body.outputs,
+        include_binary=True,
+    )
+    if body.as_file:
+        key = body.as_file.lower()
+        files = pack.get("files") or {}
+        if key == "svg" and "svg" in files:
+            return Response(files["svg"]["text"], media_type="image/svg+xml")
+        import base64
+
+        if key in files and "base64" in files[key]:
+            raw = base64.b64decode(files[key]["base64"])
+            return Response(raw, media_type=files[key]["media_type"])
+        raise HTTPException(status_code=404, detail=f"no binary for {key}")
+    return pack

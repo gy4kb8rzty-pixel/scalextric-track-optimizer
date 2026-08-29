@@ -16,7 +16,7 @@ jobs:
       - name: Install
         run: pip install -e ".[api,dev]"
       - name: Unit + contract
-        run: PYTHONPATH=src pytest tests/test_accuracy_levels.py tests/test_close_loop.py tests/test_server_contract.py tests/test_flying_start.py tests/test_inventory_picker.py -q
+        run: PYTHONPATH=src pytest tests/test_accuracy_levels.py tests/test_close_loop.py tests/test_server_contract.py tests/test_flying_start.py tests/test_inventory_picker.py tests/test_outputs.py -q
       - name: Smoke Monza B with Flying Start pack
         run: |
           PYTHONPATH=src python - << 'PY'
@@ -29,11 +29,9 @@ jobs:
               parts_json="parts.json",
           ))
           assert r.sequence, r.metrics
+          assert r.lay["rows"], r.lay
           assert len(r.sequence) >= 8, r.metrics
           assert float(r.metrics.get("length_mm") or 0) >= 2000.0, r.metrics
-          print("ok", r.accuracy_level, len(r.sequence),
-                round(float(r.metrics.get("length_mm") or 0), 1),
-                "closed", r.metrics.get("closed"),
-                "cover", r.metrics.get("cover_frac"))
+          print("ok", r.accuracy_level, len(r.sequence), "lay", r.lay["piece_count"])
           print(FLYING_START_NOTE)
           PY
