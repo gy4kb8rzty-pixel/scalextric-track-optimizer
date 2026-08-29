@@ -58,9 +58,11 @@ def get_part_by_id(parts: list[TrackPart], part_id: str) -> TrackPart | None:
     for part in parts:
         if part.id == part_id or part_id in part.aliases:
             return part
-    for part in parts:
-        if part.id == base_id(part_id) or base_id(part.id) == part_id:
-            return part
+    handed = part_id.endswith("L") or part_id.endswith("R")
+    if not handed:
+        for part in parts:
+            if base_id(part.id) == part_id:
+                return part
     return None
 
 
