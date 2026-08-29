@@ -1,23 +1,25 @@
-# GitHub status (monza-optimizer-v1)
+# GitHub status — monza-optimizer-v1
 
-Do not merge to `main` until verified.
+Working branch for the sales-pitch Track Designer. `main` stays untouched
+until a layout is physically verified.
 
-## Already on this branch
-- Construction algorithms: corner-first, sequential (tight-curve on sharp turns), coverage fill
-- Pareto hypervolume + elasticity model
-- Lean 3MF exporter + colour key
-- `monza_optimizer.api` for Lovable (user inventory + track_id + strategy)
-- Track geometry stubs in `data/tracks/`
-- F1 2026 + NASCAR Cup 2026 venue catalog in `data/TRACK_CATALOG.json`
+## Wrapper data (this drop)
 
-## Meshes
-Verified part geometry lives in repo-root `parts.json` plus existing BMP / 3MF / zip assets on `main`.
-Do not re-upload multi-MB BMP dumps. Point the 3MF loader at those existing assets.
+- `data/WORKFLOW.json` — four-step pitch flow
+- `data/ACCURACY_LEVELS.json` — A–D picker
+- `data/tracks/CIRCUITS_INDEX.json` — F1 + NASCAR Cup + Nordschleife
+- `data/OPTIMIZE_REQUEST.schema.json` / `data/OPTIMIZE_RESULT.schema.json`
+- `data/USER_INVENTORY.schema.json` + example
+- `docs/SALES_WORKFLOW.md`
 
-## Still placeholders
-Replace these with official/OSM centrelines:
-- `data/tracks/monaco_centerline_mm.json`
-- `data/tracks/nordschleife_outline_mm.json`
-- `data/tracks/charlotte_roval_centerline_mm.json`
+## Already on the branch
 
-Best source for F1 polylines: https://github.com/bacinger/f1-circuits
+- F1 and NASCAR centreline JSONs under `data/tracks/`
+- `src/monza_optimizer/api.py` — `accuracy_level` + shopping cart
+- ShopGate / enforce_shop_cap so B can land inside 8 pieces
+
+## Do not
+
+- Invent unofficial SKUs
+- Bypass connector / lane / collision checks
+- Merge this branch to `main` as a convenience shortcut

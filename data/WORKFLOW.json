@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "title": "Scalextric Track Designer — sales pitch flow",
+  "branch": "monza-optimizer-v1",
+  "steps": [
+    {
+      "id": "inventory",
+      "title": "Inventory",
+      "copy": "List the parts already on the table.",
+      "input": "data/USER_INVENTORY.schema.json",
+      "example": "data/USER_INVENTORY.example.json"
+    },
+    {
+      "id": "circuit",
+      "title": "Circuit",
+      "copy": "Pick Monza, Silverstone, Monaco, a NASCAR Roval — or any indexed F1 / Cup venue.",
+      "catalog": "data/tracks/CIRCUITS_INDEX.json",
+      "featured": ["monza", "silverstone", "monaco", "charlotte_roval", "daytona"]
+    },
+    {
+      "id": "ambition",
+      "title": "Ambition",
+      "copy": "Lean Budget · Budget · Detailed · Full Accuracy.",
+      "catalog": "data/ACCURACY_LEVELS.json"
+    },
+    {
+      "id": "basket",
+      "title": "Basket",
+      "copy": "Used parts + missing official SKUs, one click to Shop.",
+      "request_schema": "data/OPTIMIZE_REQUEST.schema.json",
+      "result_schema": "data/OPTIMIZE_RESULT.schema.json",
+      "api": "monza_optimizer.api.optimize_layout"
+    }
+  ],
+  "rules": [
+    "Official catalogue only.",
+    "Physical correctness (connectors, lanes, closure) outranks score.",
+    "Budget modes never invent unofficial parts.",
+    "Full Accuracy is labelled unlimited.",
+    "Do not merge to main until a layout is physically verified."
+  ]
+}
