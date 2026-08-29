@@ -86,31 +86,43 @@ def _run_pipeline(cl, get_part, avail, profile, cand, shop=None):
     seq: list[str] = []
     metrics: dict[str, Any] = {}
 
-    if strategy == "sequential":
-        result = sequential_follow(
-            cl,
-            get_part,
-            avail,
+    def _seq_kwargs():
+        return dict(
             candidates=cand,
             max_pieces=profile.max_pieces,
             sharp_turn_deg=profile.sharp_turn_deg,
             max_radius_on_sharp=profile.max_radius_on_sharp,
             dist_tol_mm=profile.dist_tol_mm,
-            shop=shop,
-            loose=profile.letter in ("0", "A"),
         )
+
+    if strategy == "sequential":
+        try:
+            result = sequential_follow(
+                cl, get_part, avail, shop=shop, loose=profile.letter in ("0", "A"), **_seq_kwargs()
+            )
+        except TypeError:
+            result = sequential_follow(cl, get_part, avail, **_seq_kwargs())
         seq = list(result.sequence)
         metrics = dict(result.metrics)
     elif strategy == "corner_first":
-        result = corner_first_build(cl, get_part, avail, min_turn_deg=profile.min_turn_deg, shop=shop)
+        try:
+            result = corner_first_build(cl, get_part, avail, min_turn_deg=profile.min_turn_deg, shop=shop)
+        except TypeError:
+            result = corner_first_build(cl, get_part, avail, min_turn_deg=profile.min_turn_deg)
         seq = list(result.sequence)
         metrics = dict(result.metrics)
     else:
-        result = corner_first_build(cl, get_part, avail, min_turn_deg=profile.min_turn_deg, shop=shop)
+        try:
+            result = corner_first_build(cl, get_part, avail, min_turn_deg=profile.min_turn_deg, shop=shop)
+        except TypeError:
+            result = corner_first_build(cl, get_part, avail, min_turn_deg=profile.min_turn_deg)
         seq = list(result.sequence)
         metrics = dict(result.metrics)
         if profile.run_coverage_fill:
-            seq = coverage_fill(seq, cl, get_part, avail, prefer_sharp_first=True, shop=shop)
+            try:
+                seq = coverage_fill(seq, cl, get_part, avail, prefer_sharp_first=True, shop=shop)
+            except TypeError:
+                seq = coverage_fill(seq, cl, get_part, avail, prefer_sharp_first=True)
             metrics["n_pieces"] = len(seq)
 
     metrics["accuracy_level"] = profile.level.value
@@ -128,15 +140,24 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
 
     catalog_ids = [p.id for p in parts] or candidates_for(profile)
     user_inv = dict(req.inventory or {})
+    shopping_inv = dict(user_inv)
     if profile.ignore_inventory:
+        # Empty-box starter: build from the official catalogue, then bill every piece.
+        shopping_inv = {}
         user_inv = {}
 
     unlimited = profile.unlimited if req.unlimited is None else bool(req.unlimited)
     if unlimited:
         profile = LevelProfile(**{**profile.__dict__, "unlimited": True, "inventory_only": False})
 
-    avail = resolve_availability(profile, user_inv, catalog_ids)
-    shop = ShopGate.from_profile(profile, user_inv)
+    if profile.ignore_inventory:
+        avail = {base_id(i): 999 for i in catalog_ids}
+        for code in candidates_for(profile):
+            avail[base_id(code)] = max(avail.get(base_id(code), 0), 999)
+        shop = ShopGate(owned={}, max_shop_pieces=999, max_shop_skus=99, unlimited=True)
+    else:
+        avail = resolve_availability(profile, user_inv, catalog_ids)
+        shop = ShopGate.from_profile(profile, user_inv)
 
     loaded = load_track_centreline(req.track_id)
     target_mm = target_length_for(
@@ -154,7 +175,8 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
 
     cand = candidates_for(profile)
     seq, metrics, strategy = _run_pipeline(cl, get_part, avail, profile, cand, shop=shop)
-    seq = enforce_shop_cap(seq, user_inv, profile, get_part=get_part)
+    if not profile.ignore_inventory:
+        seq = enforce_shop_cap(seq, user_inv, profile, get_part=get_part)
     start_pose = Pose(cl.points[0][0], cl.points[0][1], cl.heading(0))
     close_cands = (
         [
@@ -183,19 +205,19 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
     })
 
     bom = dict(Counter(base_id(c) for c in seq))
-    shop = shopping_list(bom, user_inv, profile)
+    shop_list = shopping_list(bom, shopping_inv, profile)
     from monza_optimizer.geometry.path import path_length as _plen
     built = _plen([get_part(c) for c in seq if get_part(c)])
     metrics["length_mm"] = built
     metrics["target_length_mm"] = target_mm
     metrics["n_pieces"] = len(seq)
     metrics["cover_frac"] = built / max(target_mm, 1.0)
-    if built < 0.55 * target_mm:
+    if not seq or built < 0.55 * target_mm:
         metrics["collapsed"] = True
         metrics["closed"] = False
     else:
         metrics["collapsed"] = False
-    basket = shop.as_dict()
+    basket = shop_list.as_dict()
     dialogue = join_dialogue_for(profile, metrics)
     if dialogue is not None:
         basket["join_dialogue"] = dialogue
