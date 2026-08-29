@@ -16,12 +16,19 @@ jobs:
       - name: Install
         run: pip install -e ".[api,dev]"
       - name: Unit + contract
-        run: PYTHONPATH=src pytest tests/test_accuracy_levels.py tests/test_close_loop.py tests/test_server_contract.py -q
-      - name: Smoke Monza B
+        run: PYTHONPATH=src pytest tests/test_accuracy_levels.py tests/test_close_loop.py tests/test_server_contract.py tests/test_flying_start.py -q
+      - name: Smoke Monza B with Flying Start pack
         run: |
           PYTHONPATH=src python - << 'PY'
           from monza_optimizer.api import OptimizeRequest, optimize_layout
-          r = optimize_layout(OptimizeRequest(track_id="monza", inventory={}, accuracy_level="B", parts_json="parts.json"))
-          assert r.metrics.get("collapsed") is not True
+          from monza_optimizer.optimize.flying_start import flying_start_inventory, FLYING_START_NOTE
+          r = optimize_layout(OptimizeRequest(
+              track_id="monza",
+              inventory=flying_start_inventory(),
+              accuracy_level="B",
+              parts_json="parts.json",
+          ))
+          assert r.metrics.get("collapsed") is not True, r.metrics
           print("ok", r.accuracy_level, len(r.sequence), r.metrics.get("closed"))
+          print(FLYING_START_NOTE)
           PY
