@@ -1,9 +1,10 @@
-"""Tick-box owned inventory for the Lovable wrapper."""
+"""Tick-box owned inventory. One stepper per moulding."""
 
 from __future__ import annotations
 
 from typing import Any
 
+from monza_optimizer.catalog.parts import base_id
 from monza_optimizer.optimize.flying_start import (
     FLYING_START_NOTE,
     FLYING_START_SET_ID,
@@ -15,22 +16,23 @@ from monza_optimizer.optimize.part_art import urls_for_sku
 LETTER_UNDER = {
     "C8200": "F",
     "C8204": "N",
-    "C8204L": "N",
-    "C8204R": "N",
     "C8205": "B",
     "C8206": "C",
-    "C8206L": "C",
-    "C8206R": "C",
     "C8207": "D",
     "C8234": "U",
-    "C8234L": "U",
-    "C8234R": "U",
     "C8235": "S",
-    "C8235L": "S",
-    "C8235R": "S",
     "C8236": "T",
+    "C156": None,
+    "C187": None,
+    "C8010": None,
 }
 LETTER_UNDER.update(LETTER_EXTRA)
+
+# Mouldings that are the same piece either way.
+REVERSIBLE = {
+    "C8206", "C8204", "C8234", "C8235", "C8201", "C8202",
+    "C156", "C187", "C8010",
+}
 
 OFFICIAL_SHOP = {
     "C8205": "https://uk.scalextric.com/products/standard-straight-350mm-x-2-c8205",
@@ -39,36 +41,32 @@ OFFICIAL_SHOP = {
 }
 
 CARDS: list[dict[str, Any]] = [
-    {"sku": "C8205", "name": "Standard straight 350 mm", "family": "straight", "group": "Straights", "hand": None, "hint": "Long black straight. Letter B underneath."},
-    {"sku": "C8207", "name": "Half straight 175 mm", "family": "straight", "group": "Straights", "hand": None, "hint": "Half the standard straight. Letter D underneath."},
-    {"sku": "C8200", "name": "Quarter straight 87 mm", "family": "straight", "group": "Straights", "hand": None, "hint": "Short filler. Letter F underneath."},
-    {"sku": "C8236", "name": "Short straight 78 mm", "family": "straight", "group": "Straights", "hand": None, "hint": "Tiny closer. Letter T underneath."},
-    {"sku": "C8206L", "name": "R2 curve 45 left", "family": "r2", "group": "Radius 2", "hand": "L", "hint": "Standard starter bend, turns left. Letter C underneath."},
-    {"sku": "C8206R", "name": "R2 curve 45 right", "family": "r2", "group": "Radius 2", "hand": "R", "hint": "Standard starter bend, turns right. Letter C underneath."},
-    {"sku": "C8234L", "name": "R2 curve 22.5 left", "family": "r2", "group": "Radius 2", "hand": "L", "hint": "Shallower R2. Letter U underneath."},
-    {"sku": "C8234R", "name": "R2 curve 22.5 right", "family": "r2", "group": "Radius 2", "hand": "R", "hint": "Shallower R2. Letter U underneath."},
-    {"sku": "C8204L", "name": "R3 curve 22.5 left", "family": "r3", "group": "Radius 3", "hand": "L", "hint": "Wider sweep. Letter N underneath."},
-    {"sku": "C8204R", "name": "R3 curve 22.5 right", "family": "r3", "group": "Radius 3", "hand": "R", "hint": "Wider sweep. Letter N underneath."},
-    {"sku": "C8235L", "name": "R4 curve 22.5 left", "family": "r4", "group": "Radius 4", "hand": "L", "hint": "Outer sweep. Letter S underneath."},
-    {"sku": "C8235R", "name": "R4 curve 22.5 right", "family": "r4", "group": "Radius 4", "hand": "R", "hint": "Outer sweep. Letter S underneath."},
-    {"sku": "C156L", "name": "R1 Classic 90 left C156", "family": "r1", "group": "Radius 1", "hand": "L", "hint": "Classic R1 90. Sport hairpin is C8201."},
-    {"sku": "C156R", "name": "R1 Classic 90 right C156", "family": "r1", "group": "Radius 1", "hand": "R", "hint": "Classic R1 90. Sport hairpin is C8201."},
-    {"sku": "C187L", "name": "Banked curve 45 left", "family": "banked", "group": "Specials", "hand": "L", "hint": "Raised outer edge."},
-    {"sku": "C187R", "name": "Banked curve 45 right", "family": "banked", "group": "Specials", "hand": "R", "hint": "Raised outer edge."},
-    {"sku": "C8010L", "name": "Chicane curve 22.5 left", "family": "chicane", "group": "Chicanes", "hand": "L", "hint": "Offset lane chicane bend."},
-    {"sku": "C8010R", "name": "Chicane curve 22.5 right", "family": "chicane", "group": "Chicanes", "hand": "R", "hint": "Offset lane chicane bend."},
+    {"sku": "C8205", "name": "Standard straight 350 mm", "family": "straight", "group": "Straights", "hand": None, "hint": "Letter B. Pack is two pieces."},
+    {"sku": "C8207", "name": "Half straight 175 mm", "family": "straight", "group": "Straights", "hand": None, "hint": "Letter D."},
+    {"sku": "C8200", "name": "Quarter straight 87 mm", "family": "straight", "group": "Straights", "hand": None, "hint": "Letter F."},
+    {"sku": "C8236", "name": "Short straight 78 mm", "family": "straight", "group": "Straights", "hand": None, "hint": "Letter T."},
+    {"sku": "C8206", "name": "R2 curve 45° (C8206)", "family": "r2", "group": "Radius 2", "hand": None, "hint": "Letter C. One moulding. Clip either way for left or right."},
+    {"sku": "C8234", "name": "R2 curve 22.5° (C8234)", "family": "r2", "group": "Radius 2", "hand": None, "hint": "Letter U. One moulding."},
+    {"sku": "C8204", "name": "R3 curve 22.5° (C8204)", "family": "r3", "group": "Radius 3", "hand": None, "hint": "Letter N. One moulding."},
+    {"sku": "C8235", "name": "R4 curve 22.5° (C8235)", "family": "r4", "group": "Radius 4", "hand": None, "hint": "Letter S. One moulding."},
+    {"sku": "C156", "name": "R1 Classic 90° (C156)", "family": "r1", "group": "Radius 1", "hand": None, "hint": "Classic R1. Sport hairpin is C8201."},
+    {"sku": "C187", "name": "Banked curve 45° (C187)", "family": "banked", "group": "Specials", "hand": None, "hint": "Raised outer edge. Rotate for hand."},
+    {"sku": "C8010", "name": "Chicane curve 22.5° (C8010)", "family": "chicane", "group": "Chicanes", "hand": None, "hint": "Offset lane bend. Rotate for hand."},
 ]
 
 
 def _card(raw: dict[str, Any]) -> dict[str, Any]:
     sku = raw["sku"]
     art = urls_for_sku(sku)
-    card = {
+    if not art.get("thumb_png"):
+        art = urls_for_sku(sku + "L") or art
+    return {
         "sku": sku,
         "name": raw["name"],
         "family": raw["family"],
         "group": raw["group"],
-        "hand": raw["hand"],
+        "hand": None,
+        "reversible": sku in REVERSIBLE,
         "letter_under_track": LETTER_UNDER.get(sku),
         "hint": raw["hint"],
         "tickable": True,
@@ -83,25 +81,44 @@ def _card(raw: dict[str, Any]) -> dict[str, Any]:
         "in_flying_start": sku in flying_start_inventory(),
         "flying_start_qty": flying_start_inventory().get(sku, 0),
     }
-    return card
 
 
 def picker_cards() -> list[dict[str, Any]]:
-    return [_card(c) for c in CARDS + EXTRA_CARDS]
+    seen = set()
+    out = []
+    for raw in CARDS + EXTRA_CARDS:
+        if raw["sku"] in seen:
+            continue
+        seen.add(raw["sku"])
+        out.append(_card(raw))
+    return out
 
 
 def ticks_to_inventory(ticks: list[dict[str, Any]] | dict[str, int] | None) -> dict[str, int]:
     if ticks is None:
         return {}
+    raw: dict[str, int] = {}
     if isinstance(ticks, dict):
-        return {str(k): max(0, int(v)) for k, v in ticks.items() if int(v) > 0}
+        items = ticks.items()
+        for k, v in items:
+            sku = str(k).strip().upper()
+            qty = max(0, int(v))
+            if sku and qty:
+                raw[sku] = raw.get(sku, 0) + qty
+    else:
+        for row in ticks:
+            sku = str(row.get("sku") or row.get("id") or "").upper()
+            qty = int(row.get("qty") or row.get("quantity") or 0)
+            if sku and qty > 0:
+                raw[sku] = raw.get(sku, 0) + qty
     out: dict[str, int] = {}
-    for row in ticks:
-        sku = str(row.get("sku") or row.get("id") or "").upper()
-        qty = int(row.get("qty") or row.get("quantity") or 0)
-        if sku and qty > 0:
+    for sku, qty in raw.items():
+        root = base_id(sku)
+        if root in REVERSIBLE:
+            out[root] = out.get(root, 0) + qty
+        else:
             out[sku] = out.get(sku, 0) + qty
-    return out
+    return {k: v for k, v in out.items() if v > 0}
 
 
 def picker_payload() -> dict[str, Any]:
@@ -115,7 +132,7 @@ def picker_payload() -> dict[str, Any]:
     zeros = {card["sku"]: 0 for card in cards}
     return {
         "title": "Tick the pieces you already own",
-        "blurb": "Match the top-view photo to the piece in your box.",
+        "blurb": "Curves are one moulding. The lay-list will say left or right when you clip them.",
         "how_to_count": "Count single pieces, not shop packs.",
         "presets": [
             {
@@ -138,6 +155,6 @@ def picker_payload() -> dict[str, Any]:
         "optimize_hint": {
             "path": "/optimize",
             "inventory_field": "inventory",
-            "example": {"track_id": "monza", "accuracy_level": "B", "inventory": {"C8205": 12}},
+            "example": {"track_id": "monza", "accuracy_level": "B", "inventory": {"C8205": 4, "C8206": 16}},
         },
     }
