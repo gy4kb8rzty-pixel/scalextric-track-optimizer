@@ -29,8 +29,6 @@ class AccuracyLevel(str, Enum):
             "fullaccuracy": cls.FULL_ACCURACY, "full_accuracy": cls.FULL_ACCURACY,
             "unlimited": cls.FULL_ACCURACY,
         }
-        # Do not pass cls(key) as dict.get default — Python evaluates it first
-        # and Enum rejects letter aliases like "0"/"a"/"d".
         if key in aliases:
             return aliases[key]
         try:
@@ -66,9 +64,9 @@ class LevelProfile:
     min_target_mm: float = 4000.0
     max_target_mm: float = 40000.0
 
-STARTER_CANDIDATES = ["C8205", "C8206L", "C8206R", "C8204L", "C8204R", "C8010L", "C8010R", "C8234L", "C8234R", "C156L", "C156R"]
+STARTER_CANDIDATES = ["C8205", "C8206L", "C8206R", "C8204L", "C8204R", "C8010L", "C8010R", "C8234L", "C8234R", "C8201L", "C8201R"]
 COMPACT_CANDIDATES = ["C8205", "C8207", "C8200", "C8236", "C8204L", "C8204R", "C8206L", "C8206R", "C8010L", "C8010R"]
-STANDARD_CANDIDATES = COMPACT_CANDIDATES + ["C8235L", "C8235R", "C8234L", "C8234R", "C156L", "C156R", "C187L", "C187R"]
+STANDARD_CANDIDATES = COMPACT_CANDIDATES + ["C8235L", "C8235R", "C8234L", "C8234R", "C8201L", "C8201R", "C187L", "C187R"]
 FULL_CANDIDATES = list(STANDARD_CANDIDATES)
 STREET_CIRCUITS = {"monaco", "monte_carlo", "marina_bay", "singapore", "las_vegas", "baku", "jeddah", "miami", "montreal", "san_diego"}
 
