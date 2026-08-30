@@ -49,6 +49,9 @@ def load_parts(path: str | Path) -> list[TrackPart]:
     if not isinstance(raw_parts, list):
         raise PartValidationError("parts inventory must contain a 'parts' list")
     parsed = [_parse_part(raw_part, index) for index, raw_part in enumerate(raw_parts)]
+    extra = _extra_parts()
+    have = {p.id for p in parsed}
+    parsed.extend(p for p in extra if p.id not in have)
     if not any(p.geometry is not None for p in parsed):
         return builtin_sport_catalog()
     return parsed
@@ -110,8 +113,12 @@ def _parse_geometry(raw: Any, index: int) -> Geometry | None:
     raise PartValidationError(f"part at index {index}: unrecognized geometry")
 
 
+def _extra_parts() -> list[TrackPart]:
+    from monza_optimizer.optimize.inventory_extra import EXTRA_GEOMETRY
+    return [_parse_part(row, 900 + i) for i, row in enumerate(EXTRA_GEOMETRY)]
+
+
 def builtin_sport_catalog() -> list[TrackPart]:
-    """Official Sport pieces used when parts.json has no geometry."""
     raw = [
         {"id": "C8205", "name": "Standard Straight", "type": "straight", "verified_geometry": True, "geometry": {"length": 350.0}},
         {"id": "C8207", "name": "Half Straight", "type": "straight", "verified_geometry": True, "geometry": {"length": 175.0}},
@@ -132,4 +139,6 @@ def builtin_sport_catalog() -> list[TrackPart]:
         {"id": "C8010L", "name": "Chicane 22.5 L", "type": "curve", "verified_geometry": True, "geometry": {"radius": 294.0, "angle_degrees": 22.5}},
         {"id": "C8010R", "name": "Chicane 22.5 R", "type": "curve", "verified_geometry": True, "geometry": {"radius": 294.0, "angle_degrees": -22.5}},
     ]
+    from monza_optimizer.optimize.inventory_extra import EXTRA_GEOMETRY
+    raw = raw + EXTRA_GEOMETRY
     return [_parse_part(row, i) for i, row in enumerate(raw)]
