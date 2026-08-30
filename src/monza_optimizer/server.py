@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+import os
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
@@ -23,9 +23,13 @@ from monza_optimizer.optimize.inventory_book import apply_purchase, inventory_st
 from monza_optimizer.optimize.inventory_picker import picker_payload, ticks_to_inventory
 from monza_optimizer.optimize.part_art import bmp_to_png, resolve_art_path
 
+PUBLIC_API_BASE = os.environ.get(
+    "PUBLIC_API_BASE", "https://scalextric-track-optimizer.onrender.com"
+).rstrip("/")
+
 app = FastAPI(
     title="Scalextric Track Designer API",
-    version="1.3.1",
+    version="1.3.2",
     description="Inventory + circuit + ambition → official BOM, lay-list, and files.",
 )
 app.add_middleware(
@@ -70,6 +74,18 @@ class ExportBody(BaseModel):
     as_file: str | None = None
 
 
+def _absolutize_art(payload: dict[str, Any]) -> dict[str, Any]:
+    base = PUBLIC_API_BASE
+    for group in payload.get("groups") or []:
+        for part in group.get("parts") or []:
+            for key in ("thumb_png", "thumb_url"):
+                val = part.get(key)
+                if isinstance(val, str) and val.startswith("/"):
+                    part[key] = base + val
+    payload["art_base"] = base + "/part-art"
+    return payload
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -96,7 +112,7 @@ def outputs() -> dict[str, Any]:
 
 @app.get("/inventory-picker")
 def inventory_picker() -> dict[str, Any]:
-    return picker_payload()
+    return _absolutize_art(picker_payload())
 
 
 @app.get("/part-art/{filename}")
