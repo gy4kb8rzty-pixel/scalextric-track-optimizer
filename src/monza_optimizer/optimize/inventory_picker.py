@@ -137,9 +137,9 @@ def picker_payload() -> dict[str, Any]:
     zeros = {card["sku"]: 0 for card in cards}
     return {
         "hero": HERO_HEADLINE,
-        "title": "Tick the pieces you already own",
-        "blurb": "R1 hairpin is C8201 (letter J). Old C156 stock counts as C8201.",
-        "how_to_count": "Count single pieces, not shop packs.",
+        "title": "List the parts you already own by entering number of parts in the picker below",
+        "blurb": "",
+        "how_to_count": "",
         "presets": [
             {
                 "id": "empty_box",
