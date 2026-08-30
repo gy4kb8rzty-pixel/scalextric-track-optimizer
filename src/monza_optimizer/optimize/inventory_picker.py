@@ -10,6 +10,7 @@ from monza_optimizer.optimize.flying_start import (
     flying_start_inventory,
 )
 from monza_optimizer.optimize.inventory_extra import EXTRA_CARDS, LETTER_EXTRA
+from monza_optimizer.optimize.part_art import urls_for_sku
 
 LETTER_UNDER = {
     "C8200": "F",
@@ -31,33 +32,9 @@ LETTER_UNDER = {
 }
 LETTER_UNDER.update(LETTER_EXTRA)
 
-THUMB_BMP = {
-    "C8205": "c8205.bmp",
-    "C8207": "c8207p.bmp",
-    "C8200": "c8200p.bmp",
-    "C8236": "c8236p.bmp",
-    "C8206": "512x512_C8206.bmp",
-    "C8206L": "512x512_C8206.bmp",
-    "C8206R": "c8206r.bmp",
-    "C8204L": "c8204lp.bmp",
-    "C8204R": "c8204rp.bmp",
-    "C8235L": "c8235lp.bmp",
-    "C8235R": "c8235rp.bmp",
-    "C8234L": "c8234lp.bmp",
-    "C8234R": "c8234rp.bmp",
-    "C156L": "c156lp.bmp",
-    "C156R": "c156rp.bmp",
-    "C8010L": "c8010lp.bmp",
-    "C8010R": "c8010r.bmp",
-}
-
 OFFICIAL_SHOP = {
     "C8205": "https://uk.scalextric.com/products/standard-straight-350mm-x-2-c8205",
     "C8206": "https://uk.scalextric.com/products/radius-2-curve-45-x-2-c8206",
-    "C8206L": "https://uk.scalextric.com/products/radius-2-curve-45-x-2-c8206",
-    "C8206R": "https://uk.scalextric.com/products/radius-2-curve-45-x-2-c8206",
-    "C8207": "https://uk.scalextric.com/products/half-straight-175mm-x-2-c8207",
-    "C8235": "https://uk.scalextric.com/products/radius-4-curve-22-5-x-2-c8235",
     "C8210": "https://uk.scalextric.com/products/straight-crossover-c8210",
 }
 
@@ -120,7 +97,7 @@ def _svg_icon(family: str, hand: str | None) -> str:
 
 def _card(raw: dict[str, Any]) -> dict[str, Any]:
     sku = raw["sku"]
-    bmp = THUMB_BMP.get(sku)
+    art = urls_for_sku(sku)
     return {
         "sku": sku,
         "name": raw["name"],
@@ -134,8 +111,9 @@ def _card(raw: dict[str, Any]) -> dict[str, Any]:
         "qty_max": 80,
         "qty_step": 1,
         "default_qty": 0,
-        "thumb_bmp": bmp,
-        "thumb_url": f"/part-art/{bmp}" if bmp else None,
+        "thumb_bmp": art["thumb_bmp"],
+        "thumb_url": art["thumb_url"],
+        "thumb_png": art["thumb_png"],
         "thumb_svg": _svg_icon(raw["family"], raw["hand"]),
         "shop_url": OFFICIAL_SHOP.get(sku),
         "in_flying_start": sku in flying_start_inventory(),
@@ -174,21 +152,16 @@ def picker_payload() -> dict[str, Any]:
         "title": "Tick the pieces you already own",
         "blurb": (
             "Match the top-view picture to the piece in your box. "
-            "The letter moulded under Sport track is the fastest check. "
-            "Leave a box at 0 if you do not have that SKU. "
-            "Empty box clears every counter so you can type your own collection."
+            "The letter moulded under Sport track is the fastest check."
         ),
-        "how_to_count": (
-            "Count single pieces, not shop packs. A C8205 pack is two straights. "
-            "Curves: hold the connectors toward you; the slot bend is L or R."
-        ),
+        "how_to_count": "Count single pieces, not shop packs.",
         "presets": [
             {
                 "id": "empty_box",
                 "label": "Empty box — reset",
                 "inventory": zeros,
                 "replace": True,
-                "note": "Sets every SKU to 0. Then type the pieces on your table.",
+                "note": "Sets every SKU to 0.",
             },
             {
                 "id": "flying_start",
@@ -203,6 +176,6 @@ def picker_payload() -> dict[str, Any]:
         "optimize_hint": {
             "path": "/optimize",
             "inventory_field": "inventory",
-            "example": {"track_id": "monza", "accuracy_level": "B", "inventory": {"C8205": 12, "C8206L": 4}},
+            "example": {"track_id": "monza", "accuracy_level": "B", "inventory": {"C8205": 12}},
         },
     }
