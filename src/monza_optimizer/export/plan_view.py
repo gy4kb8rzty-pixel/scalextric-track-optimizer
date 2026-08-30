@@ -29,49 +29,43 @@ def _signed_angle(part, code: str) -> float:
     return float(part.geometry.angle_degrees)
 
 
-def _advance(pose: Pose, part, code: str) -> Pose:
-    g = part.geometry
-    if isinstance(g, StraightGeometry):
-        hr = math.radians(pose.heading_degrees)
-        return Pose(pose.x + g.length * math.cos(hr), pose.y + g.length * math.sin(hr), pose.heading_degrees)
-    ang = _signed_angle(part, code)
-    R = g.radius
-    hr = math.radians(pose.heading_degrees)
-    ar = math.radians(ang)
-    td = 1.0 if ang >= 0 else -1.0
-    lx = R * math.sin(abs(ar))
-    ly = td * R * (1.0 - math.cos(abs(ar)))
-    wx = lx * math.cos(hr) - ly * math.sin(hr)
-    wy = lx * math.sin(hr) + ly * math.cos(hr)
-    return Pose(pose.x + wx, pose.y + wy, pose.heading_degrees + ang)
-
-
 def _offset(pose: Pose, half: float) -> tuple[float, float]:
     hr = math.radians(pose.heading_degrees)
     nx, ny = -math.sin(hr), math.cos(hr)
     return pose.x + nx * half, pose.y + ny * half
 
 
+def _step_curve(pose: Pose, radius: float, dt: float) -> Pose:
+    hr = math.radians(pose.heading_degrees)
+    ar = math.radians(dt)
+    td = 1.0 if dt >= 0 else -1.0
+    lx = radius * math.sin(abs(ar))
+    ly = td * radius * (1.0 - math.cos(abs(ar)))
+    wx = lx * math.cos(hr) - ly * math.sin(hr)
+    wy = lx * math.sin(hr) + ly * math.cos(hr)
+    return Pose(pose.x + wx, pose.y + wy, pose.heading_degrees + dt)
+
+
 def piece_polygon(part, code: str, start: Pose, steps: int = 8) -> list[tuple[float, float]]:
-    """Closed plan outline of one Sport piece in world mm."""
     g = part.geometry
     if isinstance(g, StraightGeometry):
-        end = _advance(start, part, code)
-        a = _offset(start, HALF_W)
-        b = _offset(end, HALF_W)
-        c = _offset(end, -HALF_W)
-        d = _offset(start, -HALF_W)
-        return [a, b, c, d]
+        hr = math.radians(start.heading_degrees)
+        end = Pose(start.x + g.length * math.cos(hr), start.y + g.length * math.sin(hr), start.heading_degrees)
+        return [
+            _offset(start, HALF_W),
+            _offset(end, HALF_W),
+            _offset(end, -HALF_W),
+            _offset(start, -HALF_W),
+        ]
+    if not isinstance(g, CurveGeometry):
+        return [_offset(start, HALF_W), _offset(start, -HALF_W)]
     n = max(4, steps)
-    outer: list[tuple[float, float]] = []
-    inner: list[tuple[float, float]] = []
-    pose = start
-    outer.append(_offset(pose, HALF_W))
-    inner.append(_offset(pose, -HALF_W))
     dt = _signed_angle(part, code) / n
-    dummy = type("P", (), {"geometry": type("G", (), {"angle_degrees": dt, "radius": g.radius})()})()
+    pose = start
+    outer = [_offset(pose, HALF_W)]
+    inner = [_offset(pose, -HALF_W)]
     for _ in range(n):
-        pose = _advance(pose, dummy, "L" if dt >= 0 else "R")
+        pose = _step_curve(pose, g.radius, dt)
         outer.append(_offset(pose, HALF_W))
         inner.append(_offset(pose, -HALF_W))
     inner.reverse()
@@ -82,10 +76,7 @@ def layout_pieces(sequence: Sequence[str], get_part: Callable):
     codes = [c for c in sequence if get_part(c) is not None]
     parts = [get_part(c) for c in codes]
     poses = compute_track_path(parts, start=Pose(0.0, 0.0, 0.0)) if parts else [Pose(0, 0, 0)]
-    pieces = []
-    for i, code in enumerate(codes):
-        poly = piece_polygon(parts[i], code, poses[i])
-        pieces.append((code, poly))
+    pieces = [(code, piece_polygon(parts[i], code, poses[i])) for i, code in enumerate(codes)]
     return pieces, poses
 
 
