@@ -9,6 +9,7 @@ from monza_optimizer.optimize.flying_start import (
     FLYING_START_SET_ID,
     flying_start_inventory,
 )
+from monza_optimizer.optimize.inventory_extra import EXTRA_CARDS, LETTER_EXTRA
 
 LETTER_UNDER = {
     "C8200": "F",
@@ -28,6 +29,7 @@ LETTER_UNDER = {
     "C8235R": "S",
     "C8236": "T",
 }
+LETTER_UNDER.update(LETTER_EXTRA)
 
 THUMB_BMP = {
     "C8205": "c8205.bmp",
@@ -56,8 +58,7 @@ OFFICIAL_SHOP = {
     "C8206R": "https://uk.scalextric.com/products/radius-2-curve-45-x-2-c8206",
     "C8207": "https://uk.scalextric.com/products/half-straight-175mm-x-2-c8207",
     "C8235": "https://uk.scalextric.com/products/radius-4-curve-22-5-x-2-c8235",
-    "C8235L": "https://uk.scalextric.com/products/radius-4-curve-22-5-x-2-c8235",
-    "C8235R": "https://uk.scalextric.com/products/radius-4-curve-22-5-x-2-c8235",
+    "C8210": "https://uk.scalextric.com/products/straight-crossover-c8210",
 }
 
 CARDS: list[dict[str, Any]] = [
@@ -65,20 +66,20 @@ CARDS: list[dict[str, Any]] = [
     {"sku": "C8207", "name": "Half straight 175 mm", "family": "straight", "group": "Straights", "hand": None, "hint": "Half the standard straight. Letter D underneath."},
     {"sku": "C8200", "name": "Quarter straight 87 mm", "family": "straight", "group": "Straights", "hand": None, "hint": "Short filler. Letter F underneath."},
     {"sku": "C8236", "name": "Short straight 78 mm", "family": "straight", "group": "Straights", "hand": None, "hint": "Tiny closer. Letter T underneath."},
-    {"sku": "C8206L", "name": "R2 curve 45\u00b0 left", "family": "r2", "group": "Radius 2", "hand": "L", "hint": "Standard starter bend, turns left. Letter C underneath."},
-    {"sku": "C8206R", "name": "R2 curve 45\u00b0 right", "family": "r2", "group": "Radius 2", "hand": "R", "hint": "Standard starter bend, turns right. Letter C underneath."},
-    {"sku": "C8234L", "name": "R2 curve 22.5\u00b0 / 11.25\u00b0 left", "family": "r2", "group": "Radius 2", "hand": "L", "hint": "Shallower R2. Letter U underneath."},
-    {"sku": "C8234R", "name": "R2 curve 22.5\u00b0 / 11.25\u00b0 right", "family": "r2", "group": "Radius 2", "hand": "R", "hint": "Shallower R2. Letter U underneath."},
-    {"sku": "C8204L", "name": "R3 curve 22.5\u00b0 left", "family": "r3", "group": "Radius 3", "hand": "L", "hint": "Wider sweep. Letter N underneath."},
-    {"sku": "C8204R", "name": "R3 curve 22.5\u00b0 right", "family": "r3", "group": "Radius 3", "hand": "R", "hint": "Wider sweep. Letter N underneath."},
-    {"sku": "C8235L", "name": "R4 curve 22.5\u00b0 left", "family": "r4", "group": "Radius 4", "hand": "L", "hint": "Outer sweep. Letter S underneath."},
-    {"sku": "C8235R", "name": "R4 curve 22.5\u00b0 right", "family": "r4", "group": "Radius 4", "hand": "R", "hint": "Outer sweep. Letter S underneath."},
-    {"sku": "C156L", "name": "R1 hairpin 90\u00b0 left", "family": "r1", "group": "Radius 1", "hand": "L", "hint": "Tight inner hairpin."},
-    {"sku": "C156R", "name": "R1 hairpin 90\u00b0 right", "family": "r1", "group": "Radius 1", "hand": "R", "hint": "Tight inner hairpin."},
-    {"sku": "C187L", "name": "Banked curve 45\u00b0 left", "family": "banked", "group": "Specials", "hand": "L", "hint": "Raised outer edge."},
-    {"sku": "C187R", "name": "Banked curve 45\u00b0 right", "family": "banked", "group": "Specials", "hand": "R", "hint": "Raised outer edge."},
-    {"sku": "C8010L", "name": "Chicane curve 22.5\u00b0 left", "family": "chicane", "group": "Specials", "hand": "L", "hint": "Offset lane chicane bend."},
-    {"sku": "C8010R", "name": "Chicane curve 22.5\u00b0 right", "family": "chicane", "group": "Specials", "hand": "R", "hint": "Offset lane chicane bend."},
+    {"sku": "C8206L", "name": "R2 curve 45 left", "family": "r2", "group": "Radius 2", "hand": "L", "hint": "Standard starter bend, turns left. Letter C underneath."},
+    {"sku": "C8206R", "name": "R2 curve 45 right", "family": "r2", "group": "Radius 2", "hand": "R", "hint": "Standard starter bend, turns right. Letter C underneath."},
+    {"sku": "C8234L", "name": "R2 curve 22.5 left", "family": "r2", "group": "Radius 2", "hand": "L", "hint": "Shallower R2. Letter U underneath."},
+    {"sku": "C8234R", "name": "R2 curve 22.5 right", "family": "r2", "group": "Radius 2", "hand": "R", "hint": "Shallower R2. Letter U underneath."},
+    {"sku": "C8204L", "name": "R3 curve 22.5 left", "family": "r3", "group": "Radius 3", "hand": "L", "hint": "Wider sweep. Letter N underneath."},
+    {"sku": "C8204R", "name": "R3 curve 22.5 right", "family": "r3", "group": "Radius 3", "hand": "R", "hint": "Wider sweep. Letter N underneath."},
+    {"sku": "C8235L", "name": "R4 curve 22.5 left", "family": "r4", "group": "Radius 4", "hand": "L", "hint": "Outer sweep. Letter S underneath."},
+    {"sku": "C8235R", "name": "R4 curve 22.5 right", "family": "r4", "group": "Radius 4", "hand": "R", "hint": "Outer sweep. Letter S underneath."},
+    {"sku": "C156L", "name": "R1 Classic 90 left C156", "family": "r1", "group": "Radius 1", "hand": "L", "hint": "Classic R1 90. Sport hairpin is C8201."},
+    {"sku": "C156R", "name": "R1 Classic 90 right C156", "family": "r1", "group": "Radius 1", "hand": "R", "hint": "Classic R1 90. Sport hairpin is C8201."},
+    {"sku": "C187L", "name": "Banked curve 45 left", "family": "banked", "group": "Specials", "hand": "L", "hint": "Raised outer edge."},
+    {"sku": "C187R", "name": "Banked curve 45 right", "family": "banked", "group": "Specials", "hand": "R", "hint": "Raised outer edge."},
+    {"sku": "C8010L", "name": "Chicane curve 22.5 left", "family": "chicane", "group": "Chicanes", "hand": "L", "hint": "Offset lane chicane bend."},
+    {"sku": "C8010R", "name": "Chicane curve 22.5 right", "family": "chicane", "group": "Chicanes", "hand": "R", "hint": "Offset lane chicane bend."},
 ]
 
 _FAMILY_FILL = {
@@ -89,12 +90,14 @@ _FAMILY_FILL = {
     "r4": "#9b51e0",
     "banked": "#b42318",
     "chicane": "#c11574",
+    "special": "#44546A",
+    "digital": "#0563C1",
 }
 
 
 def _svg_icon(family: str, hand: str | None) -> str:
     fill = _FAMILY_FILL.get(family, "#444")
-    if family == "straight":
+    if family in ("straight", "special", "digital"):
         body = '<rect x="18" y="44" width="92" height="40" rx="4" fill="%s"/>' % fill
         slots = '<line x1="18" y1="54" x2="110" y2="54" stroke="#f4d35e" stroke-width="3"/>'
         slots += '<line x1="18" y1="74" x2="110" y2="74" stroke="#f4d35e" stroke-width="3"/>'
@@ -141,7 +144,7 @@ def _card(raw: dict[str, Any]) -> dict[str, Any]:
 
 
 def picker_cards() -> list[dict[str, Any]]:
-    return [_card(c) for c in CARDS]
+    return [_card(c) for c in CARDS + EXTRA_CARDS]
 
 
 def ticks_to_inventory(ticks: list[dict[str, Any]] | dict[str, int] | None) -> dict[str, int]:
