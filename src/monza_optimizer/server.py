@@ -19,11 +19,12 @@ from monza_optimizer.api import (
 )
 from monza_optimizer.catalog import load_parts, get_part_by_id
 from monza_optimizer.export import build_output_pack
+from monza_optimizer.optimize.inventory_book import apply_purchase, inventory_status
 from monza_optimizer.optimize.inventory_picker import picker_payload, ticks_to_inventory
 
 app = FastAPI(
     title="Scalextric Track Designer API",
-    version="1.2.0",
+    version="1.3.0",
     description="Inventory + circuit + ambition → official BOM, lay-list, and files.",
 )
 app.add_middleware(
@@ -69,6 +70,16 @@ class OptimizeBody(BaseModel):
 
 class TicksBody(BaseModel):
     ticks: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class BookBody(BaseModel):
+    owned: dict[str, int] = Field(default_factory=dict)
+    purchased: dict[str, int] = Field(default_factory=dict)
+    used: dict[str, int] | None = None
+    missing: dict[str, int] | None = None
+    leftover: dict[str, int] | None = None
+    track_id: str | None = None
+    accuracy_level: str | None = None
 
 
 class ExportBody(BaseModel):
@@ -130,6 +141,32 @@ def inventory_from_ticks(body: TicksBody) -> dict[str, Any]:
     return {"inventory": inv, "owned_piece_count": sum(inv.values()), "skus": sorted(inv)}
 
 
+@app.post("/inventory/status")
+def inventory_status_ep(body: BookBody) -> dict[str, Any]:
+    return inventory_status(
+        body.owned,
+        used=body.used,
+        missing=body.missing,
+        leftover=body.leftover,
+        track_id=body.track_id,
+        accuracy_level=body.accuracy_level,
+    )
+
+
+@app.post("/inventory/apply-purchase")
+def inventory_apply_purchase(body: BookBody) -> dict[str, Any]:
+    owned = apply_purchase(body.owned, body.purchased)
+    status = inventory_status(
+        owned,
+        used=body.used,
+        missing={},
+        leftover=body.leftover,
+        track_id=body.track_id,
+        accuracy_level=body.accuracy_level,
+    )
+    return {"owned": owned, "added": {k: int(v) for k, v in dict(body.purchased or {}).items() if int(v) > 0}, "status": status}
+
+
 @app.post("/optimize")
 def optimize(body: OptimizeBody) -> dict[str, Any]:
     inventory = dict(body.inventory or {})
@@ -154,7 +191,17 @@ def optimize(body: OptimizeBody) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
-    return result.as_dict()
+    payload = result.as_dict()
+    shop = payload.get("shopping") or {}
+    payload["inventory_status"] = inventory_status(
+        inventory,
+        used=shop.get("owned_used") or shop.get("used"),
+        missing=shop.get("missing"),
+        leftover=shop.get("leftover"),
+        track_id=payload.get("track_id"),
+        accuracy_level=payload.get("accuracy_level"),
+    )
+    return payload
 
 
 @app.post("/export")
