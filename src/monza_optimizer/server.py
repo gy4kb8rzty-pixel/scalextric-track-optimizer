@@ -21,10 +21,11 @@ from monza_optimizer.catalog import load_parts, get_part_by_id
 from monza_optimizer.export import build_output_pack
 from monza_optimizer.optimize.inventory_book import apply_purchase, inventory_status
 from monza_optimizer.optimize.inventory_picker import picker_payload, ticks_to_inventory
+from monza_optimizer.optimize.part_art import bmp_to_png, resolve_art_path
 
 app = FastAPI(
     title="Scalextric Track Designer API",
-    version="1.3.0",
+    version="1.3.1",
     description="Inventory + circuit + ambition → official BOM, lay-list, and files.",
 )
 app.add_middleware(
@@ -33,27 +34,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-REPO_ROOT = Path(__file__).resolve().parents[2]
-
-_ALLOWED_ART = {
-    "c8205.bmp",
-    "c8206r.bmp",
-    "512x512_c8206.bmp",
-    "c8207p.bmp",
-    "c8200p.bmp",
-    "c8236p.bmp",
-    "c8204lp.bmp",
-    "c8204rp.bmp",
-    "c8235lp.bmp",
-    "c8235rp.bmp",
-    "c8234lp.bmp",
-    "c8234rp.bmp",
-    "c156lp.bmp",
-    "c156rp.bmp",
-    "c8010lp.bmp",
-    "c8010r.bmp",
-}
 
 
 class OptimizeBody(BaseModel):
@@ -121,18 +101,17 @@ def inventory_picker() -> dict[str, Any]:
 
 @app.get("/part-art/{filename}")
 def part_art(filename: str):
-    key = filename.strip().lower()
-    if key not in _ALLOWED_ART:
-        raise HTTPException(status_code=404, detail="unknown part graphic")
-    path = REPO_ROOT / filename
-    if not path.is_file():
-        for child in REPO_ROOT.iterdir():
-            if child.name.lower() == key and child.is_file():
-                path = child
-                break
-    if not path.is_file():
+    path = resolve_art_path(filename)
+    if path is None or not path.is_file():
         raise HTTPException(status_code=404, detail="graphic file missing")
-    return FileResponse(path, media_type="image/bmp")
+    want_png = filename.lower().endswith(".png")
+    if want_png:
+        try:
+            png = bmp_to_png(path.read_bytes())
+        except ValueError as exc:
+            raise HTTPException(status_code=415, detail=str(exc)) from exc
+        return Response(png, media_type="image/png", headers={"Cache-Control": "public, max-age=86400"})
+    return FileResponse(path, media_type="image/bmp", headers={"Cache-Control": "public, max-age=86400"})
 
 
 @app.post("/inventory-from-ticks")
