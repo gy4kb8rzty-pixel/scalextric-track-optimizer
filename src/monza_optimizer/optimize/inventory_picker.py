@@ -59,46 +59,11 @@ CARDS: list[dict[str, Any]] = [
     {"sku": "C8010R", "name": "Chicane curve 22.5 right", "family": "chicane", "group": "Chicanes", "hand": "R", "hint": "Offset lane chicane bend."},
 ]
 
-_FAMILY_FILL = {
-    "straight": "#2b2b2b",
-    "r1": "#c45c26",
-    "r2": "#1f6feb",
-    "r3": "#2f9e44",
-    "r4": "#9b51e0",
-    "banked": "#b42318",
-    "chicane": "#c11574",
-    "special": "#44546A",
-    "digital": "#0563C1",
-}
-
-
-def _svg_icon(family: str, hand: str | None) -> str:
-    fill = _FAMILY_FILL.get(family, "#444")
-    if family in ("straight", "special", "digital"):
-        body = '<rect x="18" y="44" width="92" height="40" rx="4" fill="%s"/>' % fill
-        slots = '<line x1="18" y1="54" x2="110" y2="54" stroke="#f4d35e" stroke-width="3"/>'
-        slots += '<line x1="18" y1="74" x2="110" y2="74" stroke="#f4d35e" stroke-width="3"/>'
-    else:
-        sweep = "1" if hand != "R" else "0"
-        body = (
-            f'<path d="M 28 96 A 48 48 0 0 {sweep} 100 36 L 88 28 A 36 36 0 0 {1 if sweep == "0" else 0} 36 88 Z" '
-            f'fill="{fill}"/>'
-        )
-        slots = ""
-    label = (hand or "")[:1]
-    return (
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">'
-        '<rect width="128" height="128" rx="16" fill="#f3f1ea"/>'
-        f"{body}{slots}"
-        f'<text x="10" y="22" font-size="14" font-family="sans-serif" fill="#222">{label}</text>'
-        "</svg>"
-    )
-
 
 def _card(raw: dict[str, Any]) -> dict[str, Any]:
     sku = raw["sku"]
     art = urls_for_sku(sku)
-    return {
+    card = {
         "sku": sku,
         "name": raw["name"],
         "family": raw["family"],
@@ -114,11 +79,11 @@ def _card(raw: dict[str, Any]) -> dict[str, Any]:
         "thumb_bmp": art["thumb_bmp"],
         "thumb_url": art["thumb_url"],
         "thumb_png": art["thumb_png"],
-        "thumb_svg": _svg_icon(raw["family"], raw["hand"]),
         "shop_url": OFFICIAL_SHOP.get(sku),
         "in_flying_start": sku in flying_start_inventory(),
         "flying_start_qty": flying_start_inventory().get(sku, 0),
     }
+    return card
 
 
 def picker_cards() -> list[dict[str, Any]]:
@@ -150,10 +115,7 @@ def picker_payload() -> dict[str, Any]:
     zeros = {card["sku"]: 0 for card in cards}
     return {
         "title": "Tick the pieces you already own",
-        "blurb": (
-            "Match the top-view picture to the piece in your box. "
-            "The letter moulded under Sport track is the fastest check."
-        ),
+        "blurb": "Match the top-view photo to the piece in your box.",
         "how_to_count": "Count single pieces, not shop packs.",
         "presets": [
             {
