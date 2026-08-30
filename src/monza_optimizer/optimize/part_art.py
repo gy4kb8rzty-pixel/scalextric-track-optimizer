@@ -20,16 +20,22 @@ SKU_BMP = {
     "C8234": "c8234p.bmp",
     "C8234L": "c8234lp.bmp",
     "C8234R": "c8234rp.bmp",
+    "C8204": "c8204lp.bmp",
     "C8204L": "c8204lp.bmp",
     "C8204R": "c8204rp.bmp",
+    "C8235": "c8235lp.bmp",
     "C8235L": "c8235lp.bmp",
     "C8235R": "c8235rp.bmp",
+    "C156": "c156lp.bmp",
     "C156L": "c156lp.bmp",
     "C156R": "c156rp.bmp",
+    "C8010": "c8010lp.bmp",
     "C8010L": "c8010lp.bmp",
     "C8010R": "c8010r.bmp",
+    "C8201": "c8201lp.bmp",
     "C8201L": "c8201lp.bmp",
     "C8201R": "c8201rp.bmp",
+    "C8202": "c8202lp.bmp",
     "C8202L": "c8202lp.bmp",
     "C8202R": "c8202rp.bmp",
     "C8203": "c8203lp.bmp",
@@ -46,6 +52,7 @@ SKU_BMP = {
     "C7004": "c7036p.bmp",
     "C7007": "c7007lp.bmp",
     "C7010": "c7010rp.bmp",
+    "C187": "c191p.bmp",
     "C187L": "c191p.bmp",
     "C187R": "c191p.bmp",
 }
@@ -101,7 +108,7 @@ def bmp_to_png(data: bytes) -> bytes:
 
 
 def urls_for_sku(sku: str) -> dict[str, str | None]:
-    bmp = SKU_BMP.get(sku)
+    bmp = SKU_BMP.get(sku) or SKU_BMP.get(sku + "L")
     if not bmp:
         return {"thumb_bmp": None, "thumb_url": None, "thumb_png": None}
     stem = bmp[:-4] if bmp.lower().endswith(".bmp") else bmp
