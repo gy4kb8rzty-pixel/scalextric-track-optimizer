@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 from typing import Any, Literal
 
+from monza_optimizer.catalog.aliases import modern_id
 from monza_optimizer.catalog.geometry_types import StraightGeometry, CurveGeometry, Geometry
 
 REQUIRED_PART_FIELDS = {"id", "name", "type", "verified_geometry", "geometry"}
@@ -34,6 +35,7 @@ class TrackPart:
 
 
 def base_id(part_id: str) -> str:
+    part_id = modern_id(part_id)
     if part_id.endswith("L") or part_id.endswith("R"):
         return part_id[:-1]
     return part_id
@@ -58,6 +60,7 @@ def load_parts(path: str | Path) -> list[TrackPart]:
 
 
 def get_part_by_id(parts: list[TrackPart], part_id: str) -> TrackPart | None:
+    part_id = modern_id(part_id)
     for part in parts:
         if part.id == part_id or part_id in part.aliases:
             return part
@@ -130,8 +133,8 @@ def builtin_sport_catalog() -> list[TrackPart]:
         {"id": "C8204R", "name": "R3 22.5 R", "type": "curve", "verified_geometry": True, "geometry": {"radius": 449.0, "angle_degrees": -22.5}},
         {"id": "C8235L", "name": "R4 22.5 L", "type": "curve", "verified_geometry": True, "geometry": {"radius": 608.0, "angle_degrees": 22.5}},
         {"id": "C8235R", "name": "R4 22.5 R", "type": "curve", "verified_geometry": True, "geometry": {"radius": 608.0, "angle_degrees": -22.5}},
-        {"id": "C156L", "name": "R1 90 L", "type": "curve", "verified_geometry": True, "geometry": {"radius": 137.0, "angle_degrees": 90.0}},
-        {"id": "C156R", "name": "R1 90 R", "type": "curve", "verified_geometry": True, "geometry": {"radius": 137.0, "angle_degrees": -90.0}},
+        {"id": "C8201L", "name": "R1 hairpin 90 L", "type": "curve", "verified_geometry": True, "geometry": {"radius": 137.0, "angle_degrees": 90.0}, "aliases": ["C156L"]},
+        {"id": "C8201R", "name": "R1 hairpin 90 R", "type": "curve", "verified_geometry": True, "geometry": {"radius": 137.0, "angle_degrees": -90.0}, "aliases": ["C156R"]},
         {"id": "C8234L", "name": "R2 11.25 L", "type": "curve", "verified_geometry": True, "geometry": {"radius": 294.0, "angle_degrees": 11.25}},
         {"id": "C8234R", "name": "R2 11.25 R", "type": "curve", "verified_geometry": True, "geometry": {"radius": 294.0, "angle_degrees": -11.25}},
         {"id": "C187L", "name": "Banked 45 L", "type": "curve", "verified_geometry": True, "geometry": {"radius": 280.0, "angle_degrees": 45.0}},
