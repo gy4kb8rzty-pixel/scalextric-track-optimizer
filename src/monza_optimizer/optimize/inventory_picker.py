@@ -40,6 +40,11 @@ OFFICIAL_SHOP = {
     "C8210": "https://uk.scalextric.com/products/straight-crossover-c8210",
 }
 
+HERO_HEADLINE = (
+    "Build Monza / Monaco / Silverstone with what you own. "
+    "We will tell you the pieces that finish it."
+)
+
 CARDS: list[dict[str, Any]] = [
     {"sku": "C8205", "name": "Standard straight 350 mm", "family": "straight", "group": "Straights", "hand": None, "hint": "Letter B. Pack is two pieces."},
     {"sku": "C8207", "name": "Half straight 175 mm", "family": "straight", "group": "Straights", "hand": None, "hint": "Letter D."},
@@ -131,6 +136,7 @@ def picker_payload() -> dict[str, Any]:
         groups.append({"id": name.lower().replace(" ", "_"), "label": name, "parts": items})
     zeros = {card["sku"]: 0 for card in cards}
     return {
+        "hero": HERO_HEADLINE,
         "title": "Tick the pieces you already own",
         "blurb": "R1 hairpin is C8201 (letter J). Old C156 stock counts as C8201.",
         "how_to_count": "Count single pieces, not shop packs.",
