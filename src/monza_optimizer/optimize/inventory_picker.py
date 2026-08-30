@@ -22,21 +22,21 @@ LETTER_UNDER = {
     "C8234": "U",
     "C8235": "S",
     "C8236": "T",
-    "C156": None,
+    "C8201": "J",
     "C187": None,
     "C8010": None,
 }
 LETTER_UNDER.update(LETTER_EXTRA)
 
-# Mouldings that are the same piece either way.
 REVERSIBLE = {
     "C8206", "C8204", "C8234", "C8235", "C8201", "C8202",
-    "C156", "C187", "C8010",
+    "C187", "C8010",
 }
 
 OFFICIAL_SHOP = {
     "C8205": "https://uk.scalextric.com/products/standard-straight-350mm-x-2-c8205",
     "C8206": "https://uk.scalextric.com/products/radius-2-curve-45-x-2-c8206",
+    "C8201": "https://uk.scalextric.com/products/radius-1-hairpin-curve-90-x-2-c8201",
     "C8210": "https://uk.scalextric.com/products/straight-crossover-c8210",
 }
 
@@ -45,13 +45,12 @@ CARDS: list[dict[str, Any]] = [
     {"sku": "C8207", "name": "Half straight 175 mm", "family": "straight", "group": "Straights", "hand": None, "hint": "Letter D."},
     {"sku": "C8200", "name": "Quarter straight 87 mm", "family": "straight", "group": "Straights", "hand": None, "hint": "Letter F."},
     {"sku": "C8236", "name": "Short straight 78 mm", "family": "straight", "group": "Straights", "hand": None, "hint": "Letter T."},
-    {"sku": "C8206", "name": "R2 curve 45° (C8206)", "family": "r2", "group": "Radius 2", "hand": None, "hint": "Letter C. One moulding. Clip either way for left or right."},
-    {"sku": "C8234", "name": "R2 curve 22.5° (C8234)", "family": "r2", "group": "Radius 2", "hand": None, "hint": "Letter U. One moulding."},
-    {"sku": "C8204", "name": "R3 curve 22.5° (C8204)", "family": "r3", "group": "Radius 3", "hand": None, "hint": "Letter N. One moulding."},
-    {"sku": "C8235", "name": "R4 curve 22.5° (C8235)", "family": "r4", "group": "Radius 4", "hand": None, "hint": "Letter S. One moulding."},
-    {"sku": "C156", "name": "R1 Classic 90° (C156)", "family": "r1", "group": "Radius 1", "hand": None, "hint": "Classic R1. Sport hairpin is C8201."},
-    {"sku": "C187", "name": "Banked curve 45° (C187)", "family": "banked", "group": "Specials", "hand": None, "hint": "Raised outer edge. Rotate for hand."},
-    {"sku": "C8010", "name": "Chicane curve 22.5° (C8010)", "family": "chicane", "group": "Chicanes", "hand": None, "hint": "Offset lane bend. Rotate for hand."},
+    {"sku": "C8206", "name": "R2 curve 45 (C8206)", "family": "r2", "group": "Radius 2", "hand": None, "hint": "Letter C. One moulding."},
+    {"sku": "C8234", "name": "R2 curve 22.5 (C8234)", "family": "r2", "group": "Radius 2", "hand": None, "hint": "Letter U. One moulding."},
+    {"sku": "C8204", "name": "R3 curve 22.5 (C8204)", "family": "r3", "group": "Radius 3", "hand": None, "hint": "Letter N. One moulding."},
+    {"sku": "C8235", "name": "R4 curve 22.5 (C8235)", "family": "r4", "group": "Radius 4", "hand": None, "hint": "Letter S. One moulding."},
+    {"sku": "C187", "name": "Banked curve 45 (C187)", "family": "banked", "group": "Specials", "hand": None, "hint": "Raised outer edge."},
+    {"sku": "C8010", "name": "Chicane curve 22.5 (C8010)", "family": "chicane", "group": "Chicanes", "hand": None, "hint": "Offset lane bend."},
 ]
 
 
@@ -87,6 +86,8 @@ def picker_cards() -> list[dict[str, Any]]:
     seen = set()
     out = []
     for raw in CARDS + EXTRA_CARDS:
+        if raw["sku"] in {"C156", "C156L", "C156R"}:
+            continue
         if raw["sku"] in seen:
             continue
         seen.add(raw["sku"])
@@ -99,8 +100,7 @@ def ticks_to_inventory(ticks: list[dict[str, Any]] | dict[str, int] | None) -> d
         return {}
     raw: dict[str, int] = {}
     if isinstance(ticks, dict):
-        items = ticks.items()
-        for k, v in items:
+        for k, v in ticks.items():
             sku = str(k).strip().upper()
             qty = max(0, int(v))
             if sku and qty:
@@ -132,7 +132,7 @@ def picker_payload() -> dict[str, Any]:
     zeros = {card["sku"]: 0 for card in cards}
     return {
         "title": "Tick the pieces you already own",
-        "blurb": "Curves are one moulding. The lay-list will say left or right when you clip them.",
+        "blurb": "R1 hairpin is C8201 (letter J). Old C156 stock counts as C8201.",
         "how_to_count": "Count single pieces, not shop packs.",
         "presets": [
             {
@@ -155,6 +155,6 @@ def picker_payload() -> dict[str, Any]:
         "optimize_hint": {
             "path": "/optimize",
             "inventory_field": "inventory",
-            "example": {"track_id": "monza", "accuracy_level": "B", "inventory": {"C8205": 4, "C8206": 16}},
+            "example": {"track_id": "monza", "accuracy_level": "B", "inventory": {"C8205": 4, "C8206": 16, "C8201": 2}},
         },
     }
