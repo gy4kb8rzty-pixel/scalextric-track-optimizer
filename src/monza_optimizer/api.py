@@ -181,23 +181,18 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
     if not profile.ignore_inventory:
         seq = enforce_shop_cap(seq, user_inv, profile, get_part=get_part)
     start_pose = Pose(cl.points[0][0], cl.points[0][1], cl.heading(0))
-    close_cands = (
-        [
-            "C8236", "C8200", "C8207",
-            "C8205", "C8206L", "C8206R", "C8010L", "C8010R",
-            "C8204L", "C8204R", "C8234L", "C8234R", "C156L", "C156R",
-        ]
-        if profile.letter == "0" else None
-    )
-    close_shop = shop
-    if profile.letter == "0":
-        close_shop = ShopGate(owned={}, max_shop_pieces=999, max_shop_skus=99, unlimited=True)
+    close_cands = [
+        "C8236", "C8200", "C8207",
+        "C8205", "C8206L", "C8206R", "C8010L", "C8010R",
+        "C8204L", "C8204R", "C8234L", "C8234R", "C8201L", "C8201R",
+    ]
+    close_shop = ShopGate(owned={}, max_shop_pieces=999, max_shop_skus=99, unlimited=True)
     seq, close_stats = close_loop(
         seq, start_pose, get_part, avail, close_shop,
-        max_pieces=24 if profile.letter == "0" else 12,
+        max_pieces=24,
         candidates=close_cands,
-        beam_width=48 if profile.letter == "0" else 36,
-        lateral=profile.letter == "0",
+        beam_width=48,
+        lateral=profile.letter in ("0", "A", "B"),
     )
     metrics.update({
         "pos_mm": close_stats.get("pos_mm", metrics.get("pos_mm")),
