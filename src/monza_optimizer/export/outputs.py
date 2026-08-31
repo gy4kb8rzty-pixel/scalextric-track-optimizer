@@ -40,7 +40,7 @@ OUTPUT_MENU = [
     },
     {
         "id": "pdf",
-        "label": "Plan + lay-list PDF",
+        "label": "Plan PDF",
         "default": False,
         "kind": "application/pdf",
     },
@@ -81,6 +81,7 @@ def build_output_pack(
     wanted: Iterable[str] | None = None,
     shopping: dict[str, Any] | None = None,
     include_binary: bool = True,
+    outline_points: Sequence[tuple[float, float]] | None = None,
 ) -> dict[str, Any]:
     want = normalize_wanted(wanted)
     pack: dict[str, Any] = {"wanted": want, "available": [r["id"] for r in OUTPUT_MENU]}
@@ -91,14 +92,14 @@ def build_output_pack(
     files: dict[str, Any] = {}
     if include_binary:
         if "svg" in want:
-            svg = render_svg(sequence, get_part, title=title)
+            svg = render_svg(sequence, get_part, title=title, outline_points=outline_points)
             files["svg"] = {
                 "filename": _fname(title, "svg"),
                 "media_type": "image/svg+xml",
                 "text": svg,
             }
         if "png" in want:
-            png = render_png(sequence, get_part)
+            png = render_png(sequence, get_part, outline_points=outline_points)
             files["png"] = {
                 "filename": _fname(title, "png"),
                 "media_type": "image/png",
@@ -106,7 +107,7 @@ def build_output_pack(
             }
         if "pdf" in want:
             text = pack.get("lay", {}).get("text") or ""
-            pdf = render_pdf(sequence, get_part, title, text)
+            pdf = render_pdf(sequence, get_part, title, text, outline_points=outline_points)
             files["pdf"] = {
                 "filename": _fname(title, "pdf"),
                 "media_type": "application/pdf",
