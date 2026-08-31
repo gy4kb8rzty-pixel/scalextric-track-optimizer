@@ -42,7 +42,9 @@ OFFICIAL_SHOP = {
 
 HERO_HEADLINE = (
     "Build Monza / Monaco / Silverstone with what you own. "
-    "We will tell you the pieces that finish it."
+    "We will tell you the pieces that finish it. "
+    "This is a demo of the optimiser: one inventory, four ambition levels, "
+    "from a small shop list to a closer layout."
 )
 
 CARDS: list[dict[str, Any]] = [
