@@ -1,8 +1,6 @@
 """Lean 3MF for Microsoft 3D Builder.
 
-Only watertight piece solids. No ground plane, colour-key slab or outline
-tube — those open/zero-thickness meshes make 3D Builder draw the red
-"needs repair" rectangle.
+Only watertight piece solids. No ground plane or open legend slab.
 """
 
 from __future__ import annotations
@@ -28,6 +26,7 @@ PART_COLORS = {
     "C187": "8E44AD",
     "C8234": "1ABC9C",
     "C156": "C0392B",
+    "C8201": "C0392B",
     "C8010": "3498DB",
 }
 
@@ -78,15 +77,10 @@ def _curve_mesh(part, code: str, half_w: float = 78.0, h: float = 8.0, steps: in
     tris: list[tuple[int, int, int]] = []
     for i in range(len(stations) - 1):
         a, b = 4 * i, 4 * (i + 1)
-        # top (z0+h): 2,3
         tris += [(a + 2, b + 2, b + 3), (a + 2, b + 3, a + 3)]
-        # bottom (z0): 0,1 — opposite winding
         tris += [(a, a + 1, b + 1), (a, b + 1, b)]
-        # outer (index 0-2)
         tris += [(a, a + 2, b + 2), (a, b + 2, b)]
-        # inner (index 1-3)
         tris += [(a + 1, b + 1, b + 3), (a + 1, b + 3, a + 3)]
-    # end caps — required or 3D Builder flags repair
     s = 0
     e = 4 * (len(stations) - 1)
     tris += [(s, s + 2, s + 3), (s, s + 3, s + 1)]
@@ -99,14 +93,13 @@ def _straight_mesh(part, half_w: float = 78.0, h: float = 8.0, z0: float = 0.0):
     verts = [
         (0, -half_w, z0), (L, -half_w, z0), (L, half_w, z0), (0, half_w, z0),
         (0, -half_w, z0 + h), (L, -half_w, z0 + h), (L, half_w, z0 + h), (0, half_w, z0 + h),
-    ]
-    tris = [
-        (0, 2, 1), (0, 3, 2),  # bottom, normal -Z
-        (4, 5, 6), (4, 6, 7),  # top, normal +Z
-        (0, 1, 5), (0, 5, 4),  # -Y
-        (3, 7, 6), (3, 6, 2),  # +Y
-        (0, 4, 7), (0, 7, 3),  # x=0 cap
-        (1, 2, 6), (1, 6, 5),  # x=L cap
+    ]n    tris = [
+        (0, 2, 1), (0, 3, 2),
+        (4, 5, 6), (4, 6, 7),
+        (0, 1, 5), (0, 5, 4),
+        (3, 7, 6), (3, 6, 2),
+        (0, 4, 7), (0, 7, 3),
+        (1, 2, 6), (1, 6, 5),
     ]
     return verts, tris
 
@@ -181,6 +174,7 @@ def build_track_3mf(
         '<model unit="millimeter" '
         'xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">'
         f'<metadata name="Title">{title}</metadata>'
+        '<metadata name="Description">Colour: grey straight, yellow short, green R2, blue R3, orange R4, red R1</metadata>'
         f'<resources><basematerials id="1">{bases}</basematerials>'
         f'{ "".join(objects) }</resources>'
         f'<build>{ "".join(items) }</build></model>'
