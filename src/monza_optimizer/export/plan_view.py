@@ -1,4 +1,4 @@
-"""Plan-view graphics: filled official pieces, not centreline sticks."""
+"""Plan-view graphics: filled pieces plus a colour key. PDF has no SKU list."""
 
 from __future__ import annotations
 
@@ -15,6 +15,20 @@ from monza_optimizer.geometry.path import compute_track_path
 from monza_optimizer.geometry.pose import Pose
 
 HALF_W = 78.0
+
+COLOR_KEY = [
+    ("C8205", "Straight"),
+    ("C8207", "Half"),
+    ("C8200", "Quarter"),
+    ("C8236", "Short"),
+    ("C8206", "R2 45"),
+    ("C8234", "R2 22.5"),
+    ("C8204", "R3"),
+    ("C8235", "R4"),
+    ("C8201", "R1 hairpin"),
+    ("C187", "Banked"),
+    ("C8010", "Chicane"),
+]
 
 
 def _signed_angle(part, code: str) -> float:
@@ -80,6 +94,12 @@ def layout_pieces(sequence: Sequence[str], get_part: Callable):
     return pieces, poses
 
 
+def keys_used(sequence: Sequence[str]) -> list[tuple[str, str]]:
+    used = {base_id(c) for c in sequence}
+    used.discard("")
+    return [(sku, label) for sku, label in COLOR_KEY if sku in used]
+
+
 def _bounds_poly(pieces, pad: float = 80.0):
     xs, ys = [], []
     for _, poly in pieces:
@@ -101,11 +121,11 @@ def render_svg(sequence: Sequence[str], get_part: Callable, title: str = "Layout
     minx, miny, maxx, maxy = _bounds_poly(pieces)
     w = max(maxx - minx, 1.0)
     h = max(maxy - miny, 1.0)
-    vw, vh = 900.0, max(220.0, 900.0 * h / w)
+    vw, vh = 900.0, max(260.0, 900.0 * h / w + 36)
     scale = vw / w
 
     def xy(x: float, y: float) -> tuple[float, float]:
-        return (x - minx) * scale, vh - (y - miny) * scale
+        return (x - minx) * scale, vh - 40 - (y - miny) * scale
 
     paths = []
     for sku, poly in pieces:
@@ -115,12 +135,22 @@ def render_svg(sequence: Sequence[str], get_part: Callable, title: str = "Layout
             f'<polygon points="{pts}" fill="{col}" fill-opacity="0.92" '
             f'stroke="#1f2933" stroke-width="1.2"/>'
         )
+    legend = []
+    x = 16.0
+    for sku, label in keys_used(sequence):
+        col = "#" + PART_COLORS.get(sku, "7F8C8D")
+        legend.append(f'<rect x="{x:.0f}" y="{vh-28:.0f}" width="14" height="14" fill="{col}" stroke="#222"/>')
+        legend.append(
+            f'<text x="{x+18:.0f}" y="{vh-16:.0f}" font-size="12" font-family="sans-serif">{label}</text>'
+        )
+        x += 18 + 7 * len(label) + 16
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {vw:.0f} {vh:.0f}" '
         f'width="900" height="{vh:.0f}">'
         f'<rect width="100%" height="100%" fill="#f7f4ee"/>'
-        f'<text x="16" y="28" font-size="18" font-family="sans-serif">{title}</text>'
+        f'<text x="16" y="22" font-size="16" font-family="sans-serif">{title}</text>'
         + "".join(paths)
+        + "".join(legend)
         + "</svg>"
     )
 
@@ -131,7 +161,8 @@ def render_png(sequence: Sequence[str], get_part: Callable, size: int = 720) -> 
     w = max(maxx - minx, 1.0)
     h = max(maxy - miny, 1.0)
     canvas = size
-    scale = (canvas - 24) / max(w, h)
+    top, bot = 28, 36
+    scale = (canvas - 24 - top - bot) / max(w, h)
     img = bytearray([247, 244, 238] * (canvas * canvas))
 
     def put(ix: int, iy: int, rgb: tuple[int, int, int]):
@@ -140,7 +171,7 @@ def render_png(sequence: Sequence[str], get_part: Callable, size: int = 720) -> 
             img[o : o + 3] = bytes(rgb)
 
     def pix(x: float, y: float) -> tuple[int, int]:
-        return int(12 + (x - minx) * scale), int(canvas - 12 - (y - miny) * scale)
+        return int(12 + (x - minx) * scale), int(canvas - bot - 8 - (y - miny) * scale)
 
     for sku, poly in pieces:
         col = _rgb(sku)
@@ -149,6 +180,15 @@ def render_png(sequence: Sequence[str], get_part: Callable, size: int = 720) -> 
         for i, (x0, y0) in enumerate(pts):
             x1, y1 = pts[(i + 1) % len(pts)]
             _line(x0, y0, x1, y1, lambda ix, iy: put(ix, iy, (30, 30, 30)))
+    lx = 8
+    ly = canvas - 22
+    for sku, label in keys_used(sequence):
+        col = _rgb(sku)
+        for dx in range(12):
+            for dy in range(12):
+                put(lx + dx, ly + dy, col)
+        # tiny label ticks only — full words need a font; use colour swatches + short marks
+        lx += 18
     return _png_rgb(canvas, canvas, bytes(img))
 
 
@@ -196,12 +236,13 @@ def _png_rgb(width: int, height: int, raw: bytes) -> bytes:
 
 
 def render_pdf(sequence: Sequence[str], get_part: Callable, title: str, lay_text: str) -> bytes:
+    del lay_text
     pieces, _ = layout_pieces(sequence, get_part)
     minx, miny, maxx, maxy = _bounds_poly(pieces)
     w = max(maxx - minx, 1.0)
     h = max(maxy - miny, 1.0)
     pw, ph = 595.0, 842.0
-    box_x, box_y, box_w, box_h = 36.0, 420.0, 523.0, 380.0
+    box_x, box_y, box_w, box_h = 36.0, 80.0, 523.0, 680.0
     scale = min(box_w / w, box_h / h)
 
     def xy(x: float, y: float) -> tuple[float, float]:
@@ -220,12 +261,16 @@ def render_pdf(sequence: Sequence[str], get_part: Callable, title: str, lay_text
             xx, yy = xy(x, y)
             ops.append(f"{xx:.1f} {yy:.1f} l")
         ops.append("h B")
-    y = 400.0
     ops.append("0 0 0 rg")
-    for line in lay_text.splitlines()[:28]:
-        ops.append(f"BT /F1 8 Tf 36 {y:.1f} Td ({_pdf_esc(line[:90])}) Tj ET")
-        y -= 11
-        if y < 40:
+    ops.append("BT /F1 10 Tf 36 56 Td (Colour key) Tj ET")
+    x = 36.0
+    for sku, label in keys_used(sequence):
+        r, g, b = [c / 255 for c in _rgb(sku)]
+        ops.append(f"{r:.3f} {g:.3f} {b:.3f} rg {x:.1f} 36 10 10 re f")
+        ops.append("0 0 0 rg")
+        ops.append(f"BT /F1 8 Tf {x+14:.1f} 38 Td ({_pdf_esc(label)}) Tj ET")
+        x += 14 + 6 * len(label) + 10
+        if x > 520:
             break
     stream = "\n".join(ops).encode("latin-1", "replace")
     objs = []
