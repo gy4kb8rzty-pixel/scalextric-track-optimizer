@@ -5,11 +5,6 @@ from __future__ import annotations
 from typing import Any
 
 from monza_optimizer.catalog.parts import base_id
-from monza_optimizer.optimize.flying_start import (
-    FLYING_START_NOTE,
-    FLYING_START_SET_ID,
-    flying_start_inventory,
-)
 from monza_optimizer.optimize.inventory_extra import EXTRA_CARDS, LETTER_EXTRA
 from monza_optimizer.optimize.part_art import urls_for_sku
 
@@ -84,8 +79,6 @@ def _card(raw: dict[str, Any]) -> dict[str, Any]:
         "thumb_url": art["thumb_url"],
         "thumb_png": art["thumb_png"],
         "shop_url": OFFICIAL_SHOP.get(sku),
-        "in_flying_start": sku in flying_start_inventory(),
-        "flying_start_qty": flying_start_inventory().get(sku, 0),
     }
 
 
@@ -140,29 +133,21 @@ def picker_payload() -> dict[str, Any]:
     return {
         "hero": HERO_HEADLINE,
         "title": "List the parts you already own by entering number of parts in the picker below",
-        "blurb": "",
-        "how_to_count": "",
+        "blurb": "Start at zero. Type how many of each piece you have. Clear all resets the box.",
+        "how_to_count": "Count single pieces, not shop packs.",
         "presets": [
             {
                 "id": "empty_box",
-                "label": "Empty box — reset",
+                "label": "Clear all",
                 "inventory": zeros,
                 "replace": True,
-                "note": "Sets every SKU to 0.",
-            },
-            {
-                "id": "flying_start",
-                "label": "Flying Start — official C1446M START Grand Prix",
-                "set_id": FLYING_START_SET_ID,
-                "inventory": flying_start_inventory(),
-                "replace": True,
-                "note": FLYING_START_NOTE,
+                "note": "Sets every quantity to 0.",
             },
         ],
         "groups": groups,
         "optimize_hint": {
             "path": "/optimize",
             "inventory_field": "inventory",
-            "example": {"track_id": "monza", "accuracy_level": "B", "inventory": {"C8205": 4, "C8206": 16, "C8201": 2}},
+            "example": {"track_id": "monza", "accuracy_level": "B", "inventory": {"C8205": 8, "C8206": 16, "C8201": 2}},
         },
     }
