@@ -16,20 +16,71 @@ from monza_optimizer.geometry.pose import Pose
 
 HALF_W = 78.0
 RED = (192, 57, 43)
+INK = (20, 20, 20)
 
 COLOR_KEY = [
-    ("C8205", "Straight"),
-    ("C8207", "Half"),
-    ("C8200", "Quarter"),
-    ("C8236", "Short"),
-    ("C8206", "R2 45"),
-    ("C8234", "R2 22.5"),
+    ("C8205", "STR"),
+    ("C8207", "HALF"),
+    ("C8200", "QTR"),
+    ("C8236", "SHORT"),
+    ("C8206", "R2"),
+    ("C8234", "R2.22"),
     ("C8204", "R3"),
     ("C8235", "R4"),
-    ("C8201", "R1 hairpin"),
-    ("C187", "Banked"),
-    ("C8010", "Chicane"),
+    ("C8201", "R1"),
+    ("C187", "BANK"),
+    ("C8010", "CHIC"),
 ]
+
+# 5x7 caps / digits. Each row is a 5-bit mask.
+_GLYPH = {
+    " ": [0, 0, 0, 0, 0, 0, 0],
+    ".": [0, 0, 0, 0, 0, 0, 2],
+    "-": [0, 0, 0, 31, 0, 0, 0],
+    "0": [14, 17, 19, 21, 25, 17, 14],
+    "1": [4, 12, 4, 4, 4, 4, 14],
+    "2": [14, 17, 1, 2, 4, 8, 31],
+    "3": [14, 17, 1, 6, 1, 17, 14],
+    "4": [2, 6, 10, 18, 31, 2, 2],
+    "5": [31, 16, 30, 1, 1, 17, 14],
+    "6": [14, 16, 16, 30, 17, 17, 14],
+    "7": [31, 1, 2, 4, 8, 8, 8],
+    "8": [14, 17, 17, 14, 17, 17, 14],
+    "9": [14, 17, 17, 15, 1, 1, 14],
+    "A": [14, 17, 17, 31, 17, 17, 17],
+    "B": [30, 17, 17, 30, 17, 17, 30],
+    "C": [14, 17, 16, 16, 16, 17, 14],
+    "D": [30, 17, 17, 17, 17, 17, 30],
+    "E": [31, 16, 16, 30, 16, 16, 31],
+    "F": [31, 16, 16, 30, 16, 16, 16],
+    "G": [14, 17, 16, 19, 17, 17, 14],
+    "H": [17, 17, 17, 31, 17, 17, 17],
+    "I": [14, 4, 4, 4, 4, 4, 14],
+    "K": [17, 18, 20, 24, 20, 18, 17],
+    "L": [16, 16, 16, 16, 16, 16, 31],
+    "N": [17, 25, 21, 19, 17, 17, 17],
+    "O": [14, 17, 17, 17, 17, 17, 14],
+    "P": [30, 17, 17, 30, 16, 16, 16],
+    "Q": [14, 17, 17, 17, 21, 18, 13],
+    "R": [30, 17, 17, 30, 20, 18, 17],
+    "S": [14, 17, 16, 14, 1, 17, 14],
+    "T": [31, 4, 4, 4, 4, 4, 4],
+    "U": [17, 17, 17, 17, 17, 17, 14],
+}
+
+
+def _blit_text(put, x: int, y: int, text: str, rgb=INK, scale: int = 2):
+    cx = x
+    for ch in text.upper():
+        rows = _GLYPH.get(ch, _GLYPH[" "])
+        for ry, bits in enumerate(rows):
+            for rx in range(5):
+                if bits & (16 >> rx):
+                    for dy in range(scale):
+                        for dx in range(scale):
+                            put(cx + rx * scale + dx, y + ry * scale + dy, rgb)
+        cx += 6 * scale
+    return cx
 
 
 def _signed_angle(part, code: str) -> float:
@@ -156,16 +207,22 @@ def render_svg(
         f'<line x1="{x}" y1="{vh-21}" x2="{x+18}" y2="{vh-21}" stroke="#c0392b" stroke-width="3"/>'
     )
     legend.append(
-        f'<text x="{x+22}" y="{vh-16}" font-size="12" font-family="sans-serif">Target circuit</text>'
+        f'<text x="{x+22}" y="{vh-16}" font-size="12" font-family="sans-serif">Target</text>'
     )
-    x += 130
+    x += 90
+    names = {
+        "STR": "Straight", "HALF": "Half", "QTR": "Quarter", "SHORT": "Short",
+        "R2": "R2 45", "R2.22": "R2 22.5", "R3": "R3", "R4": "R4", "R1": "R1",
+        "BANK": "Banked", "CHIC": "Chicane",
+    }
     for sku, label in keys_used(sequence):
         col = "#" + PART_COLORS.get(sku, "7F8C8D")
+        shown = names.get(label, label)
         legend.append(f'<rect x="{x:.0f}" y="{vh-28:.0f}" width="14" height="14" fill="{col}" stroke="#222"/>')
         legend.append(
-            f'<text x="{x+18:.0f}" y="{vh-16:.0f}" font-size="12" font-family="sans-serif">{label}</text>'
+            f'<text x="{x+18:.0f}" y="{vh-16:.0f}" font-size="12" font-family="sans-serif">{shown}</text>'
         )
-        x += 18 + 7 * len(label) + 16
+        x += 18 + 7 * len(shown) + 16
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {vw:.0f} {vh:.0f}" '
         f'width="900" height="{vh:.0f}">'
@@ -180,7 +237,7 @@ def render_svg(
 def render_png(
     sequence: Sequence[str],
     get_part: Callable,
-    size: int = 720,
+    size: int = 900,
     outline_points: Sequence[tuple[float, float]] | None = None,
 ) -> bytes:
     pieces, _ = layout_pieces(sequence, get_part)
@@ -189,7 +246,7 @@ def render_png(
     w = max(maxx - minx, 1.0)
     h = max(maxy - miny, 1.0)
     canvas = size
-    top, bot = 28, 36
+    top, bot = 22, 58
     scale = (canvas - 24 - top - bot) / max(w, h)
     img = bytearray([247, 244, 238] * (canvas * canvas))
 
@@ -213,17 +270,21 @@ def render_png(
         for i in range(len(opts) - 1):
             _line(opts[i][0], opts[i][1], opts[i + 1][0], opts[i + 1][1], lambda ix, iy: put(ix, iy, RED))
             _line(opts[i][0], opts[i][1] + 1, opts[i + 1][0], opts[i + 1][1] + 1, lambda ix, iy: put(ix, iy, RED))
+    ly = canvas - 44
     lx = 8
-    ly = canvas - 22
-    for dx in range(16):
+    for dx in range(14):
         put(lx + dx, ly + 6, RED)
-    lx = 8
-    for sku, _label in keys_used(sequence):
+        put(lx + dx, ly + 7, RED)
+    lx = _blit_text(put, lx + 18, ly, "TARGET", INK, 2) + 16
+    for sku, label in keys_used(sequence):
         col = _rgb(sku)
         for dx in range(12):
             for dy in range(12):
                 put(lx + dx, ly + dy, col)
-        lx += 18
+        lx = _blit_text(put, lx + 16, ly, label, INK, 2) + 14
+        if lx > canvas - 80:
+            lx = 8
+            ly += 20
     return _png_rgb(canvas, canvas, bytes(img))
 
 
@@ -319,12 +380,18 @@ def render_pdf(
     ops.append("0 0 0 rg")
     ops.append(f"BT /F1 8 Tf {x+20:.1f} 38 Td (Target) Tj ET")
     x += 70
+    names = {
+        "STR": "Straight", "HALF": "Half", "QTR": "Quarter", "SHORT": "Short",
+        "R2": "R2 45", "R2.22": "R2 22.5", "R3": "R3", "R4": "R4", "R1": "R1",
+        "BANK": "Banked", "CHIC": "Chicane",
+    }
     for sku, label in keys_used(sequence):
         r, g, b = [c / 255 for c in _rgb(sku)]
+        shown = names.get(label, label)
         ops.append(f"{r:.3f} {g:.3f} {b:.3f} rg {x:.1f} 36 10 10 re f")
         ops.append("0 0 0 rg")
-        ops.append(f"BT /F1 8 Tf {x+14:.1f} 38 Td ({_pdf_esc(label)}) Tj ET")
-        x += 14 + 6 * len(label) + 10
+        ops.append(f"BT /F1 8 Tf {x+14:.1f} 38 Td ({_pdf_esc(shown)}) Tj ET")
+        x += 14 + 6 * len(shown) + 10
         if x > 520:
             break
     stream = "\n".join(ops).encode("latin-1", "replace")
