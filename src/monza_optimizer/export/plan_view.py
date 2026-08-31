@@ -32,7 +32,6 @@ COLOR_KEY = [
     ("C8010", "CHIC"),
 ]
 
-# 5x7 caps / digits. Each row is a 5-bit mask.
 _GLYPH = {
     " ": [0, 0, 0, 0, 0, 0, 0],
     ".": [0, 0, 0, 0, 0, 0, 2],
@@ -81,6 +80,14 @@ def _blit_text(put, x: int, y: int, text: str, rgb=INK, scale: int = 2):
                             put(cx + rx * scale + dx, y + ry * scale + dy, rgb)
         cx += 6 * scale
     return cx
+
+
+def _heading_of(outline: Sequence[tuple[float, float]]) -> float:
+    if not outline or len(outline) < 2:
+        return 0.0
+    x0, y0 = outline[0]
+    x1, y1 = outline[1]
+    return math.degrees(math.atan2(y1 - y0, x1 - x0))
 
 
 def _signed_angle(part, code: str) -> float:
@@ -138,10 +145,11 @@ def piece_polygon(part, code: str, start: Pose, steps: int = 8) -> list[tuple[fl
     return outer + inner
 
 
-def layout_pieces(sequence: Sequence[str], get_part: Callable):
+def layout_pieces(sequence: Sequence[str], get_part: Callable, start: Pose | None = None):
     codes = [c for c in sequence if get_part(c) is not None]
     parts = [get_part(c) for c in codes]
-    poses = compute_track_path(parts, start=Pose(0.0, 0.0, 0.0)) if parts else [Pose(0, 0, 0)]
+    origin = start or Pose(0.0, 0.0, 0.0)
+    poses = compute_track_path(parts, start=origin) if parts else [origin]
     pieces = [(code, piece_polygon(parts[i], code, poses[i])) for i, code in enumerate(codes)]
     return pieces, poses
 
@@ -176,8 +184,9 @@ def render_svg(
     title: str = "Layout",
     outline_points: Sequence[tuple[float, float]] | None = None,
 ) -> str:
-    pieces, _ = layout_pieces(sequence, get_part)
     outline = list(outline_points or [])
+    start = Pose(0.0, 0.0, _heading_of(outline))
+    pieces, _ = layout_pieces(sequence, get_part, start=start)
     minx, miny, maxx, maxy = _bounds(pieces, outline)
     w = max(maxx - minx, 1.0)
     h = max(maxy - miny, 1.0)
@@ -240,8 +249,9 @@ def render_png(
     size: int = 900,
     outline_points: Sequence[tuple[float, float]] | None = None,
 ) -> bytes:
-    pieces, _ = layout_pieces(sequence, get_part)
     outline = list(outline_points or [])
+    start = Pose(0.0, 0.0, _heading_of(outline))
+    pieces, _ = layout_pieces(sequence, get_part, start=start)
     minx, miny, maxx, maxy = _bounds(pieces, outline)
     w = max(maxx - minx, 1.0)
     h = max(maxy - miny, 1.0)
@@ -339,8 +349,9 @@ def render_pdf(
     outline_points: Sequence[tuple[float, float]] | None = None,
 ) -> bytes:
     del lay_text
-    pieces, _ = layout_pieces(sequence, get_part)
     outline = list(outline_points or [])
+    start = Pose(0.0, 0.0, _heading_of(outline))
+    pieces, _ = layout_pieces(sequence, get_part, start=start)
     minx, miny, maxx, maxy = _bounds(pieces, outline)
     w = max(maxx - minx, 1.0)
     h = max(maxy - miny, 1.0)
