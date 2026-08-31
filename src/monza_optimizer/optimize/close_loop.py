@@ -17,11 +17,11 @@ CLOSE_HEAD_DEG = 12.0
 CLOSE_CANDIDATES = [
     "C8236", "C8200", "C8207",
     "C8010L", "C8010R",
-    "C8235L", "C8235R",
     "C8234L", "C8234R",
-    "C156L", "C156R",
+    "C8201L", "C8201R",
     "C8206L", "C8206R",
     "C8204L", "C8204R",
+    "C8235L", "C8235R",
     "C187L", "C187R",
     "C8205",
 ]
@@ -61,8 +61,8 @@ def close_loop(
     avail: dict[str, int] | None = None,
     shop: ShopGate | None = None,
     *,
-    max_pieces: int = 12,
-    beam_width: int = 36,
+    max_pieces: int = 16,
+    beam_width: int = 48,
     candidates: list[str] | None = None,
     lateral: bool = False,
 ) -> tuple[list[str], dict]:
@@ -98,16 +98,16 @@ def close_loop(
         for _sc, extra, p, us in beam:
             rem = math.hypot(p.x - start.x, p.y - start.y)
             for code in (candidates or CLOSE_CANDIDATES):
-                if not may_place(code, us, avail, shop):
+                if shop is not None and not shop.unlimited and not may_place(code, us, avail, shop):
                     continue
                 part = get_part(code)
                 if part is None or part.geometry is None:
                     continue
                 np = _advance(p, part)
                 nrem = math.hypot(np.x - start.x, np.y - start.y)
-                if extra and nrem > rem + 700:
+                if extra and nrem > rem + 900:
                     continue
-                key = (round(np.x / 20), round(np.y / 20), round(normalize_heading(np.heading_degrees) / 11.25))
+                key = (round(np.x / 16), round(np.y / 16), round(normalize_heading(np.heading_degrees) / 11.25))
                 if key in seen:
                     continue
                 seen.add(key)
