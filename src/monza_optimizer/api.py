@@ -102,7 +102,7 @@ def _run_pipeline(cl, get_part, avail, profile, cand, shop=None):
     if strategy == "sequential":
         try:
             result = sequential_follow(
-                cl, get_part, avail, shop=shop, loose=profile.letter in ("0", "A"), **_seq_kwargs()
+                cl, get_part, avail, shop=shop, loose=True, **_seq_kwargs()
             )
         except TypeError:
             result = sequential_follow(cl, get_part, avail, **_seq_kwargs())
@@ -128,6 +128,19 @@ def _run_pipeline(cl, get_part, avail, profile, cand, shop=None):
             except TypeError:
                 seq = coverage_fill(seq, cl, get_part, avail, prefer_sharp_first=True)
             metrics["n_pieces"] = len(seq)
+        if len(seq) < 8:
+            try:
+                alt = sequential_follow(cl, get_part, avail, shop=shop, loose=True, **_seq_kwargs())
+                if len(alt.sequence) > len(seq):
+                    seq = list(alt.sequence)
+                    metrics = dict(alt.metrics)
+                    strategy = "sequential"
+            except TypeError:
+                alt = sequential_follow(cl, get_part, avail, **_seq_kwargs())
+                if len(alt.sequence) > len(seq):
+                    seq = list(alt.sequence)
+                    metrics = dict(alt.metrics)
+                    strategy = "sequential"
 
     metrics["accuracy_level"] = profile.level.value
     metrics["accuracy_letter"] = profile.letter
@@ -192,7 +205,7 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
         max_pieces=24,
         candidates=close_cands,
         beam_width=48,
-        lateral=profile.letter in ("0", "A", "B"),
+        lateral=True,
     )
     metrics.update({
         "pos_mm": close_stats.get("pos_mm", metrics.get("pos_mm")),
@@ -208,15 +221,9 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
     metrics["target_length_mm"] = target_mm
     metrics["n_pieces"] = len(seq)
     metrics["cover_frac"] = built / max(target_mm, 1.0)
-    floor_mm = 1200.0 if profile.letter == "0" else 0.55 * target_mm
-    cover_need = 0.20 if profile.letter == "0" else 0.55
-    if not seq or built < floor_mm or built < cover_need * target_mm:
-        metrics["collapsed"] = True
-        metrics["closed"] = False
-    else:
-        metrics["collapsed"] = False
-
-    if metrics.get("collapsed") or not seq:
+    tiny = (not seq) or len(seq) < 8 or built < 1500.0
+    metrics["collapsed"] = tiny
+    if tiny:
         kit = closed_kit_loop(user_inv or shopping_inv, get_part)
         if kit:
             seq = kit
@@ -227,8 +234,8 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
             metrics["length_mm"] = built
             metrics["cover_frac"] = built / max(target_mm, 1.0)
             metrics["kit_note"] = (
-                "Named-circuit follow collapsed. Lay-list and 3MF are the closed "
-                "official-kit oval from stock. Shopping list remains the gap to the named circuit."
+                "Follow produced almost no pieces. Graphics show the closed kit oval. "
+                "Shopping list is still the gap to the named circuit."
             )
 
     bom = dict(Counter(base_id(c) for c in seq))
