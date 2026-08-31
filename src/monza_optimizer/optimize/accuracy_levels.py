@@ -75,8 +75,8 @@ def _p(*a, **k):
 
 LEVELS = {
     AccuracyLevel.BARE_BONES: _p(AccuracyLevel.BARE_BONES, "0", "Bare Bones", "Empty-box starter kit.", "sequential", False, False, 64, 6, 5000.0, 60.0, 80.0, 80.0, 2500.0, 1600.0, 1800.0, 64, True, False, False, "starter", ignore_inventory=True, scale_frac=0.18, min_target_mm=5500.0, max_target_mm=8000.0),
-    AccuracyLevel.LEAN_BUDGET: _p(AccuracyLevel.LEAN_BUDGET, "A", "Lean Budget", "Silhouette + tiny closer pack.", "sequential", False, False, 4, 2, 11000.0, 32.0, 65.0, 65.0, 1600.0, 600.0, 700.0, 56, True, False, False, "compact", scale_frac=0.34, min_target_mm=8000.0, max_target_mm=14000.0),
-    AccuracyLevel.BUDGET: _p(AccuracyLevel.BUDGET, "B", "Budget", "Inventory first, small cart.", "hybrid", False, False, 8, 3, 18000.0, 18.0, 40.0, 32.0, 450.0, 200.0, 280.0, 160, True, True, False, "standard", scale_frac=0.56, min_target_mm=14000.0, max_target_mm=20000.0),
+    AccuracyLevel.LEAN_BUDGET: _p(AccuracyLevel.LEAN_BUDGET, "A", "Lean Budget", "Silhouette that stays a single ribbon. Buys the shorts and radii that stop crossings.", "sequential", False, False, 18, 6, 12000.0, 28.0, 50.0, 50.0, 1400.0, 400.0, 80, True, False, False, "standard", scale_frac=0.40, min_target_mm=9000.0, max_target_mm=15000.0),
+    AccuracyLevel.BUDGET: _p(AccuracyLevel.BUDGET, "B", "Budget", "Follow the red line without knots. Shop list can grow to keep one clean lap.", "sequential", False, False, 36, 8, 18000.0, 16.0, 32.0, 32.0, 420.0, 180.0, 200, True, True, False, "standard", scale_frac=0.60, min_target_mm=15000.0, max_target_mm=22000.0),
     AccuracyLevel.DETAILED: _p(AccuracyLevel.DETAILED, "C", "Detailed", "Hairpins first.", "hybrid", False, False, 40, 12, 25000.0, 14.0, 28.0, 28.0, 400.0, 150.0, 220.0, 400, False, True, True, "full", scale_frac=0.78, min_target_mm=20000.0, max_target_mm=28000.0),
     AccuracyLevel.FULL_ACCURACY: _p(AccuracyLevel.FULL_ACCURACY, "D", "Full Accuracy", "Unlimited official catalogue.", "hybrid", True, False, 10000, 10000, 32000.0, 12.0, 22.0, 22.0, 360.0, 120.0, 180.0, 900, False, True, True, "full", scale_frac=1.0, min_target_mm=24000.0, max_target_mm=40000.0),
 }
@@ -171,7 +171,7 @@ class ShopGate:
         from monza_optimizer.catalog.parts import base_id as _base
         bid = base_id_fn or _base
         owned = {bid(k): max(0, int(v)) for k, v in dict(inventory or {}).items() if int(v) > 0}
-        return cls(owned, profile.max_shop_pieces, profile.max_shop_skus, profile.unlimited, profile.inventory_only, 0.82 if profile.letter == "A" else 0.0, 1.0)
+        return cls(owned, profile.max_shop_pieces, profile.max_shop_skus, profile.unlimited, profile.inventory_only, 0.0, 1.0)
     def owned_left(self, sku, used):
         return max(0, self.owned.get(sku, 0) - int(used.get(sku, 0)))
     def missing_from(self, used):
