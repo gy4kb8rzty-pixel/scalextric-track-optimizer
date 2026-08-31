@@ -249,6 +249,7 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
         wanted=req.outputs,
         shopping=basket,
         include_binary=bool(req.outputs),
+        outline_points=scaled,
     )
 
     return OptimizeResult(
