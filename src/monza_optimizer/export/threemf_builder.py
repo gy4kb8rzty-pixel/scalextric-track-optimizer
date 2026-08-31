@@ -93,7 +93,8 @@ def _straight_mesh(part, half_w: float = 78.0, h: float = 8.0, z0: float = 0.0):
     verts = [
         (0, -half_w, z0), (L, -half_w, z0), (L, half_w, z0), (0, half_w, z0),
         (0, -half_w, z0 + h), (L, -half_w, z0 + h), (L, half_w, z0 + h), (0, half_w, z0 + h),
-    ]n    tris = [
+    ]
+    tris = [
         (0, 2, 1), (0, 3, 2),
         (4, 5, 6), (4, 6, 7),
         (0, 1, 5), (0, 5, 4),
