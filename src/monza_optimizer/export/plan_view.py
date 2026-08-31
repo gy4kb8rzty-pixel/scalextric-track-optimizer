@@ -1,4 +1,4 @@
-"""Plan-view graphics: filled pieces plus a colour key. PDF has no SKU list."""
+"""Plan-view graphics: filled pieces, colour key, red official centreline."""
 
 from __future__ import annotations
 
@@ -15,6 +15,7 @@ from monza_optimizer.geometry.path import compute_track_path
 from monza_optimizer.geometry.pose import Pose
 
 HALF_W = 78.0
+RED = (192, 57, 43)
 
 COLOR_KEY = [
     ("C8205", "Straight"),
@@ -96,16 +97,18 @@ def layout_pieces(sequence: Sequence[str], get_part: Callable):
 
 def keys_used(sequence: Sequence[str]) -> list[tuple[str, str]]:
     used = {base_id(c) for c in sequence}
-    used.discard("")
     return [(sku, label) for sku, label in COLOR_KEY if sku in used]
 
 
-def _bounds_poly(pieces, pad: float = 80.0):
+def _bounds(pieces, outline, pad: float = 80.0):
     xs, ys = [], []
     for _, poly in pieces:
         for x, y in poly:
             xs.append(x)
             ys.append(y)
+    for x, y in outline or []:
+        xs.append(x)
+        ys.append(y)
     if not xs:
         return -pad, -pad, pad, pad
     return min(xs) - pad, min(ys) - pad, max(xs) + pad, max(ys) + pad
@@ -116,9 +119,15 @@ def _rgb(sku: str) -> tuple[int, int, int]:
     return int(hx[0:2], 16), int(hx[2:4], 16), int(hx[4:6], 16)
 
 
-def render_svg(sequence: Sequence[str], get_part: Callable, title: str = "Layout") -> str:
+def render_svg(
+    sequence: Sequence[str],
+    get_part: Callable,
+    title: str = "Layout",
+    outline_points: Sequence[tuple[float, float]] | None = None,
+) -> str:
     pieces, _ = layout_pieces(sequence, get_part)
-    minx, miny, maxx, maxy = _bounds_poly(pieces)
+    outline = list(outline_points or [])
+    minx, miny, maxx, maxy = _bounds(pieces, outline)
     w = max(maxx - minx, 1.0)
     h = max(maxy - miny, 1.0)
     vw, vh = 900.0, max(260.0, 900.0 * h / w + 36)
@@ -132,11 +141,24 @@ def render_svg(sequence: Sequence[str], get_part: Callable, title: str = "Layout
         pts = " ".join(f"{xy(x, y)[0]:.1f},{xy(x, y)[1]:.1f}" for x, y in poly)
         col = "#" + PART_COLORS.get(base_id(sku), "7F8C8D")
         paths.append(
-            f'<polygon points="{pts}" fill="{col}" fill-opacity="0.92" '
-            f'stroke="#1f2933" stroke-width="1.2"/>'
+            f'<polygon points="{pts}" fill="{col}" fill-opacity="0.88" '
+            f'stroke="#1f2933" stroke-width="1.1"/>'
+        )
+    if len(outline) >= 2:
+        d = " ".join(f"{xy(x, y)[0]:.1f},{xy(x, y)[1]:.1f}" for x, y in outline)
+        paths.append(
+            f'<polyline points="{d}" fill="none" stroke="#c0392b" '
+            f'stroke-width="2.4" stroke-linejoin="round"/>'
         )
     legend = []
     x = 16.0
+    legend.append(
+        f'<line x1="{x}" y1="{vh-21}" x2="{x+18}" y2="{vh-21}" stroke="#c0392b" stroke-width="3"/>'
+    )
+    legend.append(
+        f'<text x="{x+22}" y="{vh-16}" font-size="12" font-family="sans-serif">Target circuit</text>'
+    )
+    x += 130
     for sku, label in keys_used(sequence):
         col = "#" + PART_COLORS.get(sku, "7F8C8D")
         legend.append(f'<rect x="{x:.0f}" y="{vh-28:.0f}" width="14" height="14" fill="{col}" stroke="#222"/>')
@@ -155,9 +177,15 @@ def render_svg(sequence: Sequence[str], get_part: Callable, title: str = "Layout
     )
 
 
-def render_png(sequence: Sequence[str], get_part: Callable, size: int = 720) -> bytes:
+def render_png(
+    sequence: Sequence[str],
+    get_part: Callable,
+    size: int = 720,
+    outline_points: Sequence[tuple[float, float]] | None = None,
+) -> bytes:
     pieces, _ = layout_pieces(sequence, get_part)
-    minx, miny, maxx, maxy = _bounds_poly(pieces)
+    outline = list(outline_points or [])
+    minx, miny, maxx, maxy = _bounds(pieces, outline)
     w = max(maxx - minx, 1.0)
     h = max(maxy - miny, 1.0)
     canvas = size
@@ -180,14 +208,21 @@ def render_png(sequence: Sequence[str], get_part: Callable, size: int = 720) -> 
         for i, (x0, y0) in enumerate(pts):
             x1, y1 = pts[(i + 1) % len(pts)]
             _line(x0, y0, x1, y1, lambda ix, iy: put(ix, iy, (30, 30, 30)))
+    if len(outline) >= 2:
+        opts = [pix(x, y) for x, y in outline]
+        for i in range(len(opts) - 1):
+            _line(opts[i][0], opts[i][1], opts[i + 1][0], opts[i + 1][1], lambda ix, iy: put(ix, iy, RED))
+            _line(opts[i][0], opts[i][1] + 1, opts[i + 1][0], opts[i + 1][1] + 1, lambda ix, iy: put(ix, iy, RED))
     lx = 8
     ly = canvas - 22
-    for sku, label in keys_used(sequence):
+    for dx in range(16):
+        put(lx + dx, ly + 6, RED)
+    lx = 8
+    for sku, _label in keys_used(sequence):
         col = _rgb(sku)
         for dx in range(12):
             for dy in range(12):
                 put(lx + dx, ly + dy, col)
-        # tiny label ticks only — full words need a font; use colour swatches + short marks
         lx += 18
     return _png_rgb(canvas, canvas, bytes(img))
 
@@ -235,10 +270,17 @@ def _png_rgb(width: int, height: int, raw: bytes) -> bytes:
     return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", ihdr) + chunk(b"IDAT", comp) + chunk(b"IEND", b"")
 
 
-def render_pdf(sequence: Sequence[str], get_part: Callable, title: str, lay_text: str) -> bytes:
+def render_pdf(
+    sequence: Sequence[str],
+    get_part: Callable,
+    title: str,
+    lay_text: str,
+    outline_points: Sequence[tuple[float, float]] | None = None,
+) -> bytes:
     del lay_text
     pieces, _ = layout_pieces(sequence, get_part)
-    minx, miny, maxx, maxy = _bounds_poly(pieces)
+    outline = list(outline_points or [])
+    minx, miny, maxx, maxy = _bounds(pieces, outline)
     w = max(maxx - minx, 1.0)
     h = max(maxy - miny, 1.0)
     pw, ph = 595.0, 842.0
@@ -261,9 +303,22 @@ def render_pdf(sequence: Sequence[str], get_part: Callable, title: str, lay_text
             xx, yy = xy(x, y)
             ops.append(f"{xx:.1f} {yy:.1f} l")
         ops.append("h B")
+    if len(outline) >= 2:
+        ops.append("0.75 0.22 0.17 RG 1.6 w")
+        x0, y0 = xy(*outline[0])
+        ops.append(f"{x0:.1f} {y0:.1f} m")
+        for x, y in outline[1:]:
+            xx, yy = xy(x, y)
+            ops.append(f"{xx:.1f} {yy:.1f} l")
+        ops.append("S")
     ops.append("0 0 0 rg")
-    ops.append("BT /F1 10 Tf 36 56 Td (Colour key) Tj ET")
+    ops.append("BT /F1 10 Tf 36 56 Td (Red = target circuit. Colour key = parts.) Tj ET")
     x = 36.0
+    ops.append("0.75 0.22 0.17 RG 2 w")
+    ops.append(f"{x:.1f} 41 m {x+16:.1f} 41 l S")
+    ops.append("0 0 0 rg")
+    ops.append(f"BT /F1 8 Tf {x+20:.1f} 38 Td (Target) Tj ET")
+    x += 70
     for sku, label in keys_used(sequence):
         r, g, b = [c / 255 for c in _rgb(sku)]
         ops.append(f"{r:.3f} {g:.3f} {b:.3f} rg {x:.1f} 36 10 10 re f")
