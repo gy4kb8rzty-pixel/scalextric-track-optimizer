@@ -47,6 +47,7 @@ class OptimizeRequest:
     accuracy_level: str = "detailed"
     parts_json: str = "parts.json"
     outputs: list[str] | None = None
+    from_scratch: bool = False
 
 
 @dataclass
@@ -158,6 +159,10 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
     catalog_ids = [p.id for p in parts] or candidates_for(profile)
     user_inv = dict(req.inventory or {})
     shopping_inv = dict(user_inv)
+    from_scratch = bool(req.from_scratch)
+    if from_scratch:
+        user_inv = {}
+        shopping_inv = {}
     if profile.ignore_inventory:
         shopping_inv = {}
         user_inv = {}
@@ -213,6 +218,7 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
         "closed": close_stats.get("closed"),
         "pos_before_close_mm": close_stats.get("pos_before_mm"),
         "close_added": close_stats.get("added"),
+        "from_scratch": from_scratch,
     })
 
     from monza_optimizer.geometry.path import path_length as _plen
@@ -246,6 +252,11 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
         basket["join_dialogue"] = dialogue
     if metrics.get("kit_note"):
         basket["kit_note"] = metrics["kit_note"]
+    if from_scratch:
+        basket["from_scratch"] = True
+        basket["notes"] = list(basket.get("notes") or []) + [
+            "Started from an empty box. Every piece on this list is to buy."
+        ]
 
     title = f"{req.track_id} {profile.letter}"
     lay = lay_payload(seq, get_part, title=f"Lay-list - {title}")
@@ -277,6 +288,7 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
             "unlimited": profile.unlimited,
             "inventory_only": profile.inventory_only,
             "ignore_inventory": profile.ignore_inventory,
+            "from_scratch": from_scratch,
             "target_length_mm": profile.target_length_mm,
         },
     )
