@@ -42,6 +42,8 @@ HERO_HEADLINE = (
     "from a small shop list to a closer layout."
 )
 
+FEATURED_TRACKS = ["monza", "monaco", "silverstone"]
+
 CARDS: list[dict[str, Any]] = [
     {"sku": "C8205", "name": "Standard straight 350 mm", "family": "straight", "group": "Straights", "hand": None, "hint": "Letter B. Pack is two pieces."},
     {"sku": "C8207", "name": "Half straight 175 mm", "family": "straight", "group": "Straights", "hand": None, "hint": "Letter D."},
@@ -144,6 +146,30 @@ def picker_payload() -> dict[str, Any]:
                 "note": "Sets every quantity to 0.",
             },
         ],
+        "hidden_workflows": {
+            "from_scratch": {
+                "enabled": False,
+                "id": "from_scratch",
+                "label": "Start from zero",
+                "note": (
+                    "No owned parts. User picks a featured circuit and ambition A–D. "
+                    "POST /optimize with from_scratch=true and inventory {}. "
+                    "The basket is the official list to buy that lap."
+                ),
+                "featured_track_ids": list(FEATURED_TRACKS),
+                "levels": ["A", "B", "C", "D"],
+                "request": {
+                    "path": "/optimize",
+                    "body": {
+                        "from_scratch": True,
+                        "inventory": {},
+                        "track_id": "monza",
+                        "accuracy_level": "B",
+                        "outputs": ["shopping", "lay", "png"],
+                    },
+                },
+            }
+        },
         "groups": groups,
         "optimize_hint": {
             "path": "/optimize",
