@@ -29,7 +29,7 @@ PUBLIC_API_BASE = os.environ.get(
 
 app = FastAPI(
     title="Scalextric Track Designer API",
-    version="1.3.2",
+    version="1.3.3",
     description="Inventory + circuit + ambition → official BOM, lay-list, and files.",
 )
 app.add_middleware(
@@ -50,6 +50,7 @@ class OptimizeBody(BaseModel):
     unlimited: bool | None = None
     parts_json: str = "parts.json"
     outputs: list[str] | None = None
+    from_scratch: bool = False
 
 
 class TicksBody(BaseModel):
@@ -167,6 +168,8 @@ def optimize(body: OptimizeBody) -> dict[str, Any]:
     inventory = dict(body.inventory or {})
     if body.ticks:
         inventory.update(ticks_to_inventory(body.ticks))
+    if body.from_scratch:
+        inventory = {}
     try:
         result = optimize_layout(
             OptimizeRequest(
@@ -178,6 +181,7 @@ def optimize(body: OptimizeBody) -> dict[str, Any]:
                 unlimited=body.unlimited,
                 parts_json=body.parts_json,
                 outputs=body.outputs,
+                from_scratch=body.from_scratch,
             )
         )
     except FileNotFoundError as exc:
