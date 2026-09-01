@@ -148,7 +148,7 @@ def picker_payload() -> dict[str, Any]:
         ],
         "hidden_workflows": {
             "from_scratch": {
-                "enabled": False,
+                "enabled": True,
                 "id": "from_scratch",
                 "label": "Start from zero",
                 "note": (
