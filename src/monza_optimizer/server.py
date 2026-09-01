@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, Field
@@ -22,6 +22,7 @@ from monza_optimizer.export import build_output_pack
 from monza_optimizer.optimize.inventory_book import apply_purchase, inventory_status
 from monza_optimizer.optimize.inventory_picker import picker_payload, ticks_to_inventory
 from monza_optimizer.optimize.part_art import bmp_to_png, resolve_art_path
+from monza_optimizer.reference.race_calendar import upcoming_events
 
 PUBLIC_API_BASE = os.environ.get(
     "PUBLIC_API_BASE", "https://scalextric-track-optimizer.onrender.com"
@@ -29,7 +30,7 @@ PUBLIC_API_BASE = os.environ.get(
 
 app = FastAPI(
     title="Scalextric Track Designer API",
-    version="1.3.3",
+    version="1.3.4",
     description="Inventory + circuit + ambition → official BOM, lay-list, and files.",
 )
 app.add_middleware(
@@ -100,6 +101,11 @@ def tracks() -> list[dict[str, Any]]:
 @app.get("/levels")
 def levels() -> list[dict[str, Any]]:
     return accuracy_levels_for_ui()
+
+
+@app.get("/calendar")
+def calendar(days: int = Query(28, ge=1, le=120)) -> dict[str, Any]:
+    return upcoming_events(days=days)
 
 
 @app.get("/outputs")
