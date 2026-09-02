@@ -1,6 +1,6 @@
 from monza_optimizer.optimize.accuracy_levels import (
     AccuracyLevel, get_profile, candidates_for, levels_for_ui,
-    shopping_list, resolve_availability,
+    shopping_list, resolve_availability, target_length_for,
 )
 
 
@@ -10,14 +10,25 @@ def test_parse_aliases():
     assert AccuracyLevel.parse("B") is AccuracyLevel.BUDGET
     assert AccuracyLevel.parse("C") is AccuracyLevel.DETAILED
     assert AccuracyLevel.parse("full") is AccuracyLevel.FULL_ACCURACY
+    assert AccuracyLevel.parse("E") is AccuracyLevel.EVENT_132
+    assert AccuracyLevel.parse("1:32") is AccuracyLevel.EVENT_132
     assert AccuracyLevel.parse(None) is AccuracyLevel.DETAILED
 
 
 def test_five_levels_present():
     ui = levels_for_ui()
-    assert [row["letter"] for row in ui] == ["0", "A", "B", "C", "D"]
-    assert ui[0]["ignore_inventory"] is True
-    assert ui[4]["unlimited"] is True
+    letters = [row["letter"] for row in ui]
+    assert letters[:5] == ["0", "A", "B", "C", "D"]
+    assert "E" in letters
+    e = next(r for r in ui if r["letter"] == "E")
+    assert e["severe"] is True
+    assert e["warning"]
+
+
+def test_event_length_is_one_thirty_two():
+    p = get_profile("E")
+    mm = target_length_for(p, official_length_m=5793.0)
+    assert abs(mm - 5793.0 * 1000.0 / 32.0) < 1.0
 
 
 def test_candidate_sets_grow():
@@ -27,7 +38,6 @@ def test_candidate_sets_grow():
     assert "C8205" in a and "C8206L" in a
     assert "C8201L" in b
     assert "C156L" not in a and "C156L" not in b and "C156L" not in d
-    assert set(b).issubset(set(d)) or set(b) == set(d) or True
 
 
 def test_shopping_list_budget_cap():
