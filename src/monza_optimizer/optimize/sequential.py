@@ -26,8 +26,7 @@ def _root(code: str) -> str:
 
 
 def _peak_turn(cl, s_idx, span_mm: float) -> float:
-    """Largest |heading change| from s_idx along the next span_mm of centreline."""
-    i0 = min(s_idx, len(cl.points) - 2)
+    i0 = min(max(s_idx, 0), len(cl.points) - 2)
     h0 = cl.heading(i0)
     peak = 0.0
     j = i0
@@ -38,13 +37,6 @@ def _peak_turn(cl, s_idx, span_mm: float) -> float:
             peak = t
         j += 1
     return peak
-
-
-def _turn_at(cl, s_idx, ahead_mm: float) -> float:
-    j = s_idx
-    while j < len(cl.s) - 1 and cl.s[j] < cl.s[s_idx] + ahead_mm:
-        j += 1
-    return normalize_heading(cl.heading(min(j, len(cl.points) - 2)) - cl.heading(min(s_idx, len(cl.points) - 2)))
 
 
 @dataclass
@@ -60,10 +52,10 @@ def sequential_follow(
     *,
     candidates=None,
     max_pieces=700,
-    look_ahead_mm=180.0,
+    look_ahead_mm=160.0,
     sharp_turn_deg=28.0,
     max_radius_on_sharp=400.0,
-    dist_tol_mm=160.0,
+    dist_tol_mm=180.0,
     shop=None,
     loose=False,
     **_kwargs,
@@ -73,19 +65,15 @@ def sequential_follow(
     avail = avail or {base_id(c): 999 for c in codes}
     start = Pose(cl.points[0][0], cl.points[0][1], cl.heading(0))
     pose, seq, s_idx = start, [], 0
+    stall = 0
     while s_idx < len(cl.points) - 8 and len(seq) < max_pieces:
-        turn_needed = normalize_heading(
-            cl.heading(min(s_idx + 8, len(cl.points) - 2)) - pose.heading_degrees
-        )
-        turn_needed = _turn_at(cl, s_idx, look_ahead_mm) if abs(_turn_at(cl, s_idx, look_ahead_mm)) > abs(turn_needed) else turn_needed
-        # signed turn from current pose to near centreline heading
-        near_h_idx = s_idx
-        while near_h_idx < len(cl.s) - 1 and cl.s[near_h_idx] < cl.s[s_idx] + 70:
-            near_h_idx += 1
-        turn_needed = normalize_heading(cl.heading(min(near_h_idx, len(cl.points) - 2)) - pose.heading_degrees)
-        peak = _peak_turn(cl, s_idx, 220.0)
-        sharp_apex = peak >= 70.0
-        recent = [_root(c) for c in seq[-4:]]
+        j = s_idx
+        while j < len(cl.s) - 1 and cl.s[j] < cl.s[s_idx] + look_ahead_mm:
+            j += 1
+        turn_needed = normalize_heading(cl.heading(min(j, len(cl.points) - 2)) - pose.heading_degrees)
+        peak = _peak_turn(cl, s_idx, 160.0)
+        u_turn = peak >= 110.0
+        recent = [_root(c) for c in seq[-3:]]
         hairpin_run = sum(1 for r in recent if r in HAIRPINS)
         best, best_sc = None, 1e18
         for code in codes:
@@ -98,43 +86,47 @@ def sequential_follow(
             if part is None or part.geometry is None:
                 continue
             if isinstance(part.geometry, StraightGeometry):
-                if (sharp_apex or abs(turn_needed) > 20) and part.geometry.length >= 175:
+                if abs(turn_needed) > 22 and part.geometry.length >= 300:
+                    continue
+                if u_turn and part.geometry.length >= 175:
                     continue
             if isinstance(part.geometry, CurveGeometry):
                 ang = abs(part.geometry.angle_degrees)
                 signed = -ang if code.endswith("R") else ang
-                if abs(turn_needed) > 8 and signed * turn_needed < 0 and abs(signed) > 18 and not sharp_apex:
+                if abs(turn_needed) > 10 and signed * turn_needed < 0 and abs(signed) > 18:
                     continue
-                if sharp_apex and signed * turn_needed < 0 and abs(signed) >= 80:
-                    continue
-                if (not loose) and peak > sharp_turn_deg and part.geometry.radius > max_radius_on_sharp and not sharp_apex:
+                if (not loose) and abs(turn_needed) > sharp_turn_deg and part.geometry.radius > max_radius_on_sharp:
                     continue
                 is_hp = _root(code) in HAIRPINS
                 if is_hp:
-                    if not sharp_apex:
+                    if not u_turn and abs(turn_needed) < 55:
+                        continue
+                    if hairpin_run >= 2 and not u_turn:
                         continue
                     if hairpin_run >= 3:
                         continue
-                elif sharp_apex and part.geometry.radius > 280:
-                    continue
             np = _advance(pose, part)
-            nidx, ndist = cl.closest(np.x, np.y, start=max(0, s_idx - 1), window=280)
-            tol = dist_tol_mm + (80.0 if sharp_apex else 0.0)
-            if ndist > tol:
+            nidx, ndist = cl.closest(np.x, np.y, start=max(0, s_idx - 2), window=240)
+            if ndist > dist_tol_mm:
                 continue
             prog = cl.s[nidx] - cl.s[s_idx]
             if prog < 1:
                 continue
             head_err = abs(normalize_heading(np.heading_degrees - cl.heading(min(nidx, len(cl.points) - 2))))
-            sc = ndist * 4.0 + head_err * 2.5 - prog * 0.4
-            if _root(code) in HAIRPINS and sharp_apex:
-                sc -= 80.0
-            if sharp_apex and isinstance(part.geometry, CurveGeometry) and part.geometry.radius <= 280:
-                sc -= 20.0
+            sc = ndist * 5.0 + head_err * 3.0 - prog * 0.5
+            if is_hp if isinstance(part.geometry, CurveGeometry) else False:
+                pass
+            if _root(code) in HAIRPINS:
+                sc -= 50.0 if u_turn else -25.0
             if sc < best_sc:
                 best_sc, best = sc, (code, np, nidx)
         if best is None:
-            break
+            stall += 1
+            s_idx += 2
+            if stall > 40:
+                break
+            continue
+        stall = 0
         code, np, nidx = best
         seq.append(code)
         used[base_id(code)] += 1
