@@ -3,12 +3,10 @@ from __future__ import annotations
 import math
 from collections import Counter
 from dataclasses import dataclass, field
-from typing import Callable
 from monza_optimizer.catalog.geometry_types import CurveGeometry, StraightGeometry
 from monza_optimizer.catalog.parts import base_id
 from monza_optimizer.geometry.pose import Pose, normalize_heading
 from monza_optimizer.geometry.path import compute_track_path, path_length
-from monza_optimizer.optimize.corner_first import Centreline
 from monza_optimizer.optimize.accuracy_levels import may_place
 
 DEFAULT_CANDIDATES = [
@@ -25,6 +23,13 @@ def _advance(pose, part):
 
 def _root(code: str) -> str:
     return base_id(code)
+
+
+def _heading_in(cl, s_idx, ahead_mm):
+    j = s_idx
+    while j < len(cl.s) - 1 and cl.s[j] < cl.s[s_idx] + ahead_mm:
+        j += 1
+    return cl.heading(min(j, len(cl.points) - 2)), j
 
 
 @dataclass
@@ -54,10 +59,11 @@ def sequential_follow(
     start = Pose(cl.points[0][0], cl.points[0][1], cl.heading(0))
     pose, seq, s_idx = start, [], 0
     while s_idx < len(cl.points) - 8 and len(seq) < max_pieces:
-        j = s_idx
-        while j < len(cl.s) - 1 and cl.s[j] < cl.s[s_idx] + look_ahead_mm:
-            j += 1
-        turn_needed = normalize_heading(cl.heading(min(j, len(cl.points) - 2)) - pose.heading_degrees)
+        far_h, j = _heading_in(cl, s_idx, look_ahead_mm)
+        near_h, _ = _heading_in(cl, s_idx, 80.0)
+        turn_needed = normalize_heading(far_h - pose.heading_degrees)
+        turn_near = normalize_heading(near_h - pose.heading_degrees)
+        sharp_apex = abs(turn_near) >= 58 or abs(turn_needed) >= 75
         recent = [_root(c) for c in seq[-3:]]
         hairpin_run = sum(1 for r in recent if r in HAIRPINS)
         best, best_sc = None, 1e18
@@ -71,25 +77,27 @@ def sequential_follow(
             if part is None or part.geometry is None:
                 continue
             if isinstance(part.geometry, StraightGeometry):
-                if abs(turn_needed) > 22 and part.geometry.length >= 300:
+                if (abs(turn_needed) > 22 or sharp_apex) and part.geometry.length >= 175:
                     continue
             if isinstance(part.geometry, CurveGeometry):
                 ang = abs(part.geometry.angle_degrees)
                 signed = -ang if code.endswith("R") else ang
-                if abs(turn_needed) > 10 and signed * turn_needed < 0 and abs(signed) > 18:
+                local_turn = turn_near if sharp_apex else turn_needed
+                if abs(local_turn) > 10 and signed * local_turn < 0 and abs(signed) > 18:
                     continue
                 if (not loose) and abs(turn_needed) > sharp_turn_deg and part.geometry.radius > max_radius_on_sharp:
                     continue
-                if _root(code) in HAIRPINS:
-                    if abs(turn_needed) < 58:
+                is_hp = _root(code) in HAIRPINS
+                if is_hp:
+                    if not sharp_apex and abs(turn_needed) < 58:
                         continue
-                    if hairpin_run >= 2:
+                    if hairpin_run >= 3:
                         continue
-                if ang >= 80 and abs(turn_needed) < 70:
+                elif ang >= 80 and not sharp_apex and abs(turn_needed) < 70:
                     continue
             np = _advance(pose, part)
-            nidx, ndist = cl.closest(np.x, np.y, start=max(0, s_idx - 2), window=240)
-            if ndist > dist_tol_mm:
+            nidx, ndist = cl.closest(np.x, np.y, start=max(0, s_idx - 2), window=260)
+            if ndist > (dist_tol_mm + (40.0 if sharp_apex else 0.0)):
                 continue
             prog = cl.s[nidx] - cl.s[s_idx]
             if prog < 1:
@@ -97,9 +105,12 @@ def sequential_follow(
             head_err = abs(normalize_heading(np.heading_degrees - cl.heading(min(nidx, len(cl.points) - 2))))
             sc = ndist * 5.0 + head_err * 3.0 - prog * 0.5
             if _root(code) in HAIRPINS:
-                sc += 25.0 + 20.0 * hairpin_run
-            if isinstance(part.geometry, CurveGeometry) and abs(part.geometry.angle_degrees) >= 80:
-                sc += 12.0
+                if sharp_apex:
+                    sc -= 55.0
+                else:
+                    sc += 30.0 + 20.0 * hairpin_run
+            if sharp_apex and isinstance(part.geometry, CurveGeometry) and part.geometry.radius > 300:
+                sc += 40.0
             if sc < best_sc:
                 best_sc, best = sc, (code, np, nidx)
         if best is None:
