@@ -3,7 +3,6 @@ from __future__ import annotations
 from collections import Counter
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Sequence
 
 class AccuracyLevel(str, Enum):
     BARE_BONES = "bare_bones"
@@ -11,6 +10,7 @@ class AccuracyLevel(str, Enum):
     BUDGET = "budget"
     DETAILED = "detailed"
     FULL_ACCURACY = "full_accuracy"
+    EVENT_132 = "event_132"
     @classmethod
     def parse(cls, value):
         if value is None:
@@ -28,6 +28,9 @@ class AccuracyLevel(str, Enum):
             "d": cls.FULL_ACCURACY, "full": cls.FULL_ACCURACY,
             "fullaccuracy": cls.FULL_ACCURACY, "full_accuracy": cls.FULL_ACCURACY,
             "unlimited": cls.FULL_ACCURACY,
+            "e": cls.EVENT_132, "event": cls.EVENT_132, "event_132": cls.EVENT_132,
+            "1:32": cls.EVENT_132, "132": cls.EVENT_132, "scale_132": cls.EVENT_132,
+            "super": cls.EVENT_132,
         }
         if key in aliases:
             return aliases[key]
@@ -35,6 +38,13 @@ class AccuracyLevel(str, Enum):
             return cls(key)
         except ValueError as exc:
             raise ValueError(f"{value!r} is not a valid AccuracyLevel") from exc
+
+E_WARNING = (
+    "Level E is a 1:32 scale layout of the real circuit. Expect several hundred "
+    "to a few thousand Sport pieces, a hall or outdoor site rather than a living room, "
+    "many minutes of compute (the request may time out on a free server), and a full "
+    "club build weekend. Only use this for a serious fan community or a sponsored event."
+)
 
 @dataclass(frozen=True)
 class LevelProfile:
@@ -63,6 +73,8 @@ class LevelProfile:
     scale_frac: float = 1.0
     min_target_mm: float = 4000.0
     max_target_mm: float = 40000.0
+    warning: str | None = None
+    scale_note: str | None = None
 
 STARTER_CANDIDATES = ["C8205", "C8206L", "C8206R", "C8204L", "C8204R", "C8010L", "C8010R", "C8234L", "C8234R", "C8201L", "C8201R"]
 COMPACT_CANDIDATES = ["C8205", "C8207", "C8200", "C8236", "C8204L", "C8204R", "C8206L", "C8206R", "C8010L", "C8010R"]
@@ -79,11 +91,21 @@ LEVELS = {
     AccuracyLevel.BUDGET: _p(AccuracyLevel.BUDGET, "B", "Budget", "Follow the red line without knots. Shop list can grow to keep one clean lap.", "sequential", False, False, 36, 8, 18000.0, 16.0, 32.0, 32.0, 420.0, 220.0, 280.0, 200, True, False, False, "standard", scale_frac=0.60, min_target_mm=15000.0, max_target_mm=22000.0),
     AccuracyLevel.DETAILED: _p(AccuracyLevel.DETAILED, "C", "Detailed", "Close to Full: same parts, slightly shorter lap and a modest shop cap.", "sequential", False, False, 64, 14, 28000.0, 13.0, 26.0, 24.0, 380.0, 240.0, 200.0, 550, False, False, True, "full", scale_frac=0.86, min_target_mm=21000.0, max_target_mm=32000.0),
     AccuracyLevel.FULL_ACCURACY: _p(AccuracyLevel.FULL_ACCURACY, "D", "Full Accuracy", "Unlimited official catalogue. Follows the red centreline.", "sequential", True, False, 10000, 10000, 32000.0, 12.0, 22.0, 22.0, 360.0, 280.0, 180.0, 900, False, False, True, "full", scale_frac=1.0, min_target_mm=24000.0, max_target_mm=40000.0),
+    AccuracyLevel.EVENT_132: _p(
+        AccuracyLevel.EVENT_132, "E", "1:32 Event",
+        "True 1:32 length of the real circuit. Club or sponsor build only.",
+        "sequential", True, False, 100000, 100000, 180000.0, 18.0, 20.0, 20.0, 360.0, 280.0, 200.0, 2800,
+        False, False, True, "full", scale_frac=1.0, min_target_mm=80000.0, max_target_mm=250000.0,
+        warning=E_WARNING, scale_note="1:32 of official circuit length",
+    ),
 }
 
 def target_length_for(profile, official_length_m=None, override_mm=None, track_id=None, kind=None):
     if override_mm:
         return float(override_mm)
+    if profile.letter == "E" and official_length_m:
+        mm = float(official_length_m) * 1000.0 / 32.0
+        return max(profile.min_target_mm, min(profile.max_target_mm, mm))
     raw = 32000.0 if not official_length_m else max(14000.0, min(40000.0, 32000.0 * (float(official_length_m) / 5793.0)))
     raw *= float(profile.scale_frac)
     lo, hi = profile.min_target_mm, profile.max_target_mm
@@ -100,7 +122,29 @@ def candidates_for(profile):
     return {"starter": list(STARTER_CANDIDATES), "compact": list(COMPACT_CANDIDATES), "standard": list(STANDARD_CANDIDATES), "full": list(FULL_CANDIDATES)}[profile.candidate_set]
 
 def levels_for_ui():
-    return [{"id": p.level.value, "letter": p.letter, "label": p.label, "pitch": p.pitch, "strategy": p.strategy, "unlimited": p.unlimited, "inventory_only": p.inventory_only, "max_shop_pieces": p.max_shop_pieces, "max_shop_skus": p.max_shop_skus, "target_length_mm": p.target_length_mm, "scale_frac": p.scale_frac, "min_target_mm": p.min_target_mm, "max_target_mm": p.max_target_mm, "candidate_set": p.candidate_set, "ignore_inventory": p.ignore_inventory} for p in LEVELS.values()]
+    rows = []
+    for p in LEVELS.values():
+        rows.append({
+            "id": p.level.value,
+            "letter": p.letter,
+            "label": p.label,
+            "pitch": p.pitch,
+            "strategy": p.strategy,
+            "unlimited": p.unlimited,
+            "inventory_only": p.inventory_only,
+            "max_shop_pieces": p.max_shop_pieces,
+            "max_shop_skus": p.max_shop_skus,
+            "target_length_mm": p.target_length_mm,
+            "scale_frac": p.scale_frac,
+            "min_target_mm": p.min_target_mm,
+            "max_target_mm": p.max_target_mm,
+            "candidate_set": p.candidate_set,
+            "ignore_inventory": p.ignore_inventory,
+            "warning": p.warning,
+            "scale_note": p.scale_note,
+            "severe": p.letter == "E",
+        })
+    return rows
 
 @dataclass
 class ShoppingList:
