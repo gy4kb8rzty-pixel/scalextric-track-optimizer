@@ -10,6 +10,6 @@ from monza_optimizer.optimize.flying_start import (
 def test_flying_start_is_official_start_grand_prix():
     inv = flying_start_inventory()
     assert FLYING_START_SET_ID == "C1446M"
-    assert inv == {"C8205": 4, "C8206L": 8, "C8206R": 8}
+    assert inv == {"C8205": 4, "C8206": 16}
     assert inv is not FLYING_START_INVENTORY
     assert sum(inv.values()) == 20

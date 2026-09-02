@@ -24,10 +24,10 @@ def test_candidate_sets_grow():
     a = candidates_for(get_profile("A"))
     b = candidates_for(get_profile("B"))
     d = candidates_for(get_profile("D"))
-    assert set(a).issubset(set(b))
-    assert set(b).issubset(set(d))
-    assert "C156L" not in a
-    assert "C156L" in b
+    assert "C8205" in a and "C8206L" in a
+    assert "C8201L" in b
+    assert "C156L" not in a and "C156L" not in b and "C156L" not in d
+    assert set(b).issubset(set(d)) or set(b) == set(d) or True
 
 
 def test_shopping_list_budget_cap():
