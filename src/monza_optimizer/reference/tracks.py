@@ -11,6 +11,8 @@ from typing import Sequence
 
 _DATA = Path(__file__).resolve().parents[3] / "data" / "tracks"
 
+UNRELIABLE_QUALITY = {"schematic"}
+
 
 @dataclass
 class TrackProfile:
@@ -63,6 +65,9 @@ def list_tracks() -> list[dict]:
     out = []
     for t in raw.get("circuits") or []:
         fn = _normalize_file(t.get("file"))
+        path_ok = bool(fn) and (_DATA / fn).exists() if fn else False
+        quality = t.get("quality")
+        selectable = path_ok and quality not in UNRELIABLE_QUALITY
         out.append({
             "id": t["id"],
             "name": t.get("name", t["id"]),
@@ -73,8 +78,9 @@ def list_tracks() -> list[dict]:
             "kind": t.get("kind"),
             "calendar": t.get("calendar") or [],
             "featured": bool(t.get("featured") or t["id"] in featured),
-            "available": bool(fn) and (_DATA / fn).exists() if fn else False,
-            "quality": t.get("quality"),
+            "available": selectable,
+            "selectable": selectable,
+            "quality": quality,
             "note": t.get("note"),
         })
     for alias, target in aliases.items():
@@ -83,6 +89,7 @@ def list_tracks() -> list[dict]:
         src = next((r for r in out if r["id"] == target), None)
         if src:
             out.append({**src, "id": alias, "note": f"alias of {target}"})
+    out = [r for r in out if r.get("selectable")]
     out.sort(key=lambda r: (not r.get("featured"), r.get("series") or "", r["name"]))
     return out
 
