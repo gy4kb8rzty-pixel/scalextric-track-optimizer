@@ -1,8 +1,4 @@
-"""Sequential centreline follower.
-
-Do not add `if best is None: break` gates for hairpins. A short lap is worse
-than a skipped Loews. See docs/LEARNINGS.md.
-"""
+"""Sequential centreline follower. See docs/LEARNINGS.md."""
 from __future__ import annotations
 import math
 from collections import Counter
@@ -27,6 +23,36 @@ def _advance(pose, part):
 
 def _root(code: str) -> str:
     return base_id(code)
+
+
+def _signed_angle(code, part) -> float:
+    if not isinstance(part.geometry, CurveGeometry):
+        return 0.0
+    ang = abs(part.geometry.angle_degrees)
+    return -ang if code.endswith("R") else ang
+
+
+def _recent_spiral(seq, get_part) -> float:
+    total = 0.0
+    n = 0
+    for code in reversed(seq):
+        part = get_part(code)
+        if part is None or not isinstance(part.geometry, CurveGeometry):
+            if n:
+                break
+            continue
+        total += _signed_angle(code, part)
+        n += 1
+        if n >= 6:
+            break
+    return total
+
+
+def _turn_over(cl, s_idx, span_mm) -> float:
+    j = s_idx
+    while j < len(cl.s) - 1 and cl.s[j] < cl.s[s_idx] + span_mm:
+        j += 1
+    return normalize_heading(cl.heading(min(j, len(cl.points) - 2)) - cl.heading(min(s_idx, len(cl.points) - 2)))
 
 
 @dataclass
@@ -56,10 +82,9 @@ def sequential_follow(
     start = Pose(cl.points[0][0], cl.points[0][1], cl.heading(0))
     pose, seq, s_idx = start, [], 0
     while s_idx < len(cl.points) - 8 and len(seq) < max_pieces:
-        j = s_idx
-        while j < len(cl.s) - 1 and cl.s[j] < cl.s[s_idx] + look_ahead_mm:
-            j += 1
-        turn_needed = normalize_heading(cl.heading(min(j, len(cl.points) - 2)) - pose.heading_degrees)
+        turn_needed = _turn_over(cl, s_idx, look_ahead_mm)
+        apex = _turn_over(cl, s_idx, 90.0)
+        spiral = _recent_spiral(seq, get_part)
         recent = [_root(c) for c in seq[-4:]]
         hairpin_run = 0
         for r in reversed(recent):
@@ -78,18 +103,19 @@ def sequential_follow(
             if part is None or part.geometry is None:
                 continue
             is_hp = _root(code) in HAIRPINS
+            signed = _signed_angle(code, part)
             if isinstance(part.geometry, StraightGeometry):
                 if abs(turn_needed) > 22 and part.geometry.length >= 300:
                     continue
             if isinstance(part.geometry, CurveGeometry):
-                ang = abs(part.geometry.angle_degrees)
-                signed = -ang if code.endswith("R") else ang
                 if abs(turn_needed) > 10 and signed * turn_needed < 0 and abs(signed) > 18:
                     continue
                 if (not loose) and abs(turn_needed) > sharp_turn_deg and part.geometry.radius > max_radius_on_sharp:
                     continue
+                if abs(spiral) >= 240 and signed * spiral > 0 and abs(signed) >= 20:
+                    continue
                 if is_hp:
-                    if abs(turn_needed) < 55:
+                    if abs(apex) < 50 and abs(turn_needed) < 55:
                         continue
                     if hairpin_run >= 2:
                         continue
@@ -103,11 +129,11 @@ def sequential_follow(
             head_err = abs(normalize_heading(np.heading_degrees - cl.heading(min(nidx, len(cl.points) - 2))))
             sc = ndist * 5.0 + head_err * 3.0 - prog * 0.5
             if is_hp:
-                if abs(turn_needed) >= 80:
-                    sc -= 35.0
+                if abs(apex) >= 70:
+                    sc -= 40.0
                 else:
-                    sc += 20.0
-                sc += 12.0 * hairpin_run
+                    sc += 18.0
+                sc += 14.0 * hairpin_run
             if sc < best_sc:
                 best_sc, best = sc, (code, np, nidx)
         if best is None:
