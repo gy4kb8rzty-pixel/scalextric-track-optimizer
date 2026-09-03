@@ -12,6 +12,8 @@ from typing import Sequence
 _DATA = Path(__file__).resolve().parents[3] / "data" / "tracks"
 
 UNRELIABLE_QUALITY = {"schematic"}
+# Temporary menu hide — files stay in the repo.
+HIDDEN_FROM_MENU = {"charlotte_roval", "gateway"}
 
 
 @dataclass
@@ -67,7 +69,8 @@ def list_tracks() -> list[dict]:
         fn = _normalize_file(t.get("file"))
         path_ok = bool(fn) and (_DATA / fn).exists() if fn else False
         quality = t.get("quality")
-        selectable = path_ok and quality not in UNRELIABLE_QUALITY
+        hidden = t["id"] in HIDDEN_FROM_MENU
+        selectable = path_ok and quality not in UNRELIABLE_QUALITY and not hidden
         out.append({
             "id": t["id"],
             "name": t.get("name", t["id"]),
@@ -77,7 +80,7 @@ def list_tracks() -> list[dict]:
             "series": t.get("series"),
             "kind": t.get("kind"),
             "calendar": t.get("calendar") or [],
-            "featured": bool(t.get("featured") or t["id"] in featured),
+            "featured": bool(t.get("featured") or t["id"] in featured) and not hidden,
             "available": selectable,
             "selectable": selectable,
             "quality": quality,
