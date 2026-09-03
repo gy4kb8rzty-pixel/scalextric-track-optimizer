@@ -25,31 +25,6 @@ def _root(code: str) -> str:
     return base_id(code)
 
 
-def _peak_turn(cl, s_idx, span_mm: float) -> float:
-    i0 = min(max(s_idx, 0), len(cl.points) - 2)
-    h0 = cl.heading(i0)
-    peak = 0.0
-    signed_at_peak = 0.0
-    j = i0
-    limit = cl.s[i0] + span_mm
-    while j < len(cl.s) - 1 and cl.s[j] <= limit:
-        t = normalize_heading(cl.heading(j) - h0)
-        if abs(t) > peak:
-            peak = abs(t)
-            signed_at_peak = t
-        j += 1
-    return peak, signed_at_peak
-
-
-def _loops_back(np, history, min_age=4, radius=95.0) -> bool:
-    if len(history) < min_age:
-        return False
-    for old in history[:-min_age]:
-        if math.hypot(np.x - old.x, np.y - old.y) < radius:
-            return True
-    return False
-
-
 @dataclass
 class SequentialResult:
     sequence: list
@@ -63,7 +38,7 @@ def sequential_follow(
     *,
     candidates=None,
     max_pieces=700,
-    look_ahead_mm=180.0,
+    look_ahead_mm=220.0,
     sharp_turn_deg=28.0,
     max_radius_on_sharp=400.0,
     dist_tol_mm=150.0,
@@ -76,17 +51,11 @@ def sequential_follow(
     avail = avail or {base_id(c): 999 for c in codes}
     start = Pose(cl.points[0][0], cl.points[0][1], cl.heading(0))
     pose, seq, s_idx = start, [], 0
-    history = [start]
     while s_idx < len(cl.points) - 8 and len(seq) < max_pieces:
-        peak, peak_signed = _peak_turn(cl, s_idx, 140.0)
-        u_turn = peak >= 95.0
-        ahead = 90.0 if u_turn else look_ahead_mm
         j = s_idx
-        while j < len(cl.s) - 1 and cl.s[j] < cl.s[s_idx] + ahead:
+        while j < len(cl.s) - 1 and cl.s[j] < cl.s[s_idx] + look_ahead_mm:
             j += 1
         turn_needed = normalize_heading(cl.heading(min(j, len(cl.points) - 2)) - pose.heading_degrees)
-        if u_turn:
-            turn_needed = peak_signed if abs(peak_signed) > abs(turn_needed) else turn_needed
         recent = [_root(c) for c in seq[-3:]]
         hairpin_run = sum(1 for r in recent if r in HAIRPINS)
         best, best_sc = None, 1e18
@@ -99,9 +68,8 @@ def sequential_follow(
             part = get_part(code)
             if part is None or part.geometry is None:
                 continue
-            is_hp = _root(code) in HAIRPINS
             if isinstance(part.geometry, StraightGeometry):
-                if (u_turn or abs(turn_needed) > 22) and part.geometry.length >= 250:
+                if abs(turn_needed) > 22 and part.geometry.length >= 300:
                     continue
             if isinstance(part.geometry, CurveGeometry):
                 ang = abs(part.geometry.angle_degrees)
@@ -110,31 +78,24 @@ def sequential_follow(
                     continue
                 if (not loose) and abs(turn_needed) > sharp_turn_deg and part.geometry.radius > max_radius_on_sharp:
                     continue
-                if is_hp:
-                    if not u_turn and abs(turn_needed) < 70:
+                if _root(code) in HAIRPINS:
+                    if abs(turn_needed) < 50:
                         continue
-                    if hairpin_run >= 2:
+                    if hairpin_run >= 3:
                         continue
-                elif u_turn and part.geometry.radius > 280:
+                if ang >= 80 and abs(turn_needed) < 50 and hairpin_run >= 2:
                     continue
             np = _advance(pose, part)
-            if _loops_back(np, history):
-                continue
-            win = 100 if u_turn else 220
-            nidx, ndist = cl.closest(np.x, np.y, start=max(0, s_idx - 1), window=win)
-            if ndist > dist_tol_mm + (40.0 if u_turn and is_hp else 0.0):
+            nidx, ndist = cl.closest(np.x, np.y, start=max(0, s_idx - 2), window=240)
+            if ndist > dist_tol_mm:
                 continue
             prog = cl.s[nidx] - cl.s[s_idx]
-            if prog < (6 if is_hp else 8):
-                continue
-            if prog > 400:
+            if prog < 1:
                 continue
             head_err = abs(normalize_heading(np.heading_degrees - cl.heading(min(nidx, len(cl.points) - 2))))
-            sc = ndist * 5.0 + head_err * 3.0 - prog * 0.45
-            if is_hp:
-                sc -= 70.0 if u_turn else -40.0
-            if u_turn and isinstance(part.geometry, CurveGeometry) and part.geometry.radius <= 280:
-                sc -= 15.0
+            sc = ndist * 5.0 + head_err * 3.0 - prog * 0.5
+            if _root(code) in HAIRPINS:
+                sc += 8.0 * hairpin_run
             if sc < best_sc:
                 best_sc, best = sc, (code, np, nidx)
         if best is None:
@@ -143,7 +104,6 @@ def sequential_follow(
         seq.append(code)
         used[base_id(code)] += 1
         pose = np
-        history.append(np)
         s_idx = max(s_idx + 1, nidx)
     pos = math.hypot(pose.x - start.x, pose.y - start.y)
     head = abs(normalize_heading(pose.heading_degrees - start.heading_degrees))
