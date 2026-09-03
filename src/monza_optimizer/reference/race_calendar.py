@@ -87,6 +87,8 @@ CUP_EVENTS: list[dict[str, Any]] = [
 
 ALL_EVENTS = F1_EVENTS + CUP_EVENTS
 WINDOW_DAYS = 28
+HIDDEN_FROM_BANNER_TRACK = {"charlotte_roval", "gateway"}
+HIDDEN_FROM_BANNER_VENUE = {"gateway", "charlotte"}
 
 
 def _parse(iso: str) -> date:
@@ -102,6 +104,10 @@ def upcoming_events(*, as_of: date | None = None, days: int = WINDOW_DAYS) -> di
     end = start + timedelta(days=int(days))
     rows = []
     for ev in ALL_EVENTS:
+        if (ev.get("track_id") or "") in HIDDEN_FROM_BANNER_TRACK:
+            continue
+        if str(ev.get("venue") or "").strip().lower() in HIDDEN_FROM_BANNER_VENUE:
+            continue
         race = _parse(ev["race_date"])
         weekend_start = race - timedelta(days=3)
         if race < start:
