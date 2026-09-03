@@ -89,8 +89,8 @@ LEVELS = {
     AccuracyLevel.BARE_BONES: _p(AccuracyLevel.BARE_BONES, "0", "Bare Bones", "Empty-box starter kit.", "sequential", False, False, 64, 6, 5000.0, 60.0, 80.0, 80.0, 2500.0, 1600.0, 1800.0, 64, True, False, False, "starter", ignore_inventory=True, scale_frac=0.18, min_target_mm=5500.0, max_target_mm=8000.0),
     AccuracyLevel.LEAN_BUDGET: _p(AccuracyLevel.LEAN_BUDGET, "A", "Lean Budget", "Simple silhouette that still follows the red line.", "sequential", False, False, 28, 8, 14000.0, 22.0, 40.0, 36.0, 480.0, 220.0, 400.0, 140, True, False, False, "standard", scale_frac=0.50, min_target_mm=11000.0, max_target_mm=16000.0),
     AccuracyLevel.BUDGET: _p(AccuracyLevel.BUDGET, "B", "Budget", "Follow the red line without knots. Shop list can grow to keep one clean lap.", "sequential", False, False, 36, 8, 18000.0, 16.0, 32.0, 32.0, 420.0, 220.0, 280.0, 200, True, False, False, "standard", scale_frac=0.60, min_target_mm=15000.0, max_target_mm=22000.0),
-    AccuracyLevel.DETAILED: _p(AccuracyLevel.DETAILED, "C", "Detailed", "Close to Full: same parts, slightly shorter lap and a modest shop cap.", "sequential", False, False, 64, 14, 32000.0, 13.0, 26.0, 24.0, 380.0, 240.0, 200.0, 550, False, False, True, "full", scale_frac=0.95, min_target_mm=26000.0, max_target_mm=40000.0),
-    AccuracyLevel.FULL_ACCURACY: _p(AccuracyLevel.FULL_ACCURACY, "D", "Full Accuracy", "Unlimited official catalogue. Follows the red centreline.", "sequential", True, False, 10000, 10000, 38000.0, 12.0, 22.0, 22.0, 360.0, 280.0, 180.0, 900, False, False, True, "full", scale_frac=1.2, min_target_mm=32000.0, max_target_mm=48000.0),
+    AccuracyLevel.DETAILED: _p(AccuracyLevel.DETAILED, "C", "Detailed", "Close to Full: same parts, slightly shorter lap and a modest shop cap.", "sequential", False, False, 64, 14, 34000.0, 13.0, 26.0, 24.0, 380.0, 240.0, 200.0, 550, False, False, True, "full", scale_frac=1.05, min_target_mm=30000.0, max_target_mm=42000.0),
+    AccuracyLevel.FULL_ACCURACY: _p(AccuracyLevel.FULL_ACCURACY, "D", "Full Accuracy", "Unlimited official catalogue. Follows the red centreline.", "sequential", True, False, 10000, 10000, 44000.0, 12.0, 22.0, 22.0, 360.0, 280.0, 180.0, 900, False, False, True, "full", scale_frac=1.35, min_target_mm=40000.0, max_target_mm=56000.0),
     AccuracyLevel.EVENT_132: _p(
         AccuracyLevel.EVENT_132, "E", "1:32 Event",
         "True 1:32 length of the real circuit. Club or sponsor build only.",
@@ -106,7 +106,7 @@ def target_length_for(profile, official_length_m=None, override_mm=None, track_i
     if profile.letter == "E" and official_length_m:
         mm = float(official_length_m) * 1000.0 / 32.0
         return max(profile.min_target_mm, min(profile.max_target_mm, mm))
-    raw = 32000.0 if not official_length_m else max(14000.0, min(48000.0, 32000.0 * (float(official_length_m) / 5793.0)))
+    raw = 32000.0 if not official_length_m else max(14000.0, min(56000.0, 32000.0 * (float(official_length_m) / 5793.0)))
     raw *= float(profile.scale_frac)
     lo, hi = profile.min_target_mm, profile.max_target_mm
     tid = (track_id or "").lower()
@@ -115,7 +115,7 @@ def target_length_for(profile, official_length_m=None, override_mm=None, track_i
         if tid in {"monaco", "monte_carlo"}:
             lo, hi, raw = 12000.0, 14000.0, 12000.0
     if profile.letter in {"C", "D"} and tid in {"monaco", "monte_carlo"}:
-        floor = 34000.0 if profile.letter == "D" else 28000.0
+        floor = 42000.0 if profile.letter == "D" else 32000.0
         lo, raw = max(lo, floor), max(raw, floor)
     return max(lo, min(hi, raw))
 
