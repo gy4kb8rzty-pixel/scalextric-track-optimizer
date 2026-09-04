@@ -17,7 +17,6 @@ from monza_optimizer.optimize.coverage_fill import coverage_fill
 from monza_optimizer.optimize.close_loop import close_loop
 from monza_optimizer.optimize.kit_loop import closed_kit_loop
 from monza_optimizer.optimize.silhouette import simplify_for_level_a, build_on_silhouette
-from monza_optimizer.optimize.b_guide import simplify_for_level_b
 from monza_optimizer.geometry.pose import Pose
 from monza_optimizer.geometry.path import path_length as _plen
 from monza_optimizer.optimize.accuracy_levels import (
@@ -87,7 +86,7 @@ def default_inventory_from_catalog(parts_json: str = "parts.json") -> dict[str, 
 
 def _look_ahead(profile) -> float:
     if profile.letter == "B":
-        return 320.0
+        return 280.0
     return 220.0
 
 
@@ -196,8 +195,6 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
     scaled = scale_centreline(loaded.points_m, target_mm, close=True)
     if profile.letter == "A":
         scaled = simplify_for_level_a(scaled)
-    elif profile.letter == "B":
-        scaled = simplify_for_level_b(scaled)
     cl = densify_polyline(scaled, step=profile.densify_step_mm)
 
     if req.strategy:
@@ -339,8 +336,6 @@ def export_result_3mf(
             letter = (result.accuracy_level or "")
             if letter in {"lean_budget", "a"} or result.profile.get("letter") == "A":
                 outline = simplify_for_level_a(outline)
-            elif letter in {"budget", "b"} or result.profile.get("letter") == "B":
-                outline = simplify_for_level_b(outline)
         except Exception:
             outline = None
     title = f"{result.track_id} ({result.accuracy_level}/{result.strategy})"
