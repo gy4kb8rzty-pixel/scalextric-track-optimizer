@@ -23,6 +23,7 @@ from monza_optimizer.optimize.inventory_book import apply_purchase, inventory_st
 from monza_optimizer.optimize.inventory_picker import picker_payload, ticks_to_inventory
 from monza_optimizer.optimize.part_art import bmp_to_png, resolve_art_path
 from monza_optimizer.reference.race_calendar import upcoming_events
+from monza_optimizer.optimize.accuracy_levels import levels_for_ui
 from monza_optimizer.optimize.manual_a import (
     manual_meta,
     manual_place,
@@ -37,7 +38,7 @@ PUBLIC_API_BASE = os.environ.get(
 
 app = FastAPI(
     title="Scalextric Track Designer API",
-    version="1.3.7",
+    version="1.3.8",
     description="Inventory + circuit + ambition → official BOM, lay-list, and files.",
 )
 app.add_middleware(
@@ -150,9 +151,24 @@ def tracks() -> list[dict[str, Any]]:
     return tracks_for_ui()
 
 
+def _levels_payload(track_id: str | None) -> list[dict[str, Any]]:
+    try:
+        return levels_for_ui(track_id)
+    except Exception:
+        try:
+            return accuracy_levels_for_ui()
+        except Exception:
+            return []
+
+
 @app.get("/levels")
 def levels(track_id: str | None = Query(None)) -> list[dict[str, Any]]:
-    return accuracy_levels_for_ui(track_id)
+    return _levels_payload(track_id)
+
+
+@app.get("/accuracy-levels")
+def accuracy_levels(track_id: str | None = Query(None)) -> list[dict[str, Any]]:
+    return _levels_payload(track_id)
 
 
 @app.get("/calendar")
