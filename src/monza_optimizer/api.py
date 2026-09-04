@@ -98,6 +98,7 @@ def _run_pipeline(cl, get_part, avail, profile, cand, shop=None):
             sharp_turn_deg=profile.sharp_turn_deg,
             max_radius_on_sharp=profile.max_radius_on_sharp,
             dist_tol_mm=profile.dist_tol_mm,
+            look_ahead_mm=160.0 if profile.letter == "B" else 220.0,
         )
 
     if strategy == "sequential":
@@ -201,9 +202,11 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
     start_pose = Pose(cl.points[0][0], cl.points[0][1], cl.heading(0))
     close_cands = [
         "C8236", "C8200", "C8207",
-        "C8205", "C8206L", "C8206R", "C8010L", "C8010R",
-        "C8204L", "C8204R", "C8234L", "C8234R", "C8201L", "C8201R",
+        "C8206L", "C8206R", "C8010L", "C8010R",
+        "C8204L", "C8204R", "C8234L", "C8234R",
     ]
+    if profile.letter != "B":
+        close_cands = ["C8205"] + close_cands + ["C8201L", "C8201R"]
     close_shop = ShopGate(owned={}, max_shop_pieces=999, max_shop_skus=99, unlimited=True)
     seq, close_stats = close_loop(
         seq, start_pose, get_part, avail, close_shop,
