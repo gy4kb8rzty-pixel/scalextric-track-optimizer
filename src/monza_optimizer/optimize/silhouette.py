@@ -125,8 +125,10 @@ def _follow(cl, get_part, codes):
             if isinstance(part.geometry, StraightGeometry) and abs(need) > 38 and part.geometry.length >= 250:
                 continue
             nxt = _advance(pose, part)
-            nidx, ndist = cl.closest(nxt.x, nxt.y, start=s_idx, window=100)
+            nidx, ndist = cl.closest(nxt.x, nxt.y, start=s_idx, window=45)
             if nidx <= s_idx and frac < 0.88:
+                continue
+            if nidx > s_idx + 55:
                 continue
             prog = cl.s[min(nidx, n - 1)] - cl.s[s_idx]
             if prog < 18 and frac < 0.88:
@@ -173,7 +175,6 @@ def _home(seq, start, pose, get_part, codes, max_add=14):
         head = abs(normalize_heading(pose.heading_degrees - start.heading_degrees))
         if gap < 140 and head < 28:
             break
-        want = math.degrees(math.atan2(start.y - pose.y, start.x - pose.x))
         best = None
         for code in codes:
             part = get_part(code)
