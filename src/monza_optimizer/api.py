@@ -86,6 +86,14 @@ def default_inventory_from_catalog(parts_json: str = "parts.json") -> dict[str, 
     return inv
 
 
+def _look_ahead(profile) -> float:
+    if profile.letter == "A":
+        return 130.0
+    if profile.letter == "B":
+        return 160.0
+    return 220.0
+
+
 def _run_pipeline(cl, get_part, avail, profile, cand, shop=None):
     strategy = profile.strategy
     seq: list[str] = []
@@ -98,7 +106,7 @@ def _run_pipeline(cl, get_part, avail, profile, cand, shop=None):
             sharp_turn_deg=profile.sharp_turn_deg,
             max_radius_on_sharp=profile.max_radius_on_sharp,
             dist_tol_mm=profile.dist_tol_mm,
-            look_ahead_mm=160.0 if profile.letter == "B" else 220.0,
+            look_ahead_mm=_look_ahead(profile),
         )
 
     if strategy == "sequential":
@@ -205,7 +213,7 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
         "C8206L", "C8206R", "C8010L", "C8010R",
         "C8204L", "C8204R", "C8234L", "C8234R",
     ]
-    if profile.letter != "B":
+    if profile.letter not in {"A", "B"}:
         close_cands = ["C8205"] + close_cands + ["C8201L", "C8201R"]
     close_shop = ShopGate(owned={}, max_shop_pieces=999, max_shop_skus=99, unlimited=True)
     seq, close_stats = close_loop(
