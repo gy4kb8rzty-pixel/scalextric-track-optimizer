@@ -57,6 +57,7 @@ _GLYPH = {
     "I": [14, 4, 4, 4, 4, 4, 14],
     "K": [17, 18, 20, 24, 20, 18, 17],
     "L": [16, 16, 16, 16, 16, 16, 31],
+    "M": [17, 27, 21, 21, 17, 17, 17],
     "N": [17, 25, 21, 19, 17, 17, 17],
     "O": [14, 17, 17, 17, 17, 17, 14],
     "P": [30, 17, 17, 30, 16, 16, 16],
@@ -66,6 +67,25 @@ _GLYPH = {
     "T": [31, 4, 4, 4, 4, 4, 4],
     "U": [17, 17, 17, 17, 17, 17, 14],
 }
+
+
+def _ruler_mm(span: float) -> float:
+    span = max(float(span), 1.0)
+    pick = 500.0
+    for cand in (500.0, 1000.0, 2000.0, 5000.0, 10000.0):
+        if cand <= span * 0.28:
+            pick = cand
+        else:
+            break
+    if pick > span * 0.45:
+        pick = 500.0
+    return pick
+
+
+def _ruler_label(mm: float) -> str:
+    if mm >= 1000:
+        return f"{int(round(mm / 1000.0))} M"
+    return f"{int(round(mm))} MM"
 
 
 def _blit_text(put, x: int, y: int, text: str, rgb=INK, scale: int = 2):
@@ -210,6 +230,13 @@ def render_svg(
             f'<polyline points="{d}" fill="none" stroke="#c0392b" '
             f'stroke-width="2.4" stroke-linejoin="round"/>'
         )
+    ruler = _ruler_mm(w)
+    rx0, ry0 = xy(minx + 40, miny + 40)
+    rx1, ry1 = xy(minx + 40 + ruler, miny + 40)
+    paths.append(f'<line x1="{rx0:.1f}" y1="{ry0:.1f}" x2="{rx1:.1f}" y2="{ry1:.1f}" stroke="#111" stroke-width="3"/>')
+    paths.append(f'<line x1="{rx0:.1f}" y1="{ry0-8:.1f}" x2="{rx0:.1f}" y2="{ry0+8:.1f}" stroke="#111" stroke-width="2"/>')
+    paths.append(f'<line x1="{rx1:.1f}" y1="{ry1-8:.1f}" x2="{rx1:.1f}" y2="{ry1+8:.1f}" stroke="#111" stroke-width="2"/>')
+    paths.append(f'<text x="{(rx0+rx1)/2:.1f}" y="{ry0-12:.1f}" text-anchor="middle" font-size="12" font-family="sans-serif">{_ruler_label(ruler)}</text>')
     legend = []
     x = 16.0
     legend.append(
@@ -280,6 +307,13 @@ def render_png(
         for i in range(len(opts) - 1):
             _line(opts[i][0], opts[i][1], opts[i + 1][0], opts[i + 1][1], lambda ix, iy: put(ix, iy, RED))
             _line(opts[i][0], opts[i][1] + 1, opts[i + 1][0], opts[i + 1][1] + 1, lambda ix, iy: put(ix, iy, RED))
+    ruler = _ruler_mm(w)
+    a = pix(minx + 40, miny + 40)
+    b = pix(minx + 40 + ruler, miny + 40)
+    _line(a[0], a[1], b[0], b[1], lambda ix, iy: put(ix, iy, INK))
+    _line(a[0], a[1] - 6, a[0], a[1] + 6, lambda ix, iy: put(ix, iy, INK))
+    _line(b[0], b[1] - 6, b[0], b[1] + 6, lambda ix, iy: put(ix, iy, INK))
+    _blit_text(put, min(a[0], b[0]), min(a[1], b[1]) - 16, _ruler_label(ruler), INK, 2)
     ly = canvas - 44
     lx = 8
     for dx in range(14):
@@ -383,7 +417,15 @@ def render_pdf(
             xx, yy = xy(x, y)
             ops.append(f"{xx:.1f} {yy:.1f} l")
         ops.append("S")
+    ruler = _ruler_mm(w)
+    x0, y0 = xy(minx + 40, miny + 40)
+    x1, y1 = xy(minx + 40 + ruler, miny + 40)
+    ops.append("0.05 0.05 0.05 RG 1.4 w")
+    ops.append(f"{x0:.1f} {y0:.1f} m {x1:.1f} {y1:.1f} l S")
+    ops.append(f"{x0:.1f} {y0-6:.1f} m {x0:.1f} {y0+6:.1f} l S")
+    ops.append(f"{x1:.1f} {y1-6:.1f} m {x1:.1f} {y1+6:.1f} l S")
     ops.append("0 0 0 rg")
+    ops.append(f"BT /F1 9 Tf {x0:.1f} {y0+10:.1f} Td ({_pdf_esc(_ruler_label(ruler))}) Tj ET")
     ops.append("BT /F1 10 Tf 36 56 Td (Red = target circuit. Colour key = parts.) Tj ET")
     x = 36.0
     ops.append("0.75 0.22 0.17 RG 2 w")
