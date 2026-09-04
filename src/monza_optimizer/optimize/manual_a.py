@@ -1,4 +1,4 @@
-"""Hidden Manual A: one piece at a time on a coarse silhouette. Not in the public menu."""
+"""Manual A: one piece at a time on a coarse silhouette."""
 from __future__ import annotations
 
 import base64
@@ -13,7 +13,7 @@ from monza_optimizer.optimize.accuracy_levels import get_profile, target_length_
 from monza_optimizer.optimize.silhouette import simplify_for_level_a
 from monza_optimizer.reference import load_track_centreline, scale_centreline
 
-MANUAL_A_ENABLED = False
+MANUAL_A_ENABLED = True
 MANUAL_A_TRACKS = ("monza", "mexico", "red_bull_ring")
 MANUAL_A_SKUS = (
     "C8205", "C8207", "C8200", "C8236",
@@ -79,7 +79,7 @@ def _state(track_id, sequence, parts_json="parts.json"):
     head = abs(normalize_heading(pose.heading_degrees - start.heading_degrees))
     on_line = _dist_to_outline(pose.x, pose.y, outline)
     return {
-        "hidden": True,
+        "hidden": False,
         "enabled": MANUAL_A_ENABLED,
         "mode": "manual_a",
         "track_id": track_id,
@@ -100,9 +100,9 @@ def manual_meta():
     return {
         "id": "manual_a",
         "label": "Manual A",
-        "hidden": True,
+        "hidden": False,
         "enabled": MANUAL_A_ENABLED,
-        "visible_in_menu": False,
+        "visible_in_menu": True,
         "tracks": list(MANUAL_A_TRACKS),
         "skus": list(MANUAL_A_SKUS),
         "pitch": "Modest budget: lay one piece at a time on a simple outline.",
