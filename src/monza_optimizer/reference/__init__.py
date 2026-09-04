@@ -5,6 +5,9 @@ from monza_optimizer.reference.tracks import (
     load_track_centreline,
     scale_centreline,
     TrackProfile,
+    LEVEL_A_TRACKS,
+    level_a_allowed,
+    letters_for_track,
 )
 
 __all__ = [
@@ -12,4 +15,7 @@ __all__ = [
     "load_track_centreline",
     "scale_centreline",
     "TrackProfile",
+    "LEVEL_A_TRACKS",
+    "level_a_allowed",
+    "letters_for_track",
 ]
