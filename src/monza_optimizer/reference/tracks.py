@@ -12,22 +12,20 @@ from typing import Sequence
 _DATA = Path(__file__).resolve().parents[3] / "data" / "tracks"
 
 UNRELIABLE_QUALITY = {"schematic"}
-# Temporary menu hide — files stay in the repo.
 HIDDEN_FROM_MENU = {"charlotte_roval", "gateway"}
-# Level A is only offered where local eval closed ≥95% without a knot.
-LEVEL_A_TRACKS = frozenset({"red_bull_ring", "monza", "mexico"})
-DEFAULT_LETTERS = ("B", "C", "D", "E")
+LEVEL_A_TRACKS = frozenset()
+DEFAULT_LETTERS = ("A", "B", "C", "D", "E")
 
 
 def level_a_allowed(track_id: str) -> bool:
-    return str(track_id or "").strip().lower() in LEVEL_A_TRACKS
+    tid = str(track_id or "").strip().lower()
+    return bool(tid) and tid not in HIDDEN_FROM_MENU
 
 
 def letters_for_track(track_id: str) -> list[str]:
-    letters = list(DEFAULT_LETTERS)
-    if level_a_allowed(track_id):
-        letters.insert(0, "A")
-    return letters
+    if not level_a_allowed(track_id):
+        return ["B", "C", "D", "E"]
+    return list(DEFAULT_LETTERS)
 
 
 @dataclass
