@@ -14,6 +14,20 @@ _DATA = Path(__file__).resolve().parents[3] / "data" / "tracks"
 UNRELIABLE_QUALITY = {"schematic"}
 # Temporary menu hide — files stay in the repo.
 HIDDEN_FROM_MENU = {"charlotte_roval", "gateway"}
+# Level A is only offered where local eval closed ≥95% without a knot.
+LEVEL_A_TRACKS = frozenset({"red_bull_ring", "monza", "mexico"})
+DEFAULT_LETTERS = ("B", "C", "D", "E")
+
+
+def level_a_allowed(track_id: str) -> bool:
+    return str(track_id or "").strip().lower() in LEVEL_A_TRACKS
+
+
+def letters_for_track(track_id: str) -> list[str]:
+    letters = list(DEFAULT_LETTERS)
+    if level_a_allowed(track_id):
+        letters.insert(0, "A")
+    return letters
 
 
 @dataclass
@@ -83,6 +97,8 @@ def list_tracks() -> list[dict]:
             "featured": bool(t.get("featured") or t["id"] in featured) and not hidden,
             "available": selectable,
             "selectable": selectable,
+            "accuracy_letters": letters_for_track(t["id"]),
+            "level_a_available": level_a_allowed(t["id"]),
             "quality": quality,
             "note": t.get("note"),
         })
