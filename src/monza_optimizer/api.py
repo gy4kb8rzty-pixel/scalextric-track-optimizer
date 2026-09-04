@@ -206,37 +206,14 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
         profile = LP(**{**profile.__dict__, "strategy": req.strategy})
 
     if profile.letter == "A":
-        walk = build_on_silhouette(scaled, get_part)
-        cand_a = candidates_for(profile)
-        avail_a = {base_id(c): 999 for c in cand_a}
-        shop_a = ShopGate(owned={}, max_shop_pieces=999, max_shop_skus=99, unlimited=True)
-        try:
-            fol = sequential_follow(
-                cl, get_part, avail_a, shop=shop_a, loose=True,
-                candidates=cand_a,
-                max_pieces=140,
-                sharp_turn_deg=18.0,
-                max_radius_on_sharp=900.0,
-                dist_tol_mm=320.0,
-                look_ahead_mm=280.0,
-            )
-            follow = list(fol.sequence)
-        except Exception:
-            follow = []
-        def _len(s):
-            return _plen([get_part(c) for c in s if get_part(c)]) if s else 0.0
-        if _len(follow) > _len(walk) * 1.08:
-            seq, strategy = follow, "silhouette_follow"
-        else:
-            seq, strategy = walk, "silhouette"
+        seq = build_on_silhouette(scaled, get_part)
+        strategy = "silhouette"
         metrics = {
             "accuracy_level": profile.level.value,
             "accuracy_letter": "A",
             "silhouette": True,
             "silhouette_vertices": len(scaled),
             "from_scratch": from_scratch,
-            "walk_pieces": len(walk),
-            "follow_pieces": len(follow),
         }
     else:
         cand = candidates_for(profile)
