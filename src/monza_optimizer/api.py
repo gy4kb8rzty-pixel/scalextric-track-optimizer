@@ -1,8 +1,4 @@
-"""High-level API for web / Lovable / wrapper integration.
-
-User inventory + named circuit + accuracy level → layout + shop cart.
-Physical correctness (connectors, lanes, closure) always outranks scores.
-"""
+"""High-level API for web / Lovable / wrapper integration."""
 
 from __future__ import annotations
 
@@ -21,6 +17,7 @@ from monza_optimizer.optimize.coverage_fill import coverage_fill
 from monza_optimizer.optimize.close_loop import close_loop
 from monza_optimizer.optimize.kit_loop import closed_kit_loop
 from monza_optimizer.optimize.silhouette import simplify_for_level_a, build_on_silhouette
+from monza_optimizer.optimize.b_guide import simplify_for_level_b
 from monza_optimizer.geometry.pose import Pose
 from monza_optimizer.geometry.path import path_length as _plen
 from monza_optimizer.optimize.accuracy_levels import (
@@ -90,7 +87,7 @@ def default_inventory_from_catalog(parts_json: str = "parts.json") -> dict[str, 
 
 def _look_ahead(profile) -> float:
     if profile.letter == "B":
-        return 160.0
+        return 320.0
     return 220.0
 
 
@@ -199,6 +196,8 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
     scaled = scale_centreline(loaded.points_m, target_mm, close=True)
     if profile.letter == "A":
         scaled = simplify_for_level_a(scaled)
+    elif profile.letter == "B":
+        scaled = simplify_for_level_b(scaled)
     cl = densify_polyline(scaled, step=profile.densify_step_mm)
 
     if req.strategy:
@@ -221,36 +220,38 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
         if not profile.ignore_inventory:
             seq = enforce_shop_cap(seq, user_inv, profile, get_part=get_part)
         start_pose = Pose(cl.points[0][0], cl.points[0][1], cl.heading(0))
-        close_cands = [
-            "C8236", "C8200", "C8207", "C8205",
-            "C8206L", "C8206R", "C8010L", "C8010R",
-            "C8204L", "C8204R", "C8235L", "C8235R",
-        ]
-        if profile.letter != "B":
-            close_cands = close_cands + ["C8234L", "C8234R", "C8201L", "C8201R"]
-        close_shop = ShopGate(owned={}, max_shop_pieces=999, max_shop_skus=99, unlimited=True)
-        seq, close_stats = close_loop(
-            seq, start_pose, get_part, avail, close_shop,
-            max_pieces=24,
-            candidates=close_cands,
-            beam_width=48,
-            lateral=True,
-        )
-        metrics.update({
-            "pos_mm": close_stats.get("pos_mm", metrics.get("pos_mm")),
-            "head_deg": close_stats.get("head_deg", metrics.get("head_deg")),
-            "closed": close_stats.get("closed"),
-            "pos_before_close_mm": close_stats.get("pos_before_mm"),
-            "close_added": close_stats.get("added"),
-            "from_scratch": from_scratch,
-        })
+        if profile.letter == "B":
+            metrics.update({"from_scratch": from_scratch, "close_skipped": True})
+        else:
+            close_cands = [
+                "C8236", "C8200", "C8207", "C8205",
+                "C8206L", "C8206R", "C8010L", "C8010R",
+                "C8204L", "C8204R", "C8235L", "C8235R",
+                "C8234L", "C8234R", "C8201L", "C8201R",
+            ]
+            close_shop = ShopGate(owned={}, max_shop_pieces=999, max_shop_skus=99, unlimited=True)
+            seq, close_stats = close_loop(
+                seq, start_pose, get_part, avail, close_shop,
+                max_pieces=24,
+                candidates=close_cands,
+                beam_width=48,
+                lateral=True,
+            )
+            metrics.update({
+                "pos_mm": close_stats.get("pos_mm", metrics.get("pos_mm")),
+                "head_deg": close_stats.get("head_deg", metrics.get("head_deg")),
+                "closed": close_stats.get("closed"),
+                "pos_before_close_mm": close_stats.get("pos_before_mm"),
+                "close_added": close_stats.get("added"),
+                "from_scratch": from_scratch,
+            })
 
     built = _plen([get_part(c) for c in seq if get_part(c)]) if seq else 0.0
     metrics["length_mm"] = built
     metrics["target_length_mm"] = target_mm
     metrics["n_pieces"] = len(seq)
     metrics["cover_frac"] = built / max(target_mm, 1.0)
-    tiny = profile.letter != "A" and ((not seq) or len(seq) < 8 or built < 1500.0)
+    tiny = profile.letter not in {"A", "B"} and ((not seq) or len(seq) < 8 or built < 1500.0)
     metrics["collapsed"] = tiny
     if tiny:
         kit = closed_kit_loop(user_inv or shopping_inv, get_part)
@@ -335,8 +336,11 @@ def export_result_3mf(
         try:
             loaded = load_track_centreline(result.track_id)
             outline = scale_centreline(loaded.points_m, float(length), close=True)
-            if (result.accuracy_level or "") in {"lean_budget", "a"} or result.profile.get("letter") == "A":
+            letter = (result.accuracy_level or "")
+            if letter in {"lean_budget", "a"} or result.profile.get("letter") == "A":
                 outline = simplify_for_level_a(outline)
+            elif letter in {"budget", "b"} or result.profile.get("letter") == "B":
+                outline = simplify_for_level_b(outline)
         except Exception:
             outline = None
     title = f"{result.track_id} ({result.accuracy_level}/{result.strategy})"
