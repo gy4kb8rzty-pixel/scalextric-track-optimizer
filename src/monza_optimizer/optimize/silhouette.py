@@ -1,4 +1,4 @@
-"""Level A: simplified silhouette + s-parameter follow. Max two curves in a row."""
+"""Level A: smoothed silhouette + s-follow. Max four on-line curves in a row."""
 from __future__ import annotations
 import math
 from monza_optimizer.catalog.geometry_types import CurveGeometry, StraightGeometry
@@ -31,12 +31,36 @@ def rdp(points, eps):
     return [points[0], points[-1]]
 
 
-def simplify_for_level_a(points_mm, *, min_keep=12, max_keep=18):
-    pts = list(points_mm or [])
-    if len(pts) < 4:
+def _close(pts):
+    if not pts:
         return pts
     if math.hypot(pts[-1][0] - pts[0][0], pts[-1][1] - pts[0][1]) > 1.0:
-        pts = pts + [pts[0]]
+        return list(pts) + [pts[0]]
+    return list(pts)
+
+
+def smooth_polyline(points, passes=2):
+    pts = _close(list(points or []))
+    if len(pts) < 4:
+        return pts
+    for _ in range(passes):
+        body = pts[:-1]
+        n = len(body)
+        nxt = []
+        for i in range(n):
+            a = body[i]
+            b = body[(i + 1) % n]
+            nxt.append((0.75 * a[0] + 0.25 * b[0], 0.75 * a[1] + 0.25 * b[1]))
+            nxt.append((0.25 * a[0] + 0.75 * b[0], 0.25 * a[1] + 0.75 * b[1]))
+        pts = _close(nxt)
+    return pts
+
+
+def simplify_for_level_a(points_mm, *, min_keep=16, max_keep=30):
+    pts = _close(list(points_mm or []))
+    if len(pts) < 4:
+        return pts
+    pts = smooth_polyline(pts, passes=2)
     length = sum(
         math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1])
         for i in range(len(pts) - 1)
@@ -44,20 +68,18 @@ def simplify_for_level_a(points_mm, *, min_keep=12, max_keep=18):
     xs = [p[0] for p in pts]
     ys = [p[1] for p in pts]
     span = max(max(xs) - min(xs), max(ys) - min(ys), 1.0)
-    eps = max(200.0, min(span * 0.08, length * 0.035))
+    eps = max(120.0, min(span * 0.05, length * 0.02))
     simple = rdp(pts, eps)
     guard = 0
     while len(simple) > max_keep and guard < 8:
-        eps *= 1.3
+        eps *= 1.25
         simple = rdp(pts, eps)
         guard += 1
-    while len(simple) < min_keep and eps > 50 and guard < 16:
-        eps *= 0.75
+    while len(simple) < min_keep and eps > 40 and guard < 16:
+        eps *= 0.78
         simple = rdp(pts, eps)
         guard += 1
-    if simple and math.hypot(simple[-1][0] - simple[0][0], simple[-1][1] - simple[0][1]) > 1.0:
-        simple = simple + [simple[0]]
-    return simple
+    return _close(simple)
 
 
 def _advance(pose, part):
@@ -72,26 +94,23 @@ def _signed_curve(code, part):
 
 
 def build_on_silhouette(points_mm, get_part):
-    """Follow densified silhouette. Prefer longs. Never more than two curves in a row."""
     pts = simplify_for_level_a(points_mm) if points_mm else []
     if len(pts) < 4:
         return []
-    cl = densify_polyline(pts, step=40.0)
+    cl = densify_polyline(pts, step=35.0)
     pose = Pose(cl.points[0][0], cl.points[0][1], cl.heading(0))
-    codes = []
-    for c in (
+    codes = [c for c in (
         "C8205", "C8207", "C8200", "C8236",
         "C8235L", "C8235R", "C8010L", "C8010R",
-    ):
-        if get_part(c) is not None:
-            codes.append(c)
+    ) if get_part(c) is not None]
     seq = []
     s_idx = 0
     consec_c = 0
     n = len(cl.points)
-    while s_idx < n - 4 and len(seq) < 80:
+    stalls = 0
+    while s_idx < n - 5 and len(seq) < 90 and stalls < 4:
         look = s_idx
-        while look < n - 1 and cl.s[look] < cl.s[s_idx] + 280:
+        while look < n - 1 and cl.s[look] < cl.s[s_idx] + 320:
             look += 1
         need = normalize_heading(cl.heading(min(look, n - 2)) - pose.heading_degrees)
         best = None
@@ -100,31 +119,36 @@ def build_on_silhouette(points_mm, get_part):
             if part is None or part.geometry is None:
                 continue
             is_c = isinstance(part.geometry, CurveGeometry)
-            if is_c and consec_c >= 2:
+            if is_c and consec_c >= 4:
                 continue
             if is_c:
                 signed = _signed_curve(code, part)
-                if abs(need) < 12 and abs(signed) >= 20:
+                if abs(need) < 10 and abs(signed) >= 20:
                     continue
-                if abs(need) >= 12 and signed * need < 0:
+                if abs(need) >= 10 and signed * need < 0:
                     continue
-            if isinstance(part.geometry, StraightGeometry) and abs(need) > 28 and part.geometry.length >= 250:
+            if isinstance(part.geometry, StraightGeometry) and abs(need) > 34 and part.geometry.length >= 250:
                 continue
             nxt = _advance(pose, part)
-            nidx, ndist = cl.closest(nxt.x, nxt.y, start=s_idx, window=50)
-            if nidx <= s_idx or ndist > 280:
+            nidx, ndist = cl.closest(nxt.x, nxt.y, start=s_idx, window=80)
+            if nidx <= s_idx:
                 continue
             prog = cl.s[nidx] - cl.s[s_idx]
-            if prog < 35:
+            if prog < 28:
+                continue
+            if ndist > 520:
                 continue
             head = abs(normalize_heading(nxt.heading_degrees - cl.heading(min(nidx, n - 2))))
-            sc = ndist + head * 1.5 - prog * 0.35
+            sc = ndist * 1.1 + head * 1.1 - prog * 0.5
             if is_c:
-                sc += 8.0
+                sc += 6.0 if consec_c == 0 else 14.0
             if best is None or sc < best[0]:
                 best = (sc, code, nxt, nidx, is_c)
         if best is None:
-            break
+            stalls += 1
+            s_idx = min(s_idx + 6, n - 6)
+            continue
+        stalls = 0
         seq.append(best[1])
         pose = best[2]
         s_idx = best[3]
