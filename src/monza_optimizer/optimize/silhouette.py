@@ -1,4 +1,4 @@
-"""Level A: coarse F1 silhouette + multi-start s-follow + home."""
+"""Level A: coarser F1 silhouette + multi-start s-follow + home."""
 from __future__ import annotations
 import math
 from monza_optimizer.catalog.geometry_types import CurveGeometry, StraightGeometry
@@ -56,11 +56,12 @@ def smooth_polyline(points, passes=2):
     return pts
 
 
-def simplify_for_level_a(points_mm, *, min_keep=10, max_keep=14):
+def simplify_for_level_a(points_mm, *, min_keep=8, max_keep=11):
+    """A-level F1: drop chicanes. Keep 8-11 corners so longs can land."""
     pts = _close(list(points_mm or []))
     if len(pts) < 4:
         return pts
-    pts = smooth_polyline(pts, passes=3)
+    pts = smooth_polyline(pts, passes=5)
     length = sum(
         math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1])
         for i in range(len(pts) - 1)
@@ -68,15 +69,15 @@ def simplify_for_level_a(points_mm, *, min_keep=10, max_keep=14):
     xs = [p[0] for p in pts]
     ys = [p[1] for p in pts]
     span = max(max(xs) - min(xs), max(ys) - min(ys), 1.0)
-    eps = max(200.0, min(span * 0.085, length * 0.038))
+    eps = max(260.0, min(span * 0.11, length * 0.05))
     simple = rdp(pts, eps)
     guard = 0
-    while len(simple) > max_keep and guard < 10:
-        eps *= 1.28
+    while len(simple) > max_keep and guard < 12:
+        eps *= 1.22
         simple = rdp(pts, eps)
         guard += 1
-    if len(simple) < 6:
-        simple = rdp(pts, eps * 0.7)
+    if len(simple) < 7:
+        simple = rdp(pts, max(eps * 0.65, 160.0))
     return _close(simple)
 
 
