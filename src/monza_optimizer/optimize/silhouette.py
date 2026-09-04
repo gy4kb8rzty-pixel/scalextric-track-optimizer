@@ -99,34 +99,41 @@ def build_on_silhouette(points_mm, get_part):
 
     for i in range(len(pts) - 1):
         b = pts[i + 1]
-        for _ in range(3):
-            err = normalize_heading(_heading((pose.x, pose.y), b) - pose.heading_degrees)
-            if abs(err) < 16:
-                break
-            code, part = curve(err)
-            if part is None:
-                break
-            nxt = _advance(pose, part)
-            if math.hypot(b[0] - nxt.x, b[1] - nxt.y) > math.hypot(b[0] - pose.x, b[1] - pose.y) + 40:
-                break
-            pose = nxt
-            seq.append(code)
-        for _ in range(20):
+        nudges = 0
+        for _ in range(28):
             remain = math.hypot(b[0] - pose.x, b[1] - pose.y)
-            if remain < 70:
+            if remain < 80:
                 break
+            want = _heading((pose.x, pose.y), b)
+            err = normalize_heading(want - pose.heading_degrees)
             placed = False
-            for code, part, L in longs:
-                if L > remain + 40:
-                    continue
-                nxt = _advance(pose, part)
-                new_r = math.hypot(b[0] - nxt.x, b[1] - nxt.y)
-                if new_r >= remain - 25:
-                    continue
-                pose = nxt
-                seq.append(code)
-                placed = True
-                break
+            if abs(err) >= 16:
+                code, part = curve(err)
+                if part is not None:
+                    nxt = _advance(pose, part)
+                    pose = nxt
+                    seq.append(code)
+                    placed = True
+                    nudges += 1
             if not placed:
-                break
+                for code, part, L in longs:
+                    if L > remain + 50:
+                        continue
+                    nxt = _advance(pose, part)
+                    new_r = math.hypot(b[0] - nxt.x, b[1] - nxt.y)
+                    if new_r >= remain - 20:
+                        continue
+                    pose = nxt
+                    seq.append(code)
+                    placed = True
+                    break
+            if not placed:
+                if nudges >= 4:
+                    break
+                code, part = curve(err if abs(err) > 1 else 22.0)
+                if part is None:
+                    break
+                pose = _advance(pose, part)
+                seq.append(code)
+                nudges += 1
     return seq
