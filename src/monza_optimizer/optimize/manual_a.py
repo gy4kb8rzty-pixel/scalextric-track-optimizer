@@ -1,8 +1,9 @@
-"""Manual A: one piece at a time on a coarse silhouette."""
+"""Manual A: one piece at a time on that track's coarse silhouette."""
 from __future__ import annotations
 
 import base64
 import math
+from collections import Counter
 from typing import Any
 
 from monza_optimizer.catalog import load_parts, get_part_by_id, base_id
@@ -10,15 +11,22 @@ from monza_optimizer.export.plan_view import render_png
 from monza_optimizer.geometry.path import compute_track_path
 from monza_optimizer.geometry.pose import Pose, normalize_heading
 from monza_optimizer.optimize.accuracy_levels import get_profile, target_length_for
+from monza_optimizer.optimize.shop_helpers import shopping_list
 from monza_optimizer.optimize.silhouette import simplify_for_level_a
-from monza_optimizer.reference import load_track_centreline, scale_centreline
+from monza_optimizer.reference import list_tracks, load_track_centreline, scale_centreline
 
 MANUAL_A_ENABLED = True
-MANUAL_A_TRACKS = ("monza", "mexico", "red_bull_ring")
 MANUAL_A_SKUS = (
     "C8205", "C8207", "C8200", "C8236",
     "C8235L", "C8235R", "C8206L", "C8206R",
 )
+
+
+def _tid(track_id: str) -> str:
+    tid = str(track_id or "").strip().lower()
+    if not tid:
+        raise ValueError("track_id is required")
+    return tid
 
 
 def _outline(track_id: str):
@@ -66,7 +74,7 @@ def _png(sequence, get_part, outline):
     return base64.b64encode(raw).decode("ascii")
 
 
-def _state(track_id, sequence, parts_json="parts.json"):
+def _state(track_id, sequence, parts_json="parts.json", inventory=None):
     parts = load_parts(parts_json)
 
     def get_part(c):
@@ -94,6 +102,11 @@ def _state(track_id, sequence, parts_json="parts.json"):
         "skus": list(MANUAL_A_SKUS),
         "laid": [{"index": i, "sku": c} for i, c in enumerate(sequence)],
         "hint": "Tap a laid piece to swap it; the rest stays in order from that pose.",
+        "shopping": shopping_list(
+            dict(Counter(base_id(c) for c in sequence)),
+            inventory or {},
+            get_profile("a"),
+        ).as_dict(),
     }
 
 
@@ -104,33 +117,28 @@ def manual_meta():
         "hidden": False,
         "enabled": MANUAL_A_ENABLED,
         "visible_in_menu": True,
-        "tracks": list(MANUAL_A_TRACKS),
+        "tracks": [t["id"] for t in list_tracks()],
         "skus": list(MANUAL_A_SKUS),
-        "pitch": "Modest budget: lay one piece at a time on a simple outline.",
+        "pitch": "Manual only. One official piece at a time on that track's simple outline.",
     }
 
 
-def manual_start(track_id, parts_json="parts.json"):
-    tid = str(track_id or "monza").strip().lower()
-    if tid not in MANUAL_A_TRACKS:
-        tid = "monza"
-    return _state(tid, [], parts_json)
+def manual_start(track_id, parts_json="parts.json", inventory=None):
+    return _state(_tid(track_id), [], parts_json, inventory)
 
 
-def manual_place(track_id, sequence, sku, parts_json="parts.json"):
-    tid = str(track_id or "monza").strip().lower()
+def manual_place(track_id, sequence, sku, parts_json="parts.json", inventory=None):
     code = str(sku or "").strip()
     if code not in MANUAL_A_SKUS and base_id(code) not in {base_id(s) for s in MANUAL_A_SKUS}:
         raise ValueError(f"sku {code} is not on the Manual A list")
-    return _state(tid, list(sequence or []) + [code], parts_json)
+    return _state(_tid(track_id), list(sequence or []) + [code], parts_json, inventory)
 
 
-def manual_undo(track_id, sequence, parts_json="parts.json"):
-    tid = str(track_id or "monza").strip().lower()
+def manual_undo(track_id, sequence, parts_json="parts.json", inventory=None):
     seq = list(sequence or [])
     if seq:
         seq = seq[:-1]
-    return _state(tid, seq, parts_json)
+    return _state(_tid(track_id), seq, parts_json, inventory)
 
 
 def _valid_sku(code: str) -> str:
@@ -140,16 +148,19 @@ def _valid_sku(code: str) -> str:
     raise ValueError(f"sku {code} is not on the Manual A list")
 
 
-def manual_replace(track_id, sequence, index, sku, parts_json="parts.json"):
-    tid = str(track_id or "monza").strip().lower()
+def manual_replace(track_id, sequence, index, sku, parts_json="parts.json", inventory=None):
+    tid = _tid(track_id)
     seq = list(sequence or [])
     if not seq:
         raise ValueError("sequence is empty")
-    try:
-        i = int(index)
-    except (TypeError, ValueError) as exc:
-        raise ValueError("index must be an integer") from exc
+    i = int(index)
     if i < 0 or i >= len(seq):
         raise ValueError(f"index {i} out of range 0..{len(seq)-1}")
     seq[i] = _valid_sku(sku)
-    return _state(tid, seq, parts_json)
+    return _state(tid, seq, parts_json, inventory)
+
+
+def manual_finish(track_id, sequence, inventory=None, parts_json="parts.json"):
+    state = _state(_tid(track_id), list(sequence or []), parts_json, inventory)
+    state["finished"] = True
+    return state
