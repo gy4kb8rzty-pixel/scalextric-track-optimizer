@@ -92,7 +92,8 @@ def _state(track_id, sequence, parts_json="parts.json"):
         "closed": bool(sequence) and gap < 120 and head < 22,
         "png_base64": _png(sequence, get_part, outline),
         "skus": list(MANUAL_A_SKUS),
-        "hint": "Place one piece at a time on the red outline. Undo if the end leaves the line.",
+        "laid": [{"index": i, "sku": c} for i, c in enumerate(sequence)],
+        "hint": "Tap a laid piece to swap it; the rest stays in order from that pose.",
     }
 
 
@@ -129,4 +130,26 @@ def manual_undo(track_id, sequence, parts_json="parts.json"):
     seq = list(sequence or [])
     if seq:
         seq = seq[:-1]
+    return _state(tid, seq, parts_json)
+
+
+def _valid_sku(code: str) -> str:
+    code = str(code or "").strip()
+    if code in MANUAL_A_SKUS:
+        return code
+    raise ValueError(f"sku {code} is not on the Manual A list")
+
+
+def manual_replace(track_id, sequence, index, sku, parts_json="parts.json"):
+    tid = str(track_id or "monza").strip().lower()
+    seq = list(sequence or [])
+    if not seq:
+        raise ValueError("sequence is empty")
+    try:
+        i = int(index)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("index must be an integer") from exc
+    if i < 0 or i >= len(seq):
+        raise ValueError(f"index {i} out of range 0..{len(seq)-1}")
+    seq[i] = _valid_sku(sku)
     return _state(tid, seq, parts_json)
