@@ -26,6 +26,7 @@ from monza_optimizer.reference.race_calendar import upcoming_events
 from monza_optimizer.optimize.manual_a import (
     manual_meta,
     manual_place,
+    manual_replace,
     manual_start,
     manual_undo,
 )
@@ -36,7 +37,7 @@ PUBLIC_API_BASE = os.environ.get(
 
 app = FastAPI(
     title="Scalextric Track Designer API",
-    version="1.3.6",
+    version="1.3.7",
     description="Inventory + circuit + ambition → official BOM, lay-list, and files.",
 )
 app.add_middleware(
@@ -78,6 +79,7 @@ class ManualABody(BaseModel):
     track_id: str = "monza"
     sequence: list[str] = Field(default_factory=list)
     sku: str | None = None
+    index: int | None = None
     parts_json: str = "parts.json"
 
 
@@ -129,6 +131,18 @@ def manual_a_place(body: ManualABody) -> dict[str, Any]:
 @app.post("/manual/a/undo")
 def manual_a_undo(body: ManualABody) -> dict[str, Any]:
     return manual_undo(body.track_id, body.sequence, body.parts_json)
+
+
+@app.post("/manual/a/replace")
+def manual_a_replace(body: ManualABody) -> dict[str, Any]:
+    if body.index is None:
+        raise HTTPException(status_code=400, detail="index required")
+    if not body.sku:
+        raise HTTPException(status_code=400, detail="sku required")
+    try:
+        return manual_replace(body.track_id, body.sequence, body.index, body.sku, body.parts_json)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @app.get("/tracks")
