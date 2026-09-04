@@ -86,7 +86,7 @@ def default_inventory_from_catalog(parts_json: str = "parts.json") -> dict[str, 
 
 def _look_ahead(profile) -> float:
     if profile.letter == "B":
-        return 280.0
+        return 180.0
     return 220.0
 
 
@@ -103,12 +103,14 @@ def _run_pipeline(cl, get_part, avail, profile, cand, shop=None):
             max_radius_on_sharp=profile.max_radius_on_sharp,
             dist_tol_mm=profile.dist_tol_mm,
             look_ahead_mm=_look_ahead(profile),
+            no_chord=True,
+            loose=profile.letter not in {"B", "C"},
         )
 
     if strategy == "sequential":
         try:
             result = sequential_follow(
-                cl, get_part, avail, shop=shop, loose=True, **_seq_kwargs()
+                cl, get_part, avail, shop=shop, **_seq_kwargs()
             )
         except TypeError:
             result = sequential_follow(cl, get_part, avail, **_seq_kwargs())
@@ -136,7 +138,7 @@ def _run_pipeline(cl, get_part, avail, profile, cand, shop=None):
             metrics["n_pieces"] = len(seq)
         if len(seq) < 8:
             try:
-                alt = sequential_follow(cl, get_part, avail, shop=shop, loose=True, **_seq_kwargs())
+                alt = sequential_follow(cl, get_part, avail, shop=shop, **_seq_kwargs())
                 if len(alt.sequence) > len(seq):
                     seq = list(alt.sequence)
                     metrics = dict(alt.metrics)
@@ -176,7 +178,7 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
     if unlimited:
         profile = LevelProfile(**{**profile.__dict__, "unlimited": True, "inventory_only": False})
 
-    if profile.ignore_inventory:
+    if profile.ignore_inventory or from_scratch:
         avail = {base_id(i): 999 for i in catalog_ids}
         for code in candidates_for(profile):
             avail[base_id(code)] = max(avail.get(base_id(code), 0), 999)
@@ -214,10 +216,10 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
     else:
         cand = candidates_for(profile)
         seq, metrics, strategy = _run_pipeline(cl, get_part, avail, profile, cand, shop=shop)
-        if not profile.ignore_inventory:
+        if not profile.ignore_inventory and not from_scratch:
             seq = enforce_shop_cap(seq, user_inv, profile, get_part=get_part)
         start_pose = Pose(cl.points[0][0], cl.points[0][1], cl.heading(0))
-        if profile.letter == "B":
+        if profile.letter in {"B", "C"}:
             metrics.update({"from_scratch": from_scratch, "close_skipped": True})
         else:
             close_cands = [
@@ -229,10 +231,10 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
             close_shop = ShopGate(owned={}, max_shop_pieces=999, max_shop_skus=99, unlimited=True)
             seq, close_stats = close_loop(
                 seq, start_pose, get_part, avail, close_shop,
-                max_pieces=24,
+                max_pieces=12,
                 candidates=close_cands,
-                beam_width=48,
-                lateral=True,
+                beam_width=32,
+                lateral=False,
             )
             metrics.update({
                 "pos_mm": close_stats.get("pos_mm", metrics.get("pos_mm")),
@@ -248,7 +250,7 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
     metrics["target_length_mm"] = target_mm
     metrics["n_pieces"] = len(seq)
     metrics["cover_frac"] = built / max(target_mm, 1.0)
-    tiny = profile.letter not in {"A", "B"} and ((not seq) or len(seq) < 8 or built < 1500.0)
+    tiny = profile.letter not in {"A", "B", "C"} and ((not seq) or len(seq) < 8 or built < 1500.0)
     metrics["collapsed"] = tiny
     if tiny:
         kit = closed_kit_loop(user_inv or shopping_inv, get_part)
