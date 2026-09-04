@@ -1,4 +1,4 @@
-"""Level A: smoothed silhouette + s-follow. Max four on-line curves in a row."""
+"""Level A: smoothed silhouette + s-follow. Evaluated locally on F1 tracks."""
 from __future__ import annotations
 import math
 from monza_optimizer.catalog.geometry_types import CurveGeometry, StraightGeometry
@@ -56,7 +56,7 @@ def smooth_polyline(points, passes=2):
     return pts
 
 
-def simplify_for_level_a(points_mm, *, min_keep=16, max_keep=30):
+def simplify_for_level_a(points_mm, *, min_keep=16, max_keep=28):
     pts = _close(list(points_mm or []))
     if len(pts) < 4:
         return pts
@@ -68,11 +68,11 @@ def simplify_for_level_a(points_mm, *, min_keep=16, max_keep=30):
     xs = [p[0] for p in pts]
     ys = [p[1] for p in pts]
     span = max(max(xs) - min(xs), max(ys) - min(ys), 1.0)
-    eps = max(120.0, min(span * 0.05, length * 0.02))
+    eps = max(110.0, min(span * 0.048, length * 0.02))
     simple = rdp(pts, eps)
     guard = 0
     while len(simple) > max_keep and guard < 8:
-        eps *= 1.25
+        eps *= 1.22
         simple = rdp(pts, eps)
         guard += 1
     while len(simple) < min_keep and eps > 40 and guard < 16:
@@ -93,64 +93,78 @@ def _signed_curve(code, part):
     return -ang if str(code).endswith("R") else ang
 
 
-def build_on_silhouette(points_mm, get_part):
-    pts = simplify_for_level_a(points_mm) if points_mm else []
-    if len(pts) < 4:
-        return []
-    cl = densify_polyline(pts, step=35.0)
-    pose = Pose(cl.points[0][0], cl.points[0][1], cl.heading(0))
-    codes = [c for c in (
-        "C8205", "C8207", "C8200", "C8236",
-        "C8235L", "C8235R", "C8010L", "C8010R",
-    ) if get_part(c) is not None]
+def _follow(cl, get_part, codes):
+    start = Pose(cl.points[0][0], cl.points[0][1], cl.heading(0))
+    pose = start
     seq = []
     s_idx = 0
     consec_c = 0
     n = len(cl.points)
-    stalls = 0
-    while s_idx < n - 5 and len(seq) < 90 and stalls < 4:
+    total = max(cl.s[-1], 1.0)
+    while s_idx < n - 5 and len(seq) < 110:
+        frac = cl.s[min(s_idx, n - 1)] / total
         look = s_idx
-        while look < n - 1 and cl.s[look] < cl.s[s_idx] + 320:
+        ahead = 280 if frac < 0.82 else 160
+        while look < n - 1 and cl.s[look] < cl.s[s_idx] + ahead:
             look += 1
         need = normalize_heading(cl.heading(min(look, n - 2)) - pose.heading_degrees)
+        cap = 10 if len(seq) < 8 else (6 if frac < 0.8 else 4)
+        tol = 1400 if len(seq) < 8 else (560 if frac < 0.8 else 440)
         best = None
         for code in codes:
             part = get_part(code)
             if part is None or part.geometry is None:
                 continue
             is_c = isinstance(part.geometry, CurveGeometry)
-            if is_c and consec_c >= 4:
+            if is_c and consec_c >= cap:
                 continue
             if is_c:
                 signed = _signed_curve(code, part)
-                if abs(need) < 10 and abs(signed) >= 20:
+                if abs(need) < 8 and abs(signed) >= 20 and frac < 0.8:
                     continue
-                if abs(need) >= 10 and signed * need < 0:
+                if abs(need) >= 8 and signed * need < 0:
                     continue
-            if isinstance(part.geometry, StraightGeometry) and abs(need) > 34 and part.geometry.length >= 250:
+            if isinstance(part.geometry, StraightGeometry) and abs(need) > 38 and part.geometry.length >= 250:
                 continue
             nxt = _advance(pose, part)
-            nidx, ndist = cl.closest(nxt.x, nxt.y, start=s_idx, window=80)
-            if nidx <= s_idx:
+            nidx, ndist = cl.closest(nxt.x, nxt.y, start=s_idx, window=100)
+            if nidx <= s_idx and frac < 0.88:
                 continue
-            prog = cl.s[nidx] - cl.s[s_idx]
-            if prog < 28:
+            prog = cl.s[min(nidx, n - 1)] - cl.s[s_idx]
+            if prog < 18 and frac < 0.88:
                 continue
-            if ndist > 520:
+            if ndist > tol:
                 continue
             head = abs(normalize_heading(nxt.heading_degrees - cl.heading(min(nidx, n - 2))))
-            sc = ndist * 1.1 + head * 1.1 - prog * 0.5
+            sc = ndist * 1.1 + head * 1.0 - max(prog, 0) * 0.55
             if is_c:
-                sc += 6.0 if consec_c == 0 else 14.0
+                sc += 4.0 if consec_c == 0 else 14.0
+            if frac >= 0.82:
+                gap = math.hypot(nxt.x - start.x, nxt.y - start.y)
+                sc += gap * 0.08
+                sc += abs(normalize_heading(nxt.heading_degrees - start.heading_degrees)) * 0.4
             if best is None or sc < best[0]:
-                best = (sc, code, nxt, nidx, is_c)
+                best = (sc, code, nxt, max(nidx, s_idx + 1), is_c)
         if best is None:
-            stalls += 1
-            s_idx = min(s_idx + 6, n - 6)
-            continue
-        stalls = 0
+            break
         seq.append(best[1])
         pose = best[2]
-        s_idx = best[3]
+        s_idx = min(best[3], n - 2)
         consec_c = consec_c + 1 if best[4] else 0
+        if frac >= 0.9 and math.hypot(pose.x - start.x, pose.y - start.y) < 180:
+            break
     return seq
+
+
+def build_on_silhouette(points_mm, get_part):
+    pts = list(points_mm or [])
+    if len(pts) > 40:
+        pts = simplify_for_level_a(pts)
+    if len(pts) < 4:
+        return []
+    codes = [c for c in (
+        "C8205", "C8207", "C8200", "C8236",
+        "C8235L", "C8235R", "C8010L", "C8010R", "C8206L", "C8206R",
+    ) if get_part(c) is not None]
+    cl = densify_polyline(pts, step=32.0)
+    return _follow(cl, get_part, codes)
