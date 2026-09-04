@@ -100,6 +100,7 @@ def sequential_follow(
     dist_tol_mm=150.0,
     shop=None,
     loose=False,
+    no_chord=True,
     **_kwargs,
 ):
     codes = list(candidates or DEFAULT_CANDIDATES)
@@ -154,10 +155,22 @@ def sequential_follow(
                     if is_hp and hairpin_run >= 3:
                         continue
                 np = _advance(pose, part)
-                win = 120 if hp_turn else 240
+                win = 80 if no_chord else (120 if hp_turn else 240)
                 nidx, ndist = cl.closest(np.x, np.y, start=max(0, s_idx - 1), window=win)
                 if ndist > dist_tol_mm + (50 if hp_turn and is_hp else 0):
                     continue
+                if no_chord:
+                    mx, my = (pose.x + np.x) * 0.5, (pose.y + np.y) * 0.5
+                    _, mid_d = cl.closest(mx, my, start=max(0, s_idx - 1), window=win)
+                    if mid_d > dist_tol_mm * 0.9:
+                        continue
+                    if isinstance(part.geometry, StraightGeometry):
+                        plen = float(part.geometry.length)
+                    else:
+                        plen = abs(float(part.geometry.angle_degrees)) * math.pi / 180.0 * float(part.geometry.radius)
+                    prog_chk = cl.s[nidx] - cl.s[s_idx]
+                    if prog_chk > plen * 1.55 + 60:
+                        continue
                 prog = cl.s[nidx] - cl.s[s_idx]
                 if prog < 1:
                     continue
