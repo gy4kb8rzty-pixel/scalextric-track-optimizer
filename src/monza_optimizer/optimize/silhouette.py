@@ -1,4 +1,4 @@
-"""Level A: coarse F1 silhouette (10-14 verts) + s-follow."""
+"""Level A: coarse F1 silhouette + multi-start s-follow."""
 from __future__ import annotations
 import math
 from monza_optimizer.catalog.geometry_types import CurveGeometry, StraightGeometry
@@ -57,7 +57,6 @@ def smooth_polyline(points, passes=2):
 
 
 def simplify_for_level_a(points_mm, *, min_keep=10, max_keep=14):
-    """Coarse F1 outline: chicanes gone so longs can land."""
     pts = _close(list(points_mm or []))
     if len(pts) < 4:
         return pts
@@ -152,7 +151,15 @@ def _follow(cl, get_part, codes):
         consec_c = consec_c + 1 if best[4] else 0
         if frac >= 0.9 and math.hypot(pose.x - start.x, pose.y - start.y) < 180:
             break
-    return seq
+    cover = cl.s[min(s_idx, len(cl.s) - 1)] / total
+    gap = math.hypot(pose.x - start.x, pose.y - start.y)
+    return seq, cover, gap
+
+
+def _rotate_pts(pts, k):
+    body = pts[:-1] if pts and math.hypot(pts[-1][0] - pts[0][0], pts[-1][1] - pts[0][1]) < 2 else list(pts)
+    k = k % max(len(body), 1)
+    return _close(body[k:] + body[:k])
 
 
 def build_on_silhouette(points_mm, get_part):
@@ -165,5 +172,16 @@ def build_on_silhouette(points_mm, get_part):
         "C8205", "C8207", "C8200", "C8236",
         "C8235L", "C8235R", "C8010L", "C8010R", "C8206L", "C8206R",
     ) if get_part(c) is not None]
-    cl = densify_polyline(pts, step=32.0)
-    return _follow(cl, get_part, codes)
+    body = pts[:-1] if math.hypot(pts[-1][0] - pts[0][0], pts[-1][1] - pts[0][1]) < 2 else pts
+    best_seq, best_sc = [], -1e18
+    step = max(1, len(body) // 6)
+    for k in range(0, len(body), step):
+        rot = _rotate_pts(pts, k)
+        cl = densify_polyline(rot, step=32.0)
+        seq, cover, gap = _follow(cl, get_part, codes)
+        if not seq:
+            continue
+        sc = cover * 1000.0 - min(gap, 2500) * 0.12
+        if sc > best_sc:
+            best_sc, best_seq = sc, seq
+    return best_seq
