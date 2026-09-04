@@ -20,7 +20,7 @@ from monza_optimizer.optimize.sequential import sequential_follow
 from monza_optimizer.optimize.coverage_fill import coverage_fill
 from monza_optimizer.optimize.close_loop import close_loop
 from monza_optimizer.optimize.kit_loop import closed_kit_loop
-from monza_optimizer.optimize.silhouette import simplify_for_level_a
+from monza_optimizer.optimize.silhouette import simplify_for_level_a, build_on_silhouette
 from monza_optimizer.geometry.pose import Pose
 from monza_optimizer.optimize.accuracy_levels import (
     get_profile,
@@ -88,8 +88,6 @@ def default_inventory_from_catalog(parts_json: str = "parts.json") -> dict[str, 
 
 
 def _look_ahead(profile) -> float:
-    if profile.letter == "A":
-        return 200.0
     if profile.letter == "B":
         return 160.0
     return 220.0
@@ -206,36 +204,45 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
         from monza_optimizer.optimize.accuracy_levels import LevelProfile as LP
         profile = LP(**{**profile.__dict__, "strategy": req.strategy})
 
-    cand = candidates_for(profile)
-    seq, metrics, strategy = _run_pipeline(cl, get_part, avail, profile, cand, shop=shop)
-    if not profile.ignore_inventory:
-        seq = enforce_shop_cap(seq, user_inv, profile, get_part=get_part)
-    start_pose = Pose(cl.points[0][0], cl.points[0][1], cl.heading(0))
-    close_cands = [
-        "C8236", "C8200", "C8207", "C8205",
-        "C8206L", "C8206R", "C8010L", "C8010R",
-        "C8204L", "C8204R", "C8235L", "C8235R",
-    ]
-    if profile.letter not in {"A", "B"}:
-        close_cands = close_cands + ["C8234L", "C8234R", "C8201L", "C8201R"]
-    close_shop = ShopGate(owned={}, max_shop_pieces=999, max_shop_skus=99, unlimited=True)
-    seq, close_stats = close_loop(
-        seq, start_pose, get_part, avail, close_shop,
-        max_pieces=24,
-        candidates=close_cands,
-        beam_width=48,
-        lateral=True,
-    )
-    metrics.update({
-        "pos_mm": close_stats.get("pos_mm", metrics.get("pos_mm")),
-        "head_deg": close_stats.get("head_deg", metrics.get("head_deg")),
-        "closed": close_stats.get("closed"),
-        "pos_before_close_mm": close_stats.get("pos_before_mm"),
-        "close_added": close_stats.get("added"),
-        "from_scratch": from_scratch,
-        "silhouette": profile.letter == "A",
-        "silhouette_vertices": len(scaled) if profile.letter == "A" else None,
-    })
+    if profile.letter == "A":
+        seq = build_on_silhouette(scaled, get_part)
+        strategy = "silhouette"
+        metrics = {
+            "accuracy_level": profile.level.value,
+            "accuracy_letter": "A",
+            "silhouette": True,
+            "silhouette_vertices": len(scaled),
+            "from_scratch": from_scratch,
+        }
+    else:
+        cand = candidates_for(profile)
+        seq, metrics, strategy = _run_pipeline(cl, get_part, avail, profile, cand, shop=shop)
+        if not profile.ignore_inventory:
+            seq = enforce_shop_cap(seq, user_inv, profile, get_part=get_part)
+        start_pose = Pose(cl.points[0][0], cl.points[0][1], cl.heading(0))
+        close_cands = [
+            "C8236", "C8200", "C8207", "C8205",
+            "C8206L", "C8206R", "C8010L", "C8010R",
+            "C8204L", "C8204R", "C8235L", "C8235R",
+        ]
+        if profile.letter != "B":
+            close_cands = close_cands + ["C8234L", "C8234R", "C8201L", "C8201R"]
+        close_shop = ShopGate(owned={}, max_shop_pieces=999, max_shop_skus=99, unlimited=True)
+        seq, close_stats = close_loop(
+            seq, start_pose, get_part, avail, close_shop,
+            max_pieces=24,
+            candidates=close_cands,
+            beam_width=48,
+            lateral=True,
+        )
+        metrics.update({
+            "pos_mm": close_stats.get("pos_mm", metrics.get("pos_mm")),
+            "head_deg": close_stats.get("head_deg", metrics.get("head_deg")),
+            "closed": close_stats.get("closed"),
+            "pos_before_close_mm": close_stats.get("pos_before_mm"),
+            "close_added": close_stats.get("added"),
+            "from_scratch": from_scratch,
+        })
 
     from monza_optimizer.geometry.path import path_length as _plen
     built = _plen([get_part(c) for c in seq if get_part(c)]) if seq else 0.0
@@ -243,7 +250,7 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
     metrics["target_length_mm"] = target_mm
     metrics["n_pieces"] = len(seq)
     metrics["cover_frac"] = built / max(target_mm, 1.0)
-    tiny = (not seq) or len(seq) < 8 or built < 1500.0
+    tiny = profile.letter != "A" and ((not seq) or len(seq) < 8 or built < 1500.0)
     metrics["collapsed"] = tiny
     if tiny:
         kit = closed_kit_loop(user_inv or shopping_inv, get_part)
