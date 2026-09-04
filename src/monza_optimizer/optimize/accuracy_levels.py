@@ -3,6 +3,15 @@ from __future__ import annotations
 from collections import Counter
 from dataclasses import dataclass, field
 from enum import Enum
+from monza_optimizer.optimize.shop_helpers import (
+    ShoppingList,
+    shopping_list,
+    join_dialogue_for,
+    resolve_availability,
+    ShopGate,
+    may_place,
+    enforce_shop_cap,
+)
 
 class AccuracyLevel(str, Enum):
     BARE_BONES = "bare_bones"
