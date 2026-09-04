@@ -30,7 +30,7 @@ def rdp(points, eps):
     return [points[0], points[-1]]
 
 
-def simplify_for_level_a(points_mm, *, min_keep=10, max_keep=16):
+def simplify_for_level_a(points_mm, *, min_keep=12, max_keep=20):
     pts = list(points_mm or [])
     if len(pts) < 4:
         return pts
@@ -43,11 +43,15 @@ def simplify_for_level_a(points_mm, *, min_keep=10, max_keep=16):
     xs = [p[0] for p in pts]
     ys = [p[1] for p in pts]
     span = max(max(xs) - min(xs), max(ys) - min(ys), 1.0)
-    eps = max(250.0, min(span * 0.12, length * 0.05))
+    eps = max(180.0, min(span * 0.07, length * 0.03))
     simple = rdp(pts, eps)
     guard = 0
     while len(simple) > max_keep and guard < 8:
-        eps *= 1.4
+        eps *= 1.3
+        simple = rdp(pts, eps)
+        guard += 1
+    while len(simple) < min_keep and eps > 50 and guard < 16:
+        eps *= 0.75
         simple = rdp(pts, eps)
         guard += 1
     if simple and math.hypot(simple[-1][0] - simple[0][0], simple[-1][1] - simple[0][1]) > 1.0:
@@ -61,16 +65,6 @@ def _heading(a, b):
 
 def _advance(pose, part):
     return compute_track_path([part], start=pose)[-1]
-
-
-def _slen(part):
-    g = getattr(part, "geometry", None)
-    return float(getattr(g, "length", 0.0) or 0.0) if isinstance(g, StraightGeometry) else 0.0
-
-
-def _cang(part):
-    g = getattr(part, "geometry", None)
-    return abs(float(getattr(g, "angle_degrees", 0.0) or 0.0)) if isinstance(g, CurveGeometry) else 0.0
 
 
 def _find(get_part, *codes):
@@ -89,48 +83,50 @@ def build_on_silhouette(points_mm, get_part):
         pts = pts + [pts[0]]
     pose = Pose(float(pts[0][0]), float(pts[0][1]), _heading(pts[0], pts[1]))
     seq = []
-
-    long_code, long_part = _find(get_part, "C8205", "c8205")
-    half_code, half_part = _find(get_part, "C8207", "c8207")
-    qtr_code, qtr_part = _find(get_part, "C8200", "c8200")
-    short_code, short_part = _find(get_part, "C8236", "c8236")
-    pack = [(long_code, long_part, _slen(long_part) if long_part else 350.0),
-            (half_code, half_part, _slen(half_part) if half_part else 175.0),
-            (qtr_code, qtr_part, _slen(qtr_part) if qtr_part else 87.5),
-            (short_code, short_part, _slen(short_part) if short_part else 78.0)]
-    pack = [(c, p, L) for c, p, L in pack if c and p]
+    longs = []
+    for code in ("C8205", "C8207", "C8200", "C8236"):
+        c, p = _find(get_part, code)
+        if p is not None:
+            g = p.geometry
+            L = float(getattr(g, "length", 0) or 0) if isinstance(g, StraightGeometry) else 0.0
+            if L > 0:
+                longs.append((c, p, L))
+    longs.sort(key=lambda t: -t[2])
 
     def curve(err):
         side = "L" if err > 0 else "R"
-        return _find(get_part, "C8235" + side, "C8010" + side, "C8206" + side, "C8204" + side)
+        return _find(get_part, "C8235" + side, "C8010" + side, "C8206" + side)
 
-    n = len(pts) - 1
-    for i in range(n):
+    for i in range(len(pts) - 1):
         b = pts[i + 1]
-        edge_h = _heading((pose.x, pose.y), b) if i else _heading(pts[i], b)
-        for ncur in range(3):
-            err = normalize_heading(edge_h - pose.heading_degrees)
-            if abs(err) < 18:
+        for _ in range(3):
+            err = normalize_heading(_heading((pose.x, pose.y), b) - pose.heading_degrees)
+            if abs(err) < 16:
                 break
             code, part = curve(err)
             if part is None:
                 break
-            pose = _advance(pose, part)
+            nxt = _advance(pose, part)
+            if math.hypot(b[0] - nxt.x, b[1] - nxt.y) > math.hypot(b[0] - pose.x, b[1] - pose.y) + 40:
+                break
+            pose = nxt
             seq.append(code)
-        edge_len = math.hypot(b[0] - pose.x, b[1] - pose.y)
-        # Always spend the edge on the largest straight that fits.
-        guard = 0
-        while edge_len >= 70 and guard < 24:
+        for _ in range(20):
+            remain = math.hypot(b[0] - pose.x, b[1] - pose.y)
+            if remain < 70:
+                break
             placed = False
-            for code, part, L in pack:
-                if edge_len + 15 < L * 0.72:
+            for code, part, L in longs:
+                if L > remain + 40:
                     continue
-                pose = _advance(pose, part)
+                nxt = _advance(pose, part)
+                new_r = math.hypot(b[0] - nxt.x, b[1] - nxt.y)
+                if new_r >= remain - 25:
+                    continue
+                pose = nxt
                 seq.append(code)
                 placed = True
                 break
             if not placed:
                 break
-            edge_len = math.hypot(b[0] - pose.x, b[1] - pose.y)
-            guard += 1
     return seq
