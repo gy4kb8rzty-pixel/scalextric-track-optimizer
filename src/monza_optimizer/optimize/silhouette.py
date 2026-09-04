@@ -1,9 +1,10 @@
-"""Coarse silhouette + edge walker. Used only by ambition level A."""
+"""Level A: simplified silhouette + s-parameter follow. Max two curves in a row."""
 from __future__ import annotations
 import math
 from monza_optimizer.catalog.geometry_types import CurveGeometry, StraightGeometry
 from monza_optimizer.geometry.pose import Pose, normalize_heading
 from monza_optimizer.geometry.path import compute_track_path
+from monza_optimizer.optimize.corner_first import densify_polyline
 
 
 def _dist_point_seg(px, py, ax, ay, bx, by) -> float:
@@ -30,7 +31,7 @@ def rdp(points, eps):
     return [points[0], points[-1]]
 
 
-def simplify_for_level_a(points_mm, *, min_keep=12, max_keep=20):
+def simplify_for_level_a(points_mm, *, min_keep=12, max_keep=18):
     pts = list(points_mm or [])
     if len(pts) < 4:
         return pts
@@ -43,7 +44,7 @@ def simplify_for_level_a(points_mm, *, min_keep=12, max_keep=20):
     xs = [p[0] for p in pts]
     ys = [p[1] for p in pts]
     span = max(max(xs) - min(xs), max(ys) - min(ys), 1.0)
-    eps = max(180.0, min(span * 0.07, length * 0.03))
+    eps = max(200.0, min(span * 0.08, length * 0.035))
     simple = rdp(pts, eps)
     guard = 0
     while len(simple) > max_keep and guard < 8:
@@ -59,81 +60,73 @@ def simplify_for_level_a(points_mm, *, min_keep=12, max_keep=20):
     return simple
 
 
-def _heading(a, b):
-    return math.degrees(math.atan2(b[1] - a[1], b[0] - a[0]))
-
-
 def _advance(pose, part):
     return compute_track_path([part], start=pose)[-1]
 
 
-def _find(get_part, *codes):
-    for c in codes:
-        p = get_part(c)
-        if p is not None:
-            return c, p
-    return None, None
+def _signed_curve(code, part):
+    if not isinstance(part.geometry, CurveGeometry):
+        return 0.0
+    ang = abs(float(part.geometry.angle_degrees))
+    return -ang if str(code).endswith("R") else ang
 
 
 def build_on_silhouette(points_mm, get_part):
-    pts = list(points_mm or [])
+    """Follow densified silhouette. Prefer longs. Never more than two curves in a row."""
+    pts = simplify_for_level_a(points_mm) if points_mm else []
     if len(pts) < 4:
         return []
-    if math.hypot(pts[-1][0] - pts[0][0], pts[-1][1] - pts[0][1]) > 1.0:
-        pts = pts + [pts[0]]
-    pose = Pose(float(pts[0][0]), float(pts[0][1]), _heading(pts[0], pts[1]))
+    cl = densify_polyline(pts, step=40.0)
+    pose = Pose(cl.points[0][0], cl.points[0][1], cl.heading(0))
+    codes = []
+    for c in (
+        "C8205", "C8207", "C8200", "C8236",
+        "C8235L", "C8235R", "C8010L", "C8010R",
+    ):
+        if get_part(c) is not None:
+            codes.append(c)
     seq = []
-    longs = []
-    for code in ("C8205", "C8207", "C8200", "C8236"):
-        c, p = _find(get_part, code)
-        if p is not None:
-            g = p.geometry
-            L = float(getattr(g, "length", 0) or 0) if isinstance(g, StraightGeometry) else 0.0
-            if L > 0:
-                longs.append((c, p, L))
-    longs.sort(key=lambda t: -t[2])
-
-    def curve(err):
-        side = "L" if err > 0 else "R"
-        return _find(get_part, "C8235" + side, "C8010" + side, "C8206" + side)
-
-    for i in range(len(pts) - 1):
-        b = pts[i + 1]
-        nudges = 0
-        for _ in range(28):
-            remain = math.hypot(b[0] - pose.x, b[1] - pose.y)
-            if remain < 80:
-                break
-            want = _heading((pose.x, pose.y), b)
-            err = normalize_heading(want - pose.heading_degrees)
-            placed = False
-            if abs(err) >= 16:
-                code, part = curve(err)
-                if part is not None:
-                    nxt = _advance(pose, part)
-                    pose = nxt
-                    seq.append(code)
-                    placed = True
-                    nudges += 1
-            if not placed:
-                for code, part, L in longs:
-                    if L > remain + 50:
-                        continue
-                    nxt = _advance(pose, part)
-                    new_r = math.hypot(b[0] - nxt.x, b[1] - nxt.y)
-                    if new_r >= remain - 20:
-                        continue
-                    pose = nxt
-                    seq.append(code)
-                    placed = True
-                    break
-            if not placed:
-                if nudges >= 4:
-                    break
-                code, part = curve(err if abs(err) > 1 else 22.0)
-                if part is None:
-                    break
-                pose = _advance(pose, part)
-                seq.append(code)
-                nudges += 1
+    s_idx = 0
+    consec_c = 0
+    n = len(cl.points)
+    while s_idx < n - 4 and len(seq) < 80:
+        look = s_idx
+        while look < n - 1 and cl.s[look] < cl.s[s_idx] + 280:
+            look += 1
+        need = normalize_heading(cl.heading(min(look, n - 2)) - pose.heading_degrees)
+        best = None
+        for code in codes:
+            part = get_part(code)
+            if part is None or part.geometry is None:
+                continue
+            is_c = isinstance(part.geometry, CurveGeometry)
+            if is_c and consec_c >= 2:
+                continue
+            if is_c:
+                signed = _signed_curve(code, part)
+                if abs(need) < 12 and abs(signed) >= 20:
+                    continue
+                if abs(need) >= 12 and signed * need < 0:
+                    continue
+            if isinstance(part.geometry, StraightGeometry) and abs(need) > 28 and part.geometry.length >= 250:
+                continue
+            nxt = _advance(pose, part)
+            nidx, ndist = cl.closest(nxt.x, nxt.y, start=s_idx, window=50)
+            if nidx <= s_idx or ndist > 280:
+                continue
+            prog = cl.s[nidx] - cl.s[s_idx]
+            if prog < 35:
+                continue
+            head = abs(normalize_heading(nxt.heading_degrees - cl.heading(min(nidx, n - 2))))
+            sc = ndist + head * 1.5 - prog * 0.35
+            if is_c:
+                sc += 8.0
+            if best is None or sc < best[0]:
+                best = (sc, code, nxt, nidx, is_c)
+        if best is None:
+            break
+        seq.append(best[1])
+        pose = best[2]
+        s_idx = best[3]
+        consec_c = consec_c + 1 if best[4] else 0
     return seq
