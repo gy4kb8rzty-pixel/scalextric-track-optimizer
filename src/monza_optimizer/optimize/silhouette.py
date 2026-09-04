@@ -1,4 +1,4 @@
-"""Level A: coarser F1 silhouette + multi-start s-follow + home."""
+"""Level A: coarse silhouette + s-follow that refuses self-crossings."""
 from __future__ import annotations
 import math
 from monza_optimizer.catalog.geometry_types import CurveGeometry, StraightGeometry
@@ -56,8 +56,7 @@ def smooth_polyline(points, passes=2):
     return pts
 
 
-def simplify_for_level_a(points_mm, *, min_keep=8, max_keep=11):
-    """A-level F1: drop chicanes. Keep 8-11 corners so longs can land."""
+def simplify_for_level_a(points_mm, *, min_keep=9, max_keep=13):
     pts = _close(list(points_mm or []))
     if len(pts) < 4:
         return pts
@@ -85,6 +84,47 @@ def _advance(pose, part):
     return compute_track_path([part], start=pose)[-1]
 
 
+def _orient(ax, ay, bx, by, cx, cy):
+    v = (by - ay) * (cx - bx) - (bx - ax) * (cy - by)
+    if abs(v) < 1e-9:
+        return 0
+    return 1 if v > 0 else 2
+
+
+def _on_seg(ax, ay, bx, by, cx, cy):
+    return (min(ax, bx) - 1e-6 <= cx <= max(ax, bx) + 1e-6 and
+            min(ay, by) - 1e-6 <= cy <= max(ay, by) + 1e-6)
+
+
+def _seg_hit(a, b, c, d) -> bool:
+    o1 = _orient(*a, *b, *c)
+    o2 = _orient(*a, *b, *d)
+    o3 = _orient(*c, *d, *a)
+    o4 = _orient(*c, *d, *b)
+    if o1 != o2 and o3 != o4:
+        return True
+    if o1 == 0 and _on_seg(*a, *b, *c):
+        return True
+    if o2 == 0 and _on_seg(*a, *b, *d):
+        return True
+    if o3 == 0 and _on_seg(*c, *d, *a):
+        return True
+    if o4 == 0 and _on_seg(*c, *d, *b):
+        return True
+    return False
+
+
+def _crosses(poly, nxt) -> bool:
+    if len(poly) < 3:
+        return False
+    a = poly[-1]
+    b = (nxt.x, nxt.y)
+    for i in range(0, len(poly) - 2):
+        if _seg_hit(a, b, poly[i], poly[i + 1]):
+            return True
+    return False
+
+
 def _signed_curve(code, part):
     if not isinstance(part.geometry, CurveGeometry):
         return 0.0
@@ -96,6 +136,7 @@ def _follow(cl, get_part, codes):
     start = Pose(cl.points[0][0], cl.points[0][1], cl.heading(0))
     pose = start
     seq = []
+    poly = [(start.x, start.y)]
     s_idx = 0
     consec_c = 0
     n = len(cl.points)
@@ -126,6 +167,8 @@ def _follow(cl, get_part, codes):
             if isinstance(part.geometry, StraightGeometry) and abs(need) > 38 and part.geometry.length >= 250:
                 continue
             nxt = _advance(pose, part)
+            if _crosses(poly, nxt):
+                continue
             nidx, ndist = cl.closest(nxt.x, nxt.y, start=s_idx, window=45)
             if nidx <= s_idx and frac < 0.88:
                 continue
@@ -150,6 +193,7 @@ def _follow(cl, get_part, codes):
             break
         seq.append(best[1])
         pose = best[2]
+        poly.append((pose.x, pose.y))
         s_idx = min(best[3], n - 2)
         consec_c = consec_c + 1 if best[4] else 0
         if frac >= 0.9 and math.hypot(pose.x - start.x, pose.y - start.y) < 180:
@@ -167,33 +211,6 @@ def _replay(seq, cl, get_part):
         if part is not None:
             pose = _advance(pose, part)
     return start, pose
-
-
-def _home(seq, start, pose, get_part, codes, max_add=14):
-    out = list(seq)
-    for _ in range(max_add):
-        gap = math.hypot(pose.x - start.x, pose.y - start.y)
-        head = abs(normalize_heading(pose.heading_degrees - start.heading_degrees))
-        if gap < 140 and head < 28:
-            break
-        best = None
-        for code in codes:
-            part = get_part(code)
-            if part is None:
-                continue
-            nxt = _advance(pose, part)
-            ng = math.hypot(nxt.x - start.x, nxt.y - start.y)
-            if ng >= gap - 8:
-                continue
-            nh = abs(normalize_heading(nxt.heading_degrees - start.heading_degrees))
-            sc = ng + nh * 1.2
-            if best is None or sc < best[0]:
-                best = (sc, code, nxt)
-        if best is None:
-            break
-        out.append(best[1])
-        pose = best[2]
-    return out
 
 
 def _rotate_pts(pts, k):
@@ -221,8 +238,6 @@ def build_on_silhouette(points_mm, get_part):
         seq, cover, gap = _follow(cl, get_part, codes)
         if not seq:
             continue
-        start, pose = _replay(seq, cl, get_part)
-        seq = _home(seq, start, pose, get_part, codes)
         start, pose = _replay(seq, cl, get_part)
         gap = math.hypot(pose.x - start.x, pose.y - start.y)
         sc = cover * 1000.0 - min(gap, 2500) * 0.18
