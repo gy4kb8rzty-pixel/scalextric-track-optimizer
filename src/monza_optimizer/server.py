@@ -23,6 +23,12 @@ from monza_optimizer.optimize.inventory_book import apply_purchase, inventory_st
 from monza_optimizer.optimize.inventory_picker import picker_payload, ticks_to_inventory
 from monza_optimizer.optimize.part_art import bmp_to_png, resolve_art_path
 from monza_optimizer.reference.race_calendar import upcoming_events
+from monza_optimizer.optimize.manual_a import (
+    manual_meta,
+    manual_place,
+    manual_start,
+    manual_undo,
+)
 
 PUBLIC_API_BASE = os.environ.get(
     "PUBLIC_API_BASE", "https://scalextric-track-optimizer.onrender.com"
@@ -30,7 +36,7 @@ PUBLIC_API_BASE = os.environ.get(
 
 app = FastAPI(
     title="Scalextric Track Designer API",
-    version="1.3.5",
+    version="1.3.6",
     description="Inventory + circuit + ambition → official BOM, lay-list, and files.",
 )
 app.add_middleware(
@@ -68,6 +74,13 @@ class BookBody(BaseModel):
     accuracy_level: str | None = None
 
 
+class ManualABody(BaseModel):
+    track_id: str = "monza"
+    sequence: list[str] = Field(default_factory=list)
+    sku: str | None = None
+    parts_json: str = "parts.json"
+
+
 class ExportBody(BaseModel):
     sequence: list[str]
     track_id: str = "layout"
@@ -90,7 +103,32 @@ def _absolutize_art(payload: dict[str, Any]) -> dict[str, Any]:
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok"}
+    return {"status": "ok", "version": app.version}
+
+
+@app.get("/manual/a")
+def manual_a_meta() -> dict[str, Any]:
+    return manual_meta()
+
+
+@app.post("/manual/a/start")
+def manual_a_start(body: ManualABody) -> dict[str, Any]:
+    return manual_start(body.track_id, body.parts_json)
+
+
+@app.post("/manual/a/place")
+def manual_a_place(body: ManualABody) -> dict[str, Any]:
+    if not body.sku:
+        raise HTTPException(status_code=400, detail="sku required")
+    try:
+        return manual_place(body.track_id, body.sequence, body.sku, body.parts_json)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/manual/a/undo")
+def manual_a_undo(body: ManualABody) -> dict[str, Any]:
+    return manual_undo(body.track_id, body.sequence, body.parts_json)
 
 
 @app.get("/tracks")
