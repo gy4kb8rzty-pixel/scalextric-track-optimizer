@@ -15,7 +15,7 @@ def _dist_point_seg(px, py, ax, ay, bx, by) -> float:
     return math.hypot(px - (ax + t * dx), py - (ay + t * dy))
 
 
-def rdp(points: list[tuple[float, float]], eps: float) -> list[tuple[float, float]]:
+def rdp(points, eps):
     if len(points) < 3:
         return list(points)
     ax, ay = points[0]
@@ -26,18 +26,11 @@ def rdp(points: list[tuple[float, float]], eps: float) -> list[tuple[float, floa
         if d > dmax:
             dmax, idx = d, i
     if dmax > eps:
-        left = rdp(points[: idx + 1], eps)
-        right = rdp(points[idx:], eps)
-        return left[:-1] + right
+        return rdp(points[: idx + 1], eps)[:-1] + rdp(points[idx:], eps)
     return [points[0], points[-1]]
 
 
-def simplify_for_level_a(
-    points_mm: list[tuple[float, float]],
-    *,
-    min_keep: int = 10,
-    max_keep: int = 18,
-) -> list[tuple[float, float]]:
+def simplify_for_level_a(points_mm, *, min_keep=10, max_keep=18):
     pts = list(points_mm or [])
     if len(pts) < 4:
         return pts
@@ -66,7 +59,7 @@ def simplify_for_level_a(
     return simple
 
 
-def _heading(a, b) -> float:
+def _heading(a, b):
     return math.degrees(math.atan2(b[1] - a[1], b[0] - a[0]))
 
 
@@ -74,29 +67,25 @@ def _advance(pose, part):
     return compute_track_path([part], start=pose)[-1]
 
 
-def _straight_len(part) -> float:
+def _straight_len(part):
     g = getattr(part, "geometry", None)
-    if isinstance(g, StraightGeometry):
-        return float(g.length)
-    return 0.0
+    return float(g.length) if isinstance(g, StraightGeometry) else 0.0
 
 
-def _curve_ang(part) -> float:
+def _curve_ang(part):
     g = getattr(part, "geometry", None)
-    if isinstance(g, CurveGeometry):
-        return abs(float(g.angle_degrees))
-    return 0.0
+    return abs(float(g.angle_degrees)) if isinstance(g, CurveGeometry) else 0.0
 
 
-def build_on_silhouette(points_mm, get_part) -> list[str]:
-    """Longs on each silhouette edge, R3/R4 at each vertex. No oval fallback."""
+def build_on_silhouette(points_mm, get_part):
+    """Align heading to each edge, lay longs, then turn only as much as the corner."""
     pts = list(points_mm or [])
     if len(pts) < 4:
         return []
     if math.hypot(pts[-1][0] - pts[0][0], pts[-1][1] - pts[0][1]) > 1.0:
         pts = pts + [pts[0]]
     pose = Pose(pts[0][0], pts[0][1], _heading(pts[0], pts[1]))
-    seq: list[str] = []
+    seq = []
     straights = []
     for code in ("C8205", "C8207", "C8200", "C8236"):
         p = get_part(code)
@@ -104,50 +93,73 @@ def build_on_silhouette(points_mm, get_part) -> list[str]:
             straights.append((code, _straight_len(p)))
     straights.sort(key=lambda t: -t[1])
 
-    def _curve_code(err: float) -> str | None:
+    def curve_for(err):
         side = "L" if err > 0 else "R"
-        for sku in ("C8235" + side, "C8010" + side, "C8206" + side, "C8204" + side):
+        prefer = ("C8235" + side, "C8010" + side, "C8206" + side, "C8204" + side)
+        if abs(err) >= 40:
+            prefer = ("C8206" + side, "C8204" + side, "C8010" + side, "C8235" + side)
+        for sku in prefer:
             p = get_part(sku)
             if p is not None and _curve_ang(p) > 0:
-                return sku
-        return None
+                return sku, p
+        return None, None
 
-    for i in range(len(pts) - 1):
-        nxt = pts[i + 1]
-        for _ in range(24):
-            remain = math.hypot(nxt[0] - pose.x, nxt[1] - pose.y)
-            if remain < 70:
+    def align(target_heading, budget_deg):
+        used = 0.0
+        for _ in range(8):
+            err = normalize_heading(target_heading - pose.heading_degrees)
+            if abs(err) < 16 or used >= budget_deg:
+                return
+            code, part = curve_for(err)
+            if part is None:
+                return
+            ang = _curve_ang(part)
+            if used + ang > budget_deg + 8 and ang > 24:
+                mild = "C8235L" if err > 0 else "C8235R"
+                mp = get_part(mild)
+                if mp is not None:
+                    code, part, ang = mild, mp, _curve_ang(mp)
+            seq.append(code)
+            pose_next = _advance(pose, part)
+            object.__setattr__(pose, "x", pose_next.x) if False else None
+            return_pose(pose_next)
+            used += ang
+
+    def return_pose(np):
+        nonlocal pose
+        pose = np
+
+    n = len(pts) - 1
+    for i in range(n):
+        a, b = pts[i], pts[i + 1]
+        edge_h = _heading(a, b)
+        turn_here = abs(normalize_heading(edge_h - pose.heading_degrees))
+        used = 0.0
+        for _ in range(8):
+            err = normalize_heading(edge_h - pose.heading_degrees)
+            if abs(err) < 16 or used >= max(turn_here, 90):
                 break
-            want = _heading(pose.x, pose.y) if False else _heading((pose.x, pose.y), nxt)
-            head_err = abs(normalize_heading(want - pose.heading_degrees))
-            if head_err > 18:
+            code, part = curve_for(err)
+            if part is None:
+                break
+            pose = _advance(pose, part)
+            seq.append(code)
+            used += _curve_ang(part)
+        for _ in range(28):
+            remain = math.hypot(b[0] - pose.x, b[1] - pose.y)
+            if remain < 80:
                 break
             placed = False
             for code, L in straights:
-                if remain < L * 0.82:
+                if remain < L * 0.78:
                     continue
                 part = get_part(code)
+                if part is None:
+                    continue
                 pose = _advance(pose, part)
                 seq.append(code)
                 placed = True
                 break
             if not placed:
                 break
-        if i + 2 < len(pts):
-            desired = _heading(nxt, pts[i + 2])
-            for _ in range(10):
-                err = normalize_heading(desired - pose.heading_degrees)
-                if abs(err) < 14:
-                    break
-                code = _curve_code(err)
-                if code is None:
-                    break
-                part = get_part(code)
-                ang = _curve_ang(part)
-                if ang > abs(err) + 8 and ang > 30:
-                    milder = "C8235L" if err > 0 else "C8235R"
-                    if get_part(milder) is not None:
-                        code, part = milder, get_part(milder)
-                pose = _advance(pose, part)
-                seq.append(code)
     return seq
