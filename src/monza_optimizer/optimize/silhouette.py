@@ -1,4 +1,4 @@
-"""Level A: coarse F1 silhouette + multi-start s-follow."""
+"""Level A: coarse F1 silhouette + multi-start s-follow + home."""
 from __future__ import annotations
 import math
 from monza_optimizer.catalog.geometry_types import CurveGeometry, StraightGeometry
@@ -156,6 +156,44 @@ def _follow(cl, get_part, codes):
     return seq, cover, gap
 
 
+def _replay(seq, cl, get_part):
+    pose = Pose(cl.points[0][0], cl.points[0][1], cl.heading(0))
+    start = pose
+    for c in seq:
+        part = get_part(c)
+        if part is not None:
+            pose = _advance(pose, part)
+    return start, pose
+
+
+def _home(seq, start, pose, get_part, codes, max_add=14):
+    out = list(seq)
+    for _ in range(max_add):
+        gap = math.hypot(pose.x - start.x, pose.y - start.y)
+        head = abs(normalize_heading(pose.heading_degrees - start.heading_degrees))
+        if gap < 140 and head < 28:
+            break
+        want = math.degrees(math.atan2(start.y - pose.y, start.x - pose.x))
+        best = None
+        for code in codes:
+            part = get_part(code)
+            if part is None:
+                continue
+            nxt = _advance(pose, part)
+            ng = math.hypot(nxt.x - start.x, nxt.y - start.y)
+            if ng >= gap - 8:
+                continue
+            nh = abs(normalize_heading(nxt.heading_degrees - start.heading_degrees))
+            sc = ng + nh * 1.2
+            if best is None or sc < best[0]:
+                best = (sc, code, nxt)
+        if best is None:
+            break
+        out.append(best[1])
+        pose = best[2]
+    return out
+
+
 def _rotate_pts(pts, k):
     body = pts[:-1] if pts and math.hypot(pts[-1][0] - pts[0][0], pts[-1][1] - pts[0][1]) < 2 else list(pts)
     k = k % max(len(body), 1)
@@ -181,7 +219,11 @@ def build_on_silhouette(points_mm, get_part):
         seq, cover, gap = _follow(cl, get_part, codes)
         if not seq:
             continue
-        sc = cover * 1000.0 - min(gap, 2500) * 0.12
+        start, pose = _replay(seq, cl, get_part)
+        seq = _home(seq, start, pose, get_part, codes)
+        start, pose = _replay(seq, cl, get_part)
+        gap = math.hypot(pose.x - start.x, pose.y - start.y)
+        sc = cover * 1000.0 - min(gap, 2500) * 0.18
         if sc > best_sc:
             best_sc, best_seq = sc, seq
     return best_seq
