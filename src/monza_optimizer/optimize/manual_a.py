@@ -8,6 +8,7 @@ from typing import Any
 
 from monza_optimizer.catalog import load_parts, get_part_by_id, base_id
 from monza_optimizer.export.plan_view import render_png
+from monza_optimizer.export.threemf_builder import PART_COLORS
 from monza_optimizer.geometry.path import compute_track_path
 from monza_optimizer.geometry.pose import Pose, normalize_heading
 from monza_optimizer.optimize.accuracy_levels import get_profile, target_length_for
@@ -18,8 +19,20 @@ from monza_optimizer.reference import list_tracks, load_track_centreline, scale_
 MANUAL_A_ENABLED = True
 MANUAL_A_SKUS = (
     "C8205", "C8207", "C8200", "C8236",
-    "C8235L", "C8235R", "C8206L", "C8206R",
+    "C8203L", "C8203R", "C8204L", "C8204R",
+    "C8202L", "C8202R", "C8206L", "C8206R",
+    "C8234L", "C8234R",
+    "C8201L", "C8201R",
+    "C8010L", "C8010R", "C8235L", "C8235R",
 )
+
+
+def _sku_color(code: str) -> str:
+    return "#" + PART_COLORS.get(base_id(code), "7F8C8D")
+
+
+def _sku_cards() -> list[dict[str, str]]:
+    return [{"sku": s, "color": _sku_color(s)} for s in MANUAL_A_SKUS]
 
 
 def _tid(track_id: str) -> str:
@@ -100,7 +113,8 @@ def _state(track_id, sequence, parts_json="parts.json", inventory=None):
         "closed": bool(sequence) and gap < 120 and head < 22,
         "png_base64": _png(sequence, get_part, outline),
         "skus": list(MANUAL_A_SKUS),
-        "laid": [{"index": i, "sku": c} for i, c in enumerate(sequence)],
+        "sku_cards": _sku_cards(),
+        "laid": [{"index": i, "sku": c, "color": _sku_color(c)} for i, c in enumerate(sequence)],
         "hint": "Tap a laid piece to swap it; the rest stays in order from that pose.",
         "shopping": shopping_list(
             dict(Counter(base_id(c) for c in sequence)),
@@ -119,6 +133,7 @@ def manual_meta():
         "visible_in_menu": True,
         "tracks": [t["id"] for t in list_tracks()],
         "skus": list(MANUAL_A_SKUS),
+        "sku_cards": _sku_cards(),
         "pitch": "Manual only. One official piece at a time on that track's simple outline.",
     }
 
