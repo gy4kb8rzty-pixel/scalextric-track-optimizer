@@ -17,14 +17,16 @@ from monza_optimizer.optimize.silhouette import simplify_for_level_a
 from monza_optimizer.reference import list_tracks, load_track_centreline, scale_centreline
 
 MANUAL_A_ENABLED = True
-MANUAL_A_SKUS = (
-    "C8205", "C8207", "C8200", "C8236",
-    "C8203L", "C8203R", "C8204L", "C8204R",
-    "C8202L", "C8202R", "C8206L", "C8206R",
-    "C8234L", "C8234R",
-    "C8201L", "C8201R",
-    "C8010L", "C8010R", "C8235L", "C8235R",
+MANUAL_A_GROUPS = (
+    ("Straights", ("C8205", "C8207", "C8200", "C8236")),
+    ("Radius 1", ("C8201L", "C8201R", "C8202L", "C8202R")),
+    ("Radius 2", ("C8206L", "C8206R", "C8234L", "C8234R")),
+    ("Radius 3", ("C8204L", "C8204R")),
+    ("Radius 4", ("C8235L", "C8235R")),
+    ("Chicanes", ("C8010L", "C8010R")),
+    ("Crossovers", ("C8203L", "C8203R")),
 )
+MANUAL_A_SKUS = tuple(sku for _, skus in MANUAL_A_GROUPS for sku in skus)
 
 
 def _sku_color(code: str) -> str:
@@ -32,7 +34,11 @@ def _sku_color(code: str) -> str:
 
 
 def _sku_cards() -> list[dict[str, str]]:
-    return [{"sku": s, "color": _sku_color(s)} for s in MANUAL_A_SKUS]
+    cards = []
+    for group, skus in MANUAL_A_GROUPS:
+        for s in skus:
+            cards.append({"sku": s, "color": _sku_color(s), "group": group})
+    return cards
 
 
 def _tid(track_id: str) -> str:
@@ -114,6 +120,7 @@ def _state(track_id, sequence, parts_json="parts.json", inventory=None):
         "png_base64": _png(sequence, get_part, outline),
         "skus": list(MANUAL_A_SKUS),
         "sku_cards": _sku_cards(),
+        "sku_groups": [{"label": label, "skus": list(skus)} for label, skus in MANUAL_A_GROUPS],
         "laid": [{"index": i, "sku": c, "color": _sku_color(c)} for i, c in enumerate(sequence)],
         "hint": "Tap a laid piece to swap it; the rest stays in order from that pose.",
         "shopping": shopping_list(
@@ -134,6 +141,7 @@ def manual_meta():
         "tracks": [t["id"] for t in list_tracks()],
         "skus": list(MANUAL_A_SKUS),
         "sku_cards": _sku_cards(),
+        "sku_groups": [{"label": label, "skus": list(skus)} for label, skus in MANUAL_A_GROUPS],
         "pitch": "Manual only. One official piece at a time on that track's simple outline.",
     }
 
