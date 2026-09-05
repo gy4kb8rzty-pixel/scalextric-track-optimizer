@@ -84,13 +84,22 @@ def default_inventory_from_catalog(parts_json: str = "parts.json") -> dict[str, 
     return inv
 
 
-def _look_ahead(profile) -> float:
+def _look_ahead(profile, override: float | None = None) -> float:
+    if override is not None:
+        return float(override)
     if profile.letter == "B":
-        return 180.0
+        return 240.0
     return 220.0
 
 
-def _run_pipeline(cl, get_part, avail, profile, cand, shop=None):
+def _lap_closed(metrics: dict) -> bool:
+    cover = float(metrics.get("cover_frac") or 0.0)
+    pos = float(metrics.get("pos_mm") or 9999.0)
+    n = int(metrics.get("n_pieces") or 0)
+    return (not metrics.get("collapsed")) and cover >= 0.92 and pos < 350.0 and n >= 50
+
+
+def _run_pipeline(cl, get_part, avail, profile, cand, shop=None, look_ahead_mm=None):
     strategy = profile.strategy
     seq: list[str] = []
     metrics: dict[str, Any] = {}
@@ -102,7 +111,7 @@ def _run_pipeline(cl, get_part, avail, profile, cand, shop=None):
             sharp_turn_deg=profile.sharp_turn_deg,
             max_radius_on_sharp=profile.max_radius_on_sharp,
             dist_tol_mm=profile.dist_tol_mm,
-            look_ahead_mm=_look_ahead(profile),
+            look_ahead_mm=_look_ahead(profile, look_ahead_mm),
             no_chord=True,
             loose=profile.letter not in {"B", "C"},
         )
@@ -221,6 +230,8 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
         start_pose = Pose(cl.points[0][0], cl.points[0][1], cl.heading(0))
         if profile.letter in {"B", "C"}:
             metrics.update({"from_scratch": from_scratch, "close_skipped": True})
+            if profile.letter == "B":
+                metrics["follow_pass"] = "38/240"
         else:
             close_cands = [
                 "C8236", "C8200", "C8207", "C8205",
@@ -250,6 +261,27 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
     metrics["target_length_mm"] = target_mm
     metrics["n_pieces"] = len(seq)
     metrics["cover_frac"] = built / max(target_mm, 1.0)
+    if profile.letter == "B" and not _lap_closed(metrics):
+        fb_profile = LevelProfile(**{**profile.__dict__, "densify_step_mm": 24.0})
+        cl_fb = densify_polyline(scaled, step=24.0)
+        seq_fb, metrics_fb, strategy_fb = _run_pipeline(
+            cl_fb, get_part, avail, fb_profile, cand, shop=shop, look_ahead_mm=180.0
+        )
+        if not profile.ignore_inventory and not from_scratch:
+            seq_fb = enforce_shop_cap(seq_fb, user_inv, fb_profile, get_part=get_part)
+        built_fb = _plen([get_part(c) for c in seq_fb if get_part(c)]) if seq_fb else 0.0
+        metrics_fb["length_mm"] = built_fb
+        metrics_fb["target_length_mm"] = target_mm
+        metrics_fb["n_pieces"] = len(seq_fb)
+        metrics_fb["cover_frac"] = built_fb / max(target_mm, 1.0)
+        metrics_fb["from_scratch"] = from_scratch
+        metrics_fb["close_skipped"] = True
+        metrics_fb["follow_pass"] = "24/180-fallback"
+        metrics_fb["fallback_from"] = "38/240"
+        if _lap_closed(metrics_fb) or (metrics_fb.get("cover_frac") or 0) > (metrics.get("cover_frac") or 0):
+            seq, metrics, strategy = seq_fb, metrics_fb, strategy_fb
+            built = built_fb
+            cl = cl_fb
     tiny = profile.letter not in {"A", "B", "C"} and ((not seq) or len(seq) < 8 or built < 1500.0)
     metrics["collapsed"] = tiny
     if tiny:
