@@ -27,9 +27,9 @@ PART_COLORS = {
     "C8234": "1ABC9C",
     "C156": "C0392B",
     "C8201": "C0392B",
-    "C8202": "C0392B",
-    "C8203": "1E8449",
-    "C8010": "3498DB",
+    "C8202": "E91E63",
+    "C8203": "6C3483",
+    "C8010": "5DADE2",
 }
 
 
@@ -177,7 +177,7 @@ def build_track_3mf(
         '<model unit="millimeter" '
         'xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">'
         f'<metadata name="Title">{title}</metadata>'
-        '<metadata name="Description">Colour: grey straight, yellow short, green R2, blue R3, orange R4, red R1</metadata>'
+        '<metadata name="Description">One colour per SKU family</metadata>'
         f'<resources><basematerials id="1">{bases}</basematerials>'
         f'{ "".join(objects) }</resources>'
         f'<build>{ "".join(items) }</build></model>'
