@@ -89,7 +89,13 @@ STARTER_CANDIDATES = ["C8205", "C8206L", "C8206R", "C8204L", "C8204R", "C8010L",
 COMPACT_CANDIDATES = ["C8205", "C8207", "C8200", "C8236", "C8204L", "C8204R", "C8206L", "C8206R", "C8010L", "C8010R"]
 STANDARD_CANDIDATES = COMPACT_CANDIDATES + ["C8235L", "C8235R", "C8234L", "C8234R", "C8201L", "C8201R", "C187L", "C187R"]
 BUDGET_CANDIDATES = list(STANDARD_CANDIDATES)
-LEAN_CANDIDATES = ["C8205", "C8207", "C8200", "C8236", "C8206L", "C8206R", "C8010L", "C8010R", "C8235L", "C8235R"]
+LEAN_CANDIDATES = [
+    "C8205", "C8207", "C8200", "C8236",
+    "C8203L", "C8203R", "C8204L", "C8204R",
+    "C8202L", "C8202R", "C8206L", "C8206R",
+    "C8234L", "C8234R", "C8201L", "C8201R",
+    "C8010L", "C8010R", "C8235L", "C8235R",
+]
 FULL_CANDIDATES = list(STANDARD_CANDIDATES)
 STREET_CIRCUITS = {"monaco", "monte_carlo", "marina_bay", "singapore", "las_vegas", "baku", "jeddah", "miami", "montreal", "san_diego"}
 
@@ -98,7 +104,7 @@ def _p(*a, **k):
 
 LEVELS = {
     AccuracyLevel.BARE_BONES: _p(AccuracyLevel.BARE_BONES, "0", "Bare Bones", "Empty-box starter kit.", "sequential", False, False, 64, 6, 5000.0, 60.0, 80.0, 80.0, 2500.0, 1600.0, 1800.0, 64, True, False, False, "starter", ignore_inventory=True, scale_frac=0.18, min_target_mm=5500.0, max_target_mm=8000.0),
-    AccuracyLevel.LEAN_BUDGET: _p(AccuracyLevel.LEAN_BUDGET, "A", "Lean Budget", "Manual only. Simple red outline ~11-16 m. One official piece at a time. Done builds the shopping list.", "manual", False, False, 56, 8, 13000.0, 36.0, 32.0, 28.0, 900.0, 280.0, 400.0, 140, True, False, False, "lean", scale_frac=0.48, min_target_mm=11000.0, max_target_mm=16000.0),
+    AccuracyLevel.LEAN_BUDGET: _p(AccuracyLevel.LEAN_BUDGET, "A", "Lean Budget", "Manual only. Simple red outline ~11-16 m. One official piece at a time. Done builds the shopping list.", "manual", False, False, 80, 20, 13000.0, 36.0, 32.0, 28.0, 900.0, 280.0, 400.0, 140, True, False, False, "lean", scale_frac=0.48, min_target_mm=11000.0, max_target_mm=16000.0),
     AccuracyLevel.BUDGET: _p(AccuracyLevel.BUDGET, "B", "Budget", "Detailed red line ~24-34 m. Follow 38/240; if the lap stays open, retry 24/180. Full catalogue. Shop cap 160 / 24 SKUs.", "sequential", False, False, 160, 24, 28000.0, 38.0, 26.0, 24.0, 380.0, 220.0, 200.0, 400, True, False, False, "full", scale_frac=0.95, min_target_mm=24000.0, max_target_mm=34000.0),
     AccuracyLevel.DETAILED: _p(AccuracyLevel.DETAILED, "C", "Detailed", "Larger red line ~34-48 m so hairpins fit. Full catalogue. Shop cap 180 pieces / 28 SKUs. Tighter fit than B. No diagonal close.", "sequential", False, False, 180, 28, 36000.0, 13.0, 26.0, 24.0, 380.0, 240.0, 200.0, 550, False, False, True, "full", scale_frac=1.15, min_target_mm=34000.0, max_target_mm=48000.0),
     AccuracyLevel.FULL_ACCURACY: _p(AccuracyLevel.FULL_ACCURACY, "D", "Full Accuracy", "Largest everyday scale ~48-64 m. Unlimited catalogue and buy list. Tightest follow of the red centreline.", "sequential", True, False, 10000, 10000, 50000.0, 12.0, 22.0, 22.0, 360.0, 280.0, 180.0, 900, False, False, True, "full", scale_frac=1.5, min_target_mm=48000.0, max_target_mm=64000.0),
