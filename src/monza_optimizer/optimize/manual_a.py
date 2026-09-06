@@ -17,6 +17,7 @@ from monza_optimizer.optimize.part_art import urls_for_sku
 from monza_optimizer.optimize.shop_helpers import shopping_list
 from monza_optimizer.optimize.silhouette import simplify_for_level_a
 from monza_optimizer.reference import list_tracks, load_track_centreline, scale_centreline
+from monza_optimizer.reference.tracks import is_ad_lib, AD_LIB_ID
 
 MANUAL_A_ENABLED = True
 MANUAL_A_GROUPS = (
@@ -59,6 +60,8 @@ def _tid(track_id: str) -> str:
 
 
 def _scaled_official(track_id: str, level: str = "a"):
+    if is_ad_lib(track_id):
+        return []
     loaded = load_track_centreline(track_id)
     profile = get_profile(level)
     target = target_length_for(profile, getattr(loaded, "official_length_m", None), track_id=track_id)
@@ -66,6 +69,8 @@ def _scaled_official(track_id: str, level: str = "a"):
 
 
 def _outline(track_id: str):
+    if is_ad_lib(track_id):
+        return []
     return simplify_for_level_a(_scaled_official(track_id, "a"))
 
 
@@ -102,7 +107,7 @@ def _dist_to_outline(x, y, outline):
 
 
 def _png(sequence, get_part, outline):
-    raw = render_png(sequence, get_part, outline_points=outline)
+    raw = render_png(sequence, get_part, outline_points=outline or None)
     return base64.b64encode(raw).decode("ascii")
 
 
@@ -133,8 +138,10 @@ def _state(track_id, sequence, parts_json="parts.json", inventory=None):
         "gap_mm": round(gap, 1),
         "heading_err_deg": round(head, 1),
         "off_line_mm": round(on_line, 1),
-        "on_line": on_line < 420,
+        "on_line": True if is_ad_lib(track_id) else on_line < 420,
         "closed": bool(sequence) and gap < 120 and head < 22,
+        "no_guide": is_ad_lib(track_id),
+        "ad_lib": is_ad_lib(track_id),
         "png_base64": _png(sequence, get_part, outline),
         "skus": list(MANUAL_A_SKUS),
         "sku_cards": _sku_cards(),
@@ -158,7 +165,7 @@ def manual_meta():
         "skus": list(MANUAL_A_SKUS),
         "sku_cards": _sku_cards(),
         "sku_groups": [{"label": label, "skus": list(skus)} for label, skus in MANUAL_A_GROUPS],
-        "pitch": "Manual only. One official piece at a time on that track's simple outline.",
+        "pitch": "Manual only. Named circuits use a simple outline; Create your own has no guide.",
     }
 
 
@@ -217,7 +224,7 @@ def manual_finish(track_id, sequence, inventory=None, parts_json="parts.json"):
         wanted=["shopping", "lay", "png", "pdf", "3mf", "svg"],
         shopping=state.get("shopping"),
         include_binary=True,
-        outline_points=_scaled_official(tid, "a"),
+        outline_points=_scaled_official(tid, "a") or None,
     )
     state["finished"] = True
     state["accuracy_level"] = "A"
