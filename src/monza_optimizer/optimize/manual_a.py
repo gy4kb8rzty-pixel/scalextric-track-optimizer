@@ -49,12 +49,15 @@ def _tid(track_id: str) -> str:
     return tid
 
 
-def _outline(track_id: str):
+def _scaled_official(track_id: str, level: str = "a"):
     loaded = load_track_centreline(track_id)
-    profile = get_profile("a")
+    profile = get_profile(level)
     target = target_length_for(profile, getattr(loaded, "official_length_m", None), track_id=track_id)
-    scaled = scale_centreline(loaded.points_m, target, close=True)
-    return simplify_for_level_a(scaled)
+    return scale_centreline(loaded.points_m, target, close=True)
+
+
+def _outline(track_id: str):
+    return simplify_for_level_a(_scaled_official(track_id, "a"))
 
 
 def _start_pose(outline):
@@ -191,7 +194,7 @@ def manual_finish(track_id, sequence, inventory=None, parts_json="parts.json"):
     tid = _tid(track_id)
     seq = list(sequence or [])
     state = _state(tid, seq, parts_json, inventory)
-    outline = state.pop("_outline", None)
+    state.pop("_outline", None)
     state.pop("_get_part_ready", None)
     parts = load_parts(parts_json)
 
@@ -205,7 +208,7 @@ def manual_finish(track_id, sequence, inventory=None, parts_json="parts.json"):
         wanted=["shopping", "lay", "png", "pdf", "3mf", "svg"],
         shopping=state.get("shopping"),
         include_binary=True,
-        outline_points=outline,
+        outline_points=_scaled_official(tid, "a"),
     )
     state["finished"] = True
     state["accuracy_level"] = "A"
