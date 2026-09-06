@@ -7,6 +7,7 @@ from collections import Counter
 from typing import Any
 
 from monza_optimizer.catalog import load_parts, get_part_by_id, base_id
+from monza_optimizer.export import build_output_pack
 from monza_optimizer.export.plan_view import render_png
 from monza_optimizer.export.threemf_builder import PART_COLORS
 from monza_optimizer.geometry.path import compute_track_path
@@ -105,6 +106,11 @@ def _state(track_id, sequence, parts_json="parts.json", inventory=None):
     gap = math.hypot(pose.x - start.x, pose.y - start.y)
     head = abs(normalize_heading(pose.heading_degrees - start.heading_degrees))
     on_line = _dist_to_outline(pose.x, pose.y, outline)
+    shop = shopping_list(
+        dict(Counter(base_id(c) for c in sequence)),
+        inventory or {},
+        get_profile("a"),
+    ).as_dict()
     return {
         "hidden": False,
         "enabled": MANUAL_A_ENABLED,
@@ -123,11 +129,9 @@ def _state(track_id, sequence, parts_json="parts.json", inventory=None):
         "sku_groups": [{"label": label, "skus": list(skus)} for label, skus in MANUAL_A_GROUPS],
         "laid": [{"index": i, "sku": c, "color": _sku_color(c)} for i, c in enumerate(sequence)],
         "hint": "Tap a laid piece to swap it; the rest stays in order from that pose.",
-        "shopping": shopping_list(
-            dict(Counter(base_id(c) for c in sequence)),
-            inventory or {},
-            get_profile("a"),
-        ).as_dict(),
+        "shopping": shop,
+        "_outline": outline,
+        "_get_part_ready": True,
     }
 
 
@@ -184,6 +188,27 @@ def manual_replace(track_id, sequence, index, sku, parts_json="parts.json", inve
 
 
 def manual_finish(track_id, sequence, inventory=None, parts_json="parts.json"):
-    state = _state(_tid(track_id), list(sequence or []), parts_json, inventory)
+    tid = _tid(track_id)
+    seq = list(sequence or [])
+    state = _state(tid, seq, parts_json, inventory)
+    outline = state.pop("_outline", None)
+    state.pop("_get_part_ready", None)
+    parts = load_parts(parts_json)
+
+    def get_part(c):
+        return get_part_by_id(parts, c)
+
+    pack = build_output_pack(
+        seq,
+        get_part,
+        title=f"{tid} A",
+        wanted=["shopping", "lay", "png", "pdf", "3mf", "svg"],
+        shopping=state.get("shopping"),
+        include_binary=True,
+        outline_points=outline,
+    )
     state["finished"] = True
+    state["accuracy_level"] = "A"
+    state["lay"] = pack.get("lay") or {}
+    state["outputs"] = pack
     return state
