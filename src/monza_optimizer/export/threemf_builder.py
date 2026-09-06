@@ -1,7 +1,4 @@
-"""Lean 3MF for Microsoft 3D Builder.
-
-Only watertight piece solids. No ground plane or open legend slab.
-"""
+"""3MF for Microsoft 3D Builder: coloured pieces plus red guide centreline."""
 
 from __future__ import annotations
 
@@ -31,6 +28,7 @@ PART_COLORS = {
     "C8203": "6C3483",
     "C8010": "5DADE2",
 }
+GUIDE_COLOR = "C0392B"
 
 
 def _signed_angle(part, code: str) -> float:
@@ -43,6 +41,14 @@ def _signed_angle(part, code: str) -> float:
     if pid.endswith("L"):
         return a
     return float(part.geometry.angle_degrees)
+
+
+def _heading_of(outline: Sequence[tuple[float, float]]) -> float:
+    if not outline or len(outline) < 2:
+        return 0.0
+    x0, y0 = outline[0]
+    x1, y1 = outline[1]
+    return math.degrees(math.atan2(y1 - y0, x1 - x0))
 
 
 def _ring(pose: Pose, half_w: float, z0: float, h: float):
@@ -107,6 +113,44 @@ def _straight_mesh(part, half_w: float = 78.0, h: float = 8.0, z0: float = 0.0):
     return verts, tris
 
 
+def _guide_mesh(outline: Sequence[tuple[float, float]], half: float = 5.0, z0: float = 14.0, h: float = 6.0):
+    """Raised red square tube along the official centreline."""
+    pts = [(float(x), float(y)) for x, y in outline if x is not None and y is not None]
+    if len(pts) < 2:
+        return [], []
+    verts: list[tuple[float, float, float]] = []
+    tris: list[tuple[int, int, int]] = []
+    for i in range(len(pts) - 1):
+        x0, y0 = pts[i]
+        x1, y1 = pts[i + 1]
+        dx, dy = x1 - x0, y1 - y0
+        L = math.hypot(dx, dy)
+        if L < 1.0:
+            continue
+        nx, ny = -dy / L, dx / L
+        base = len(verts)
+        verts += [
+            (x0 + nx * half, y0 + ny * half, z0),
+            (x0 - nx * half, y0 - ny * half, z0),
+            (x1 + nx * half, y1 + ny * half, z0),
+            (x1 - nx * half, y1 - ny * half, z0),
+            (x0 + nx * half, y0 + ny * half, z0 + h),
+            (x0 - nx * half, y0 - ny * half, z0 + h),
+            (x1 + nx * half, y1 + ny * half, z0 + h),
+            (x1 - nx * half, y1 - ny * half, z0 + h),
+        ]
+        a = base
+        tris += [
+            (a, a + 2, a + 3), (a, a + 3, a + 1),
+            (a + 4, a + 5, a + 7), (a + 4, a + 7, a + 6),
+            (a, a + 1, a + 5), (a, a + 5, a + 4),
+            (a + 2, a + 6, a + 7), (a + 2, a + 7, a + 3),
+            (a, a + 4, a + 6), (a, a + 6, a + 2),
+            (a + 1, a + 3, a + 7), (a + 1, a + 7, a + 5),
+        ]
+    return verts, tris
+
+
 def _xform(verts, pose: Pose):
     hr = math.radians(pose.heading_degrees)
     c, s = math.cos(hr), math.sin(hr)
@@ -121,15 +165,20 @@ def build_track_3mf(
     outline_points: Sequence[tuple[float, float]] | None = None,
     title: str = "Scalextric track",
     track_z: float = 0.0,
-    tube_z: float = 30.0,
+    tube_z: float = 14.0,
     include_legend: bool = False,
     include_ground: bool = False,
 ) -> Path:
-    del outline_points, tube_z, include_legend, include_ground
+    del include_legend, include_ground
     out_path = Path(out_path)
+    outline = list(outline_points or [])
     codes = [c for c in sequence if get_part(c) is not None]
     parts = [get_part(c) for c in codes]
-    poses = compute_track_path(parts, start=Pose(0.0, 0.0, 0.0)) if parts else [Pose(0, 0, 0)]
+    if outline and len(outline) >= 2:
+        start = Pose(float(outline[0][0]), float(outline[0][1]), _heading_of(outline))
+    else:
+        start = Pose(0.0, 0.0, 0.0)
+    poses = compute_track_path(parts, start=start) if parts else [start]
 
     color_list: list[str] = []
     color_index: dict[str, int] = {}
@@ -145,6 +194,8 @@ def build_track_3mf(
 
     for code in codes:
         ensure(color_for(code))
+    if outline and len(outline) >= 2:
+        ensure(GUIDE_COLOR)
     if not color_list:
         ensure("7F8C8D")
 
@@ -169,6 +220,18 @@ def build_track_3mf(
         items.append(f'<item objectid="{oid}" />')
         oid += 1
 
+    if outline and len(outline) >= 2:
+        gv, gt = _guide_mesh(outline, z0=tube_z)
+        if gv and gt:
+            vxml = "".join(f'<vertex x="{x:.3f}" y="{y:.3f}" z="{z:.3f}" />' for x, y, z in gv)
+            txml = "".join(f'<triangle v1="{a}" v2="{b}" v3="{c}" />' for a, b, c in gt)
+            pi = ensure(GUIDE_COLOR)
+            objects.append(
+                f'<object id="{oid}" name="red_guide" type="model" pid="1" pindex="{pi}">'
+                f"<mesh><vertices>{vxml}</vertices><triangles>{txml}</triangles></mesh></object>"
+            )
+            items.append(f'<item objectid="{oid}" />')
+
     bases = "".join(
         f'<base name="mat{i}" displaycolor="#{col}FF" />' for i, col in enumerate(color_list)
     )
@@ -177,7 +240,7 @@ def build_track_3mf(
         '<model unit="millimeter" '
         'xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">'
         f'<metadata name="Title">{title}</metadata>'
-        '<metadata name="Description">One colour per SKU family</metadata>'
+        '<metadata name="Description">Coloured pieces plus raised red official centreline</metadata>'
         f'<resources><basematerials id="1">{bases}</basematerials>'
         f'{ "".join(objects) }</resources>'
         f'<build>{ "".join(items) }</build></model>'
