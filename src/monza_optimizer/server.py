@@ -23,7 +23,9 @@ from monza_optimizer.optimize.inventory_book import apply_purchase, inventory_st
 from monza_optimizer.optimize.inventory_picker import picker_payload, ticks_to_inventory
 from monza_optimizer.optimize.part_art import bmp_to_png, resolve_art_path
 from monza_optimizer.reference.race_calendar import upcoming_events
-from monza_optimizer.optimize.accuracy_levels import levels_for_ui
+from monza_optimizer.optimize.accuracy_levels import get_profile, levels_for_ui, target_length_for
+from monza_optimizer.optimize.silhouette import simplify_for_level_a
+from monza_optimizer.reference import load_track_centreline, scale_centreline
 from monza_optimizer.optimize.manual_a import (
     manual_finish,
     manual_meta,
@@ -39,7 +41,7 @@ PUBLIC_API_BASE = os.environ.get(
 
 app = FastAPI(
     title="Scalextric Track Designer API",
-    version="1.3.9",
+    version="1.3.10",
     description="Inventory + circuit + ambition → official BOM, lay-list, and files.",
 )
 app.add_middleware(
@@ -89,7 +91,8 @@ class ManualABody(BaseModel):
 class ExportBody(BaseModel):
     sequence: list[str]
     track_id: str = "layout"
-    outputs: list[str] = Field(default_factory=lambda: ["lay", "svg"])
+    accuracy_level: str = "A"
+    outputs: list[str] = Field(default_factory=lambda: ["lay", "svg", "png", "pdf", "3mf"])
     parts_json: str = "parts.json"
     as_file: str | None = None
 
@@ -114,6 +117,22 @@ def _manual_kw(body: ManualABody):
     }
 
 
+def _outline_for_track(track_id: str | None, level: str = "A"):
+    tid = str(track_id or "").strip().lower()
+    if not tid or tid in {"layout", "track"}:
+        return None
+    try:
+        loaded = load_track_centreline(tid)
+        profile = get_profile(level)
+        target = target_length_for(profile, getattr(loaded, "official_length_m", None), track_id=tid)
+        scaled = scale_centreline(loaded.points_m, target, close=True)
+        if str(getattr(profile, "letter", level)).upper() == "A":
+            return simplify_for_level_a(scaled)
+        return scaled
+    except Exception:
+        return None
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok", "version": app.version}
@@ -134,8 +153,6 @@ def manual_a_place(body: ManualABody) -> dict[str, Any]:
     if not body.sku:
         raise HTTPException(status_code=400, detail="sku required")
     try:
-        return manual_place(body.sequence, body.sku, **_manual_kw(body))
-    except TypeError:
         return manual_place(body.track_id, body.sequence, body.sku, body.parts_json, body.inventory)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -325,12 +342,14 @@ def export(body: ExportBody):
 
     if not body.sequence:
         raise HTTPException(status_code=400, detail="sequence is empty")
+    outline = _outline_for_track(body.track_id, body.accuracy_level or "A")
     pack = build_output_pack(
         body.sequence,
         get_part,
         title=body.track_id,
         wanted=body.outputs,
         include_binary=True,
+        outline_points=outline,
     )
     if body.as_file:
         key = body.as_file.lower()
