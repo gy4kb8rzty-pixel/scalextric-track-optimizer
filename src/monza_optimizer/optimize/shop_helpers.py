@@ -3,6 +3,26 @@ from __future__ import annotations
 from collections import Counter
 from dataclasses import dataclass, field
 
+
+def _sku_card(sku: str, qty: int) -> dict:
+    from monza_optimizer.catalog.parts import base_id as _base
+    from monza_optimizer.export.threemf_builder import PART_COLORS
+    from monza_optimizer.optimize.part_art import urls_for_sku
+    code = _base(sku)
+    art = urls_for_sku(code) or urls_for_sku(code + "L") or {}
+    return {
+        "sku": code,
+        "qty": int(qty),
+        "color": "#" + PART_COLORS.get(code, "7F8C8D"),
+        "thumb_png": art.get("thumb_png"),
+        "thumb_url": art.get("thumb_url"),
+    }
+
+
+def _cards(mapping: dict) -> list[dict]:
+    return [_sku_card(k, v) for k, v in sorted(dict(mapping or {}).items()) if int(v) > 0]
+
+
 @dataclass
 class ShoppingList:
     used: dict
@@ -14,7 +34,19 @@ class ShoppingList:
     within_shop_budget: bool
     notes: list = field(default_factory=list)
     def as_dict(self):
-        return {"used": dict(self.used), "owned_used": dict(self.owned_used), "leftover": dict(self.leftover), "missing": dict(self.missing), "missing_piece_count": self.missing_piece_count, "missing_sku_count": self.missing_sku_count, "within_shop_budget": self.within_shop_budget, "notes": list(self.notes)}
+        return {
+            "used": dict(self.used),
+            "owned_used": dict(self.owned_used),
+            "leftover": dict(self.leftover),
+            "missing": dict(self.missing),
+            "missing_piece_count": self.missing_piece_count,
+            "missing_sku_count": self.missing_sku_count,
+            "within_shop_budget": self.within_shop_budget,
+            "notes": list(self.notes),
+            "still_needed": _cards(self.missing),
+            "owned_used_cards": _cards(self.owned_used),
+            "leftover_cards": _cards(self.leftover),
+        }
 
 def shopping_list(bom, inventory, profile, *, base_id_fn=None):
     from monza_optimizer.catalog.parts import base_id as _base
