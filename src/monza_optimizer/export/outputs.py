@@ -49,7 +49,7 @@ OUTPUT_MENU = [
         "label": "3D Builder 3MF",
         "default": False,
         "kind": "model/3mf",
-        "note": "Colour-coded pieces for Microsoft 3D Builder.",
+        "note": "Colour-coded pieces plus raised red official centreline.",
     },
 ]
 
@@ -116,7 +116,13 @@ def build_output_pack(
         if "3mf" in want:
             with TemporaryDirectory() as tmp:
                 path = Path(tmp) / _fname(title, "3mf")
-                build_track_3mf(list(sequence), get_part, path, title=title)
+                build_track_3mf(
+                    list(sequence),
+                    get_part,
+                    path,
+                    title=title,
+                    outline_points=outline_points,
+                )
                 blob = path.read_bytes()
             files["3mf"] = {
                 "filename": _fname(title, "3mf"),
