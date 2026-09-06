@@ -1,0 +1,27 @@
+{
+  "user_id": "demo",
+  "display_name": "Owned box used in the Monaco A–D compare",
+  "parts": {
+    "C8205": 39,
+    "C8207": 1,
+    "C8200": 1,
+    "C8236": 1,
+    "C8206": 11,
+    "C8204": 26,
+    "C8235": 5,
+    "C156": 7,
+    "C8234": 2,
+    "C187": 7,
+    "C8006": 2,
+    "C8005": 2,
+    "C8031": 2,
+    "C8009": 1,
+    "C8010": 1
+  },
+  "detailing": {
+    "theme": "default",
+    "borders": false,
+    "barriers": false,
+    "elevation": false
+  }
+}
