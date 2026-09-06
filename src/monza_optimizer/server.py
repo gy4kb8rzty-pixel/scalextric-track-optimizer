@@ -25,6 +25,7 @@ from monza_optimizer.optimize.part_art import bmp_to_png, resolve_art_path
 from monza_optimizer.reference.race_calendar import upcoming_events
 from monza_optimizer.optimize.accuracy_levels import levels_for_ui
 from monza_optimizer.optimize.manual_a import (
+    manual_finish,
     manual_meta,
     manual_place,
     manual_replace,
@@ -38,7 +39,7 @@ PUBLIC_API_BASE = os.environ.get(
 
 app = FastAPI(
     title="Scalextric Track Designer API",
-    version="1.3.8",
+    version="1.3.9",
     description="Inventory + circuit + ambition → official BOM, lay-list, and files.",
 )
 app.add_middleware(
@@ -81,6 +82,7 @@ class ManualABody(BaseModel):
     sequence: list[str] = Field(default_factory=list)
     sku: str | None = None
     index: int | None = None
+    inventory: dict[str, int] = Field(default_factory=dict)
     parts_json: str = "parts.json"
 
 
@@ -104,6 +106,14 @@ def _absolutize_art(payload: dict[str, Any]) -> dict[str, Any]:
     return payload
 
 
+def _manual_kw(body: ManualABody):
+    return {
+        "track_id": body.track_id,
+        "parts_json": body.parts_json,
+        "inventory": dict(body.inventory or {}),
+    }
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok", "version": app.version}
@@ -116,7 +126,7 @@ def manual_a_meta() -> dict[str, Any]:
 
 @app.post("/manual/a/start")
 def manual_a_start(body: ManualABody) -> dict[str, Any]:
-    return manual_start(body.track_id, body.parts_json)
+    return manual_start(**_manual_kw(body))
 
 
 @app.post("/manual/a/place")
@@ -124,14 +134,16 @@ def manual_a_place(body: ManualABody) -> dict[str, Any]:
     if not body.sku:
         raise HTTPException(status_code=400, detail="sku required")
     try:
-        return manual_place(body.track_id, body.sequence, body.sku, body.parts_json)
+        return manual_place(body.sequence, body.sku, **_manual_kw(body))
+    except TypeError:
+        return manual_place(body.track_id, body.sequence, body.sku, body.parts_json, body.inventory)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @app.post("/manual/a/undo")
 def manual_a_undo(body: ManualABody) -> dict[str, Any]:
-    return manual_undo(body.track_id, body.sequence, body.parts_json)
+    return manual_undo(body.track_id, body.sequence, body.parts_json, body.inventory)
 
 
 @app.post("/manual/a/replace")
@@ -141,9 +153,36 @@ def manual_a_replace(body: ManualABody) -> dict[str, Any]:
     if not body.sku:
         raise HTTPException(status_code=400, detail="sku required")
     try:
-        return manual_replace(body.track_id, body.sequence, body.index, body.sku, body.parts_json)
+        return manual_replace(body.track_id, body.sequence, body.index, body.sku, body.parts_json, body.inventory)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/manual/a/finish")
+def manual_a_finish(body: ManualABody) -> dict[str, Any]:
+    if not body.sequence:
+        raise HTTPException(status_code=400, detail="sequence is empty")
+    try:
+        state = manual_finish(body.track_id, body.sequence, body.inventory, body.parts_json)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    shop = state.get("shopping") or {}
+    state["accuracy_level"] = "A"
+    state["finished"] = True
+    state["inventory_status"] = inventory_status(
+        dict(body.inventory or {}),
+        used=shop.get("owned_used") or shop.get("used"),
+        missing=shop.get("missing"),
+        leftover=shop.get("leftover"),
+        track_id=state.get("track_id"),
+        accuracy_level="A",
+    )
+    return state
+
+
+@app.post("/manual/a/done")
+def manual_a_done(body: ManualABody) -> dict[str, Any]:
+    return manual_a_finish(body)
 
 
 @app.get("/tracks")
