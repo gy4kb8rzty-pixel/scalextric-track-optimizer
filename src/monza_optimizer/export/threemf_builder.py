@@ -10,7 +10,7 @@ from typing import Callable, Sequence
 from monza_optimizer.catalog.geometry_types import CurveGeometry
 from monza_optimizer.catalog.parts import base_id
 from monza_optimizer.geometry.pose import Pose
-from monza_optimizer.geometry.path import compute_track_path
+from monza_optimizer.geometry.path import compute_track_path, path_length
 
 PART_COLORS = {
     "C8205": "808890",
@@ -51,6 +51,25 @@ def _heading_of(outline: Sequence[tuple[float, float]]) -> float:
     return math.degrees(math.atan2(y1 - y0, x1 - x0))
 
 
+def _poly_len(pts: Sequence[tuple[float, float]]) -> float:
+    total = 0.0
+    for i in range(len(pts) - 1):
+        total += math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1])
+    return total
+
+
+def _fit_outline(outline: Sequence[tuple[float, float]], built_mm: float):
+    pts = [(float(x), float(y)) for x, y in outline]
+    if len(pts) < 2 or built_mm < 1.0:
+        return pts
+    L = _poly_len(pts)
+    if L < 1.0:
+        return pts
+    s = built_mm / L
+    x0, y0 = pts[0]
+    return [((x - x0) * s + x0, (y - y0) * s + y0) for x, y in pts]
+
+
 def _ring(pose: Pose, half_w: float, z0: float, h: float):
     hr = math.radians(pose.heading_degrees)
     nx, ny = -math.sin(hr), math.cos(hr)
@@ -70,8 +89,8 @@ def _curve_mesh(part, code: str, half_w: float = 78.0, h: float = 8.0, steps: in
     stations = [pose]
     dt = ang / n
     for _ in range(n):
-        ar = math.radians(dt)
         hr = math.radians(pose.heading_degrees)
+        ar = math.radians(dt)
         td = 1.0 if dt >= 0 else -1.0
         lx = R * math.sin(abs(ar))
         ly = td * R * (1 - math.cos(abs(ar)))
@@ -114,7 +133,6 @@ def _straight_mesh(part, half_w: float = 78.0, h: float = 8.0, z0: float = 0.0):
 
 
 def _guide_mesh(outline: Sequence[tuple[float, float]], half: float = 5.0, z0: float = 14.0, h: float = 6.0):
-    """Raised red square tube along the official centreline."""
     pts = [(float(x), float(y)) for x, y in outline if x is not None and y is not None]
     if len(pts) < 2:
         return [], []
@@ -174,6 +192,9 @@ def build_track_3mf(
     outline = list(outline_points or [])
     codes = [c for c in sequence if get_part(c) is not None]
     parts = [get_part(c) for c in codes]
+    built = path_length(parts) if parts else 0.0
+    if outline and len(outline) >= 2 and built > 1.0:
+        outline = _fit_outline(outline, built)
     if outline and len(outline) >= 2:
         start = Pose(float(outline[0][0]), float(outline[0][1]), _heading_of(outline))
     else:
@@ -240,7 +261,7 @@ def build_track_3mf(
         '<model unit="millimeter" '
         'xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">'
         f'<metadata name="Title">{title}</metadata>'
-        '<metadata name="Description">Coloured pieces plus raised red official centreline</metadata>'
+        '<metadata name="Description">Coloured pieces plus raised red official centreline fitted to lap length</metadata>'
         f'<resources><basematerials id="1">{bases}</basematerials>'
         f'{ "".join(objects) }</resources>'
         f'<build>{ "".join(items) }</build></model>'
