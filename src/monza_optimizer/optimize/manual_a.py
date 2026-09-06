@@ -13,6 +13,7 @@ from monza_optimizer.export.threemf_builder import PART_COLORS
 from monza_optimizer.geometry.path import compute_track_path
 from monza_optimizer.geometry.pose import Pose, normalize_heading
 from monza_optimizer.optimize.accuracy_levels import get_profile, target_length_for
+from monza_optimizer.optimize.part_art import urls_for_sku
 from monza_optimizer.optimize.shop_helpers import shopping_list
 from monza_optimizer.optimize.silhouette import simplify_for_level_a
 from monza_optimizer.reference import list_tracks, load_track_centreline, scale_centreline
@@ -24,6 +25,7 @@ MANUAL_A_GROUPS = (
     ("Radius 2", ("C8206L", "C8206R", "C8234L", "C8234R")),
     ("Radius 3", ("C8204L", "C8204R")),
     ("Radius 4", ("C8235L", "C8235R")),
+    ("Banked", ("C187L", "C187R")),
     ("Chicanes", ("C8010L", "C8010R")),
     ("Crossovers", ("C8203L", "C8203R")),
 )
@@ -38,7 +40,14 @@ def _sku_cards() -> list[dict[str, str]]:
     cards = []
     for group, skus in MANUAL_A_GROUPS:
         for s in skus:
-            cards.append({"sku": s, "color": _sku_color(s), "group": group})
+            art = urls_for_sku(s) or {}
+            cards.append({
+                "sku": s,
+                "color": _sku_color(s),
+                "group": group,
+                "thumb_png": art.get("thumb_png"),
+                "thumb_url": art.get("thumb_url"),
+            })
     return cards
 
 
