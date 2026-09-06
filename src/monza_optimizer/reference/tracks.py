@@ -15,14 +15,24 @@ UNRELIABLE_QUALITY = {"schematic"}
 HIDDEN_FROM_MENU = {"charlotte_roval", "gateway"}
 LEVEL_A_TRACKS = frozenset()
 DEFAULT_LETTERS = ("A", "B", "C", "D", "E")
+AD_LIB_ID = "ad_lib"
+AD_LIB_ALIASES = frozenset({"ad_lib", "create_your_own", "create-your-own", "own"})
+
+
+def is_ad_lib(track_id: str) -> bool:
+    return str(track_id or "").strip().lower() in AD_LIB_ALIASES
 
 
 def level_a_allowed(track_id: str) -> bool:
     tid = str(track_id or "").strip().lower()
+    if is_ad_lib(tid):
+        return True
     return bool(tid) and tid not in HIDDEN_FROM_MENU
 
 
 def letters_for_track(track_id: str) -> list[str]:
+    if is_ad_lib(track_id):
+        return ["A"]
     if not level_a_allowed(track_id):
         return ["B", "C", "D", "E"]
     return list(DEFAULT_LETTERS)
@@ -108,10 +118,38 @@ def list_tracks() -> list[dict]:
             out.append({**src, "id": alias, "note": f"alias of {target}"})
     out = [r for r in out if r.get("selectable")]
     out.sort(key=lambda r: (not r.get("featured"), r.get("series") or "", r["name"]))
+    out.append({
+        "id": AD_LIB_ID,
+        "name": "Create your own",
+        "official_length_m": 0.0,
+        "file": None,
+        "unit": "mm",
+        "series": None,
+        "kind": "ad_lib",
+        "calendar": [],
+        "featured": False,
+        "available": True,
+        "selectable": True,
+        "accuracy_letters": ["A"],
+        "level_a_available": True,
+        "no_guide": True,
+        "mode": "manual_a",
+        "quality": "ad_lib",
+        "note": "No red guide. Place official pieces freely, then Done for the shopping list.",
+    })
     return out
 
 
 def load_track_centreline(track_id: str) -> TrackProfile:
+    if is_ad_lib(track_id):
+        return TrackProfile(
+            id=AD_LIB_ID,
+            name="Create your own",
+            official_length_m=0.0,
+            points_m=[(0.0, 0.0), (0.35, 0.0)],
+            source="ad_lib",
+            notes="no guide",
+        )
     meta = {t["id"]: t for t in list_tracks()}
     if track_id not in meta:
         raise KeyError(f"Unknown track_id={track_id!r}. Known: {list(meta)}")
