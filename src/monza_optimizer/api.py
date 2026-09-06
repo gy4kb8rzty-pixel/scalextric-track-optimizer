@@ -8,10 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from monza_optimizer.catalog import load_parts, get_part_by_id, base_id
-from monza_optimizer.optimize import (
-    densify_polyline,
-    corner_first_build,
-)
+from monza_optimizer.optimize import densify_polyline, corner_first_build
 from monza_optimizer.optimize.sequential import sequential_follow
 from monza_optimizer.optimize.coverage_fill import coverage_fill
 from monza_optimizer.optimize.close_loop import close_loop
@@ -20,16 +17,8 @@ from monza_optimizer.optimize.silhouette import simplify_for_level_a, build_on_s
 from monza_optimizer.geometry.pose import Pose
 from monza_optimizer.geometry.path import path_length as _plen
 from monza_optimizer.optimize.accuracy_levels import (
-    get_profile,
-    candidates_for,
-    levels_for_ui,
-    shopping_list,
-    resolve_availability,
-    ShopGate,
-    LevelProfile,
-    enforce_shop_cap,
-    join_dialogue_for,
-    target_length_for,
+    get_profile, candidates_for, levels_for_ui, shopping_list, resolve_availability,
+    ShopGate, LevelProfile, enforce_shop_cap, join_dialogue_for, target_length_for,
 )
 from monza_optimizer.reference import list_tracks, load_track_centreline, scale_centreline
 from monza_optimizer.export import build_track_3mf, build_output_pack, lay_payload, OUTPUT_MENU
@@ -118,9 +107,7 @@ def _run_pipeline(cl, get_part, avail, profile, cand, shop=None, look_ahead_mm=N
 
     if strategy == "sequential":
         try:
-            result = sequential_follow(
-                cl, get_part, avail, shop=shop, **_seq_kwargs()
-            )
+            result = sequential_follow(cl, get_part, avail, shop=shop, **_seq_kwargs())
         except TypeError:
             result = sequential_follow(cl, get_part, avail, **_seq_kwargs())
         seq = list(result.sequence)
@@ -203,9 +190,10 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
         override_mm=float(req.target_length_mm) if req.target_length_mm else None,
         track_id=req.track_id,
     )
-    scaled = scale_centreline(loaded.points_m, target_mm, close=True)
+    official = scale_centreline(loaded.points_m, target_mm, close=True)
+    scaled = official
     if profile.letter == "A":
-        scaled = simplify_for_level_a(scaled)
+        scaled = simplify_for_level_a(official)
     cl = densify_polyline(scaled, step=profile.densify_step_mm)
 
     if req.strategy:
@@ -242,10 +230,7 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
             close_shop = ShopGate(owned={}, max_shop_pieces=999, max_shop_skus=99, unlimited=True)
             seq, close_stats = close_loop(
                 seq, start_pose, get_part, avail, close_shop,
-                max_pieces=12,
-                candidates=close_cands,
-                beam_width=32,
-                lateral=False,
+                max_pieces=12, candidates=close_cands, beam_width=32, lateral=False,
             )
             metrics.update({
                 "pos_mm": close_stats.get("pos_mm", metrics.get("pos_mm")),
@@ -316,46 +301,23 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
     title = f"{req.track_id} {profile.letter}"
     lay = lay_payload(seq, get_part, title=f"Lay-list - {title}")
     pack = build_output_pack(
-        seq,
-        get_part,
-        title=title,
-        wanted=req.outputs,
-        shopping=basket,
-        include_binary=bool(req.outputs),
-        outline_points=scaled,
+        seq, get_part, title=title, wanted=req.outputs, shopping=basket,
+        include_binary=bool(req.outputs), outline_points=official,
     )
 
     return OptimizeResult(
-        sequence=seq,
-        bom=bom,
-        metrics=metrics,
-        track_id=req.track_id,
-        strategy=strategy,
-        accuracy_level=profile.level.value,
-        shopping=basket,
-        lay=lay,
-        outputs=pack,
+        sequence=seq, bom=bom, metrics=metrics, track_id=req.track_id, strategy=strategy,
+        accuracy_level=profile.level.value, shopping=basket, lay=lay, outputs=pack,
         profile={
-            "id": profile.level.value,
-            "letter": profile.letter,
-            "label": profile.label,
-            "pitch": profile.pitch,
-            "unlimited": profile.unlimited,
-            "inventory_only": profile.inventory_only,
-            "ignore_inventory": profile.ignore_inventory,
-            "from_scratch": from_scratch,
-            "target_length_mm": profile.target_length_mm,
+            "id": profile.level.value, "letter": profile.letter, "label": profile.label,
+            "pitch": profile.pitch, "unlimited": profile.unlimited,
+            "inventory_only": profile.inventory_only, "ignore_inventory": profile.ignore_inventory,
+            "from_scratch": from_scratch, "target_length_mm": profile.target_length_mm,
         },
     )
 
 
-def export_result_3mf(
-    result: OptimizeResult,
-    out_path: str | Path,
-    parts_json: str = "parts.json",
-    outline_from_track: bool = True,
-    target_length_mm: float | None = None,
-) -> Path:
+def export_result_3mf(result: OptimizeResult, out_path: str | Path, parts_json: str = "parts.json", outline_from_track: bool = True, target_length_mm: float | None = None) -> Path:
     parts = load_parts(parts_json)
 
     def get_part(c: str):
@@ -367,19 +329,10 @@ def export_result_3mf(
         try:
             loaded = load_track_centreline(result.track_id)
             outline = scale_centreline(loaded.points_m, float(length), close=True)
-            letter = (result.accuracy_level or "")
-            if letter in {"lean_budget", "a"} or result.profile.get("letter") == "A":
-                outline = simplify_for_level_a(outline)
         except Exception:
             outline = None
     title = f"{result.track_id} ({result.accuracy_level}/{result.strategy})"
-    return build_track_3mf(
-        result.sequence,
-        get_part,
-        out_path,
-        outline_points=outline,
-        title=title,
-    )
+    return build_track_3mf(result.sequence, get_part, out_path, outline_points=outline, title=title)
 
 
 def tracks_for_ui() -> list[dict]:
