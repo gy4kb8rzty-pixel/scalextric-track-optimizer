@@ -29,7 +29,7 @@ PART_COLORS = {
     "C8010": "5DADE2",
 }
 GUIDE_COLOR = "C0392B"
-RULER_COLOR = "2C3E50"
+RULER_COLOR = "FFFFFF"
 
 
 def _signed_angle(part, code: str) -> float:
@@ -149,30 +149,68 @@ def _box_mesh(x0, y0, x1, y1, z0=0.0, z1=10.0):
     return verts, tris
 
 
-def _ruler_step(span_mm: float) -> float:
-    if span_mm < 4000:
-        return 500.0
-    if span_mm < 9000:
-        return 1000.0
-    if span_mm < 18000:
-        return 2000.0
-    if span_mm < 40000:
-        return 5000.0
-    return 10000.0
+_SEGMENTS = {
+    "0": "abcdef",
+    "1": "bc",
+    "2": "abged",
+    "3": "abgcd",
+    "4": "fgbc",
+    "5": "afgcd",
+    "6": "afgedc",
+    "7": "abc",
+    "8": "abcdefg",
+    "9": "abfgcd",
+}
 
 
-def _ruler_meshes(xs: list[float], ys: list[float]):
+def _digit_mesh(ch, ox, oy, z0=0.0, z1=14.0, w=70.0, h=120.0, t=16.0):
+    segs = _SEGMENTS.get(ch, "")
+    boxes = {
+        "a": (ox + t, oy + h - t, ox + w - t, oy + h),
+        "b": (ox + w - t, oy + h / 2, ox + w, oy + h - t),
+        "c": (ox + w - t, oy, ox + w, oy + h / 2),
+        "d": (ox + t, oy, ox + w - t, oy + t),
+        "e": (ox, oy, ox + t, oy + h / 2),
+        "f": (ox, oy + h / 2, ox + t, oy + h - t),
+        "g": (ox + t, oy + h / 2 - t / 2, ox + w - t, oy + h / 2 + t / 2),
+    }
+    verts, tris = [], []
+    for name in segs:
+        x0, y0, x1, y1 = boxes[name]
+        v, tr = _box_mesh(x0, y0, x1, y1, z0, z1)
+        off = len(verts)
+        verts.extend(v)
+        tris.extend((a + off, b + off, c + off) for a, b, c in tr)
+    return verts, tris
+
+
+def _number_mesh(n, ox, oy, rotate90=False):
+    s = str(int(n))
+    verts, tris = [], []
+    gap, w = 18.0, 70.0
+    for i, ch in enumerate(s):
+        v, tr = _digit_mesh(ch, ox + i * (w + gap), oy)
+        if rotate90:
+            v = [(ox - (y - oy), oy + (x - ox), z) for x, y, z in v]
+        off = len(verts)
+        verts.extend(v)
+        tris.extend((a + off, b + off, c + off) for a, b, c in tr)
+    return verts, tris
+
+
+def _ruler_meshes(xs, ys):
     if not xs or not ys:
         return [], []
     pad = 200.0
     xmin, xmax = min(xs) - pad, max(xs) + pad
     ymin, ymax = min(ys) - pad, max(ys) + pad
     wx, wy = max(1.0, xmax - xmin), max(1.0, ymax - ymin)
-    sx, sy = _ruler_step(wx), _ruler_step(wy)
-    thick, h, tick = 16.0, 8.0, 90.0
-    gap = 220.0
-    verts: list = []
-    tris: list = []
+    step = 1000.0
+    nx = max(1, int(round(wx / step)))
+    ny = max(1, int(round(wy / step)))
+    thick, h, tick = 22.0, 12.0, 110.0
+    gap = 280.0
+    verts, tris = [], []
 
     def add(v, t):
         off = len(verts)
@@ -180,28 +218,27 @@ def _ruler_meshes(xs: list[float], ys: list[float]):
         tris.extend((a + off, b + off, c + off) for a, b, c in t)
 
     yb = ymin - gap
-    x1 = xmin + sx * max(1, int(round(wx / sx)))
-    add(*_box_mesh(xmin, yb - thick / 2, x1, yb + thick / 2, 0.0, h))
-    x = xmin
-    while x <= x1 + 0.5:
-        add(*_box_mesh(x - thick / 2, yb - tick, x + thick / 2, yb + thick / 2, 0.0, h + 3))
-        x += sx
+    x_end = xmin + nx * step
+    add(*_box_mesh(xmin, yb - thick / 2, x_end, yb + thick / 2, 0.0, h))
+    for i in range(nx + 1):
+        x = xmin + i * step
+        add(*_box_mesh(x - thick / 2, yb - tick, x + thick / 2, yb + thick / 2, 0.0, h + 4))
+        add(*_number_mesh(i, x - 35.0, yb - tick - 150.0, False))
     xl = xmin - gap
-    y1 = ymin + sy * max(1, int(round(wy / sy)))
-    add(*_box_mesh(xl - thick / 2, ymin, xl + thick / 2, y1, 0.0, h))
-    y = ymin
-    while y <= y1 + 0.5:
-        add(*_box_mesh(xl - tick, y - thick / 2, xl + thick / 2, y + thick / 2, 0.0, h + 3))
-        y += sy
+    y_end = ymin + ny * step
+    add(*_box_mesh(xl - thick / 2, ymin, xl + thick / 2, y_end, 0.0, h))
+    for i in range(ny + 1):
+        y = ymin + i * step
+        add(*_box_mesh(xl - tick, y - thick / 2, xl + thick / 2, y + thick / 2, 0.0, h + 4))
+        add(*_number_mesh(i, xl - tick - 40.0, y - 35.0, True))
     return verts, tris
 
 
-def _guide_mesh(outline: Sequence[tuple[float, float]], half: float = 5.0, z0: float = 14.0, h: float = 6.0):
+def _guide_mesh(outline, half=5.0, z0=14.0, h=6.0):
     pts = [(float(x), float(y)) for x, y in outline if x is not None and y is not None]
     if len(pts) < 2:
         return [], []
-    verts: list[tuple[float, float, float]] = []
-    tris: list[tuple[int, int, int]] = []
+    verts, tris = [], []
     for i in range(len(pts) - 1):
         x0, y0 = pts[i]
         x1, y1 = pts[i + 1]
@@ -340,7 +377,7 @@ def build_track_3mf(
         '<model unit="millimeter" '
         'xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">'
         f'<metadata name="Title">{title}</metadata>'
-        '<metadata name="Description">Coloured pieces, red guide, X/Y floor rulers in millimetres</metadata>'
+        '<metadata name="Description">Coloured pieces, red guide, white X/Y rulers marked in metres</metadata>'
         f'<resources><basematerials id="1">{bases}</basematerials>'
         f'{ "".join(objects) }</resources>'
         f'<build>{ "".join(items) }</build></model>'
