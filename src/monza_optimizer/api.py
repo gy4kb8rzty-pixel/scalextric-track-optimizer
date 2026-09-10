@@ -51,7 +51,7 @@ class OptimizeResult:
     outputs: dict[str, Any] = field(default_factory=dict)
 
     def as_dict(self) -> dict[str, Any]:
-        return {
+        out = {
             "track_id": self.track_id,
             "accuracy_level": self.accuracy_level,
             "strategy": self.strategy,
@@ -63,6 +63,16 @@ class OptimizeResult:
             "lay": dict(self.lay),
             "outputs": dict(self.outputs),
         }
+        try:
+            from monza_optimizer.export.flyover import public_url
+            letter = str((self.profile or {}).get("letter") or self.accuracy_level or "")
+            if letter.upper().startswith("D"):
+                url = public_url(self.track_id, "D")
+                if url:
+                    out["flyover_mp4_url"] = url
+        except Exception:
+            pass
+        return out
 
 
 def default_inventory_from_catalog(parts_json: str = "parts.json") -> dict[str, int]:
