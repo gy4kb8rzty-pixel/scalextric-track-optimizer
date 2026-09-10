@@ -5,6 +5,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from monza_optimizer.api import OptimizeRequest, accuracy_levels_for_ui, optimize_layout, outputs_for_ui, tracks_for_ui
 from monza_optimizer.catalog import load_parts, get_part_by_id
@@ -16,10 +17,14 @@ from monza_optimizer.reference.race_calendar import upcoming_events
 from monza_optimizer.optimize.accuracy_levels import get_profile, levels_for_ui, target_length_for
 from monza_optimizer.reference import load_track_centreline, scale_centreline
 from monza_optimizer.optimize.manual_a import manual_finish, manual_meta, manual_place, manual_replace, manual_start, manual_undo
+from monza_optimizer.export.flyover import exists as flyover_exists, flyover_dir, list_available as list_flyovers, local_path as flyover_path
 
 PUBLIC_API_BASE = os.environ.get("PUBLIC_API_BASE", "https://scalextric-track-optimizer.onrender.com").rstrip("/")
-app = FastAPI(title="Scalextric Track Designer API", version="1.3.11", description="Inventory + circuit + ambition to BOM and files.")
+app = FastAPI(title="Scalextric Track Designer API", version="1.3.12", description="Inventory + circuit + ambition to BOM and files.")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+_fly_dir = flyover_dir()
+_fly_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/static/flyovers", StaticFiles(directory=str(_fly_dir)), name="flyovers")
 
 class OptimizeBody(BaseModel):
     track_id: str = "monza"
@@ -86,6 +91,21 @@ def _outline_for_track(track_id: str | None, level: str = "B"):
         return scale_centreline(loaded.points_m, target, close=True)
     except Exception:
         return None
+
+@app.get("/exports/flyovers")
+def exports_flyovers() -> dict:
+    items = list_flyovers()
+    return {"items": items, "count": len(items)}
+
+@app.get("/exports/flyover")
+def exports_flyover(track_id: str = Query(...), accuracy_level: str = Query("D")):
+    level = (accuracy_level or "D").upper()
+    if level != "D":
+        raise HTTPException(status_code=404, detail="flyover only prebuilt for D")
+    if not flyover_exists(track_id, level):
+        raise HTTPException(status_code=404, detail="no flyover for this track")
+    path = flyover_path(track_id, level)
+    return FileResponse(path, media_type="video/mp4", filename=path.name)
 
 @app.get("/health")
 def health() -> dict[str, str]:
