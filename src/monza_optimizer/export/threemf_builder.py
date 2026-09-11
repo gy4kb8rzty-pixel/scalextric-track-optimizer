@@ -186,56 +186,8 @@ def _box_mesh(x0, y0, x1, y1, z0=0.0, z1=10.0):
     return _clean_mesh(verts, tris)
 
 
-_SEGMENTS = {
-    "0": "abcdef",
-    "1": "bc",
-    "2": "abged",
-    "3": "abgcd",
-    "4": "fgbc",
-    "5": "afgcd",
-    "6": "afgedc",
-    "7": "abc",
-    "8": "abcdefg",
-    "9": "abfgcd",
-}
-
-
-def _digit_mesh(ch, ox, oy, z0=0.0, z1=14.0, w=70.0, h=120.0, t=16.0):
-    segs = _SEGMENTS.get(ch, "")
-    boxes = {
-        "a": (ox + t, oy + h - t, ox + w - t, oy + h),
-        "b": (ox + w - t, oy + h / 2, ox + w, oy + h - t),
-        "c": (ox + w - t, oy, ox + w, oy + h / 2),
-        "d": (ox + t, oy, ox + w - t, oy + t),
-        "e": (ox, oy, ox + t, oy + h / 2),
-        "f": (ox, oy + h / 2, ox + t, oy + h - t),
-        "g": (ox + t, oy + h / 2 - t / 2, ox + w - t, oy + h / 2 + t / 2),
-    }
-    verts, tris = [], []
-    for name in segs:
-        x0, y0, x1, y1 = boxes[name]
-        v, tr = _box_mesh(x0, y0, x1, y1, z0, z1)
-        off = len(verts)
-        verts.extend(v)
-        tris.extend((a + off, b + off, c + off) for a, b, c in tr)
-    return verts, tris
-
-
-def _digit_on_plate(n, ox, oy, rotate90=False, z0=1.0, z1=18.0):
-    s = str(int(abs(n)))
-    verts, tris = [], []
-    gap, w, h, t = 12.0, 48.0, 86.0, 12.0
-    for i, ch in enumerate(s):
-        v, tr = _digit_mesh(ch, ox + i * (w + gap), oy, z0, z1, w, h, t)
-        if rotate90:
-            v = [(ox - (y - oy), oy + (x - ox), z) for x, y, z in v]
-        off = len(verts)
-        verts.extend(v)
-        tris.extend((a + off, b + off, c + off) for a, b, c in tr)
-    return verts, tris
-
-
 def _ruler_axis_meshes(xs, ys):
+    """Single L-shaped white plate. No separate digit solids."""
     if not xs or not ys:
         return None
     pad = 200.0
@@ -245,35 +197,23 @@ def _ruler_axis_meshes(xs, ys):
     step = 1000.0
     nx = max(1, int(round(wx / step)))
     ny = max(1, int(round(wy / step)))
-    bar_h, bar_w, tick, gap = 12.0, 240.0, 28.0, 180.0
-
-    def pack():
-        return {"white": ([], []), "black": ([], [])}
-
-    def add(bucket, color, v, t):
-        if not v or not t:
-            return
-        tv, tt = bucket[color]
-        off = len(tv)
-        tv.extend(v)
-        tt.extend((a + off, b + off, c + off) for a, b, c in t)
-
-    x_bar, y_bar = pack(), pack()
-    yb = ymin - gap
+    bar_h, bar_w, gap = 12.0, 180.0, 160.0
     x_end = xmin + nx * step
-    add(x_bar, "white", *_box_mesh(xmin, yb - bar_w / 2, x_end, yb + bar_w / 2, 0.0, bar_h))
-    for i in range(nx + 1):
-        x = xmin + i * step
-        add(x_bar, "white", *_box_mesh(x - 8.0, yb + bar_w / 2 - 2.0, x + 8.0, yb + bar_w / 2 + tick, 0.0, bar_h + 2))
-        add(x_bar, "black", *_digit_on_plate(i, x - (24.0 if i < 10 else 50.0), yb - 43.0, False))
-    xl = xmin - gap
     y_end = ymin + ny * step
-    add(y_bar, "white", *_box_mesh(xl - bar_w / 2, ymin, xl + bar_w / 2, y_end, 0.0, bar_h))
-    for i in range(ny + 1):
-        y = ymin + i * step
-        add(y_bar, "white", *_box_mesh(xl + bar_w / 2 - 2.0, y - 8.0, xl + bar_w / 2 + tick, y + 8.0, 0.0, bar_h + 2))
-        add(y_bar, "black", *_digit_on_plate(i, xl - 43.0, y - 24.0, True))
-    return x_bar, y_bar
+    y0 = ymin - gap - bar_w
+    y1 = ymin - gap
+    x0 = xmin - gap - bar_w
+    x1 = xmin - gap
+    verts, tris = [], []
+
+    def add(v, tr):
+        off = len(verts)
+        verts.extend(v)
+        tris.extend((a + off, b + off, c + off) for a, b, c in tr)
+
+    add(*_box_mesh(x0, y0, x_end, y1, 0.0, bar_h))
+    add(*_box_mesh(x0, y1, x1, y_end, 0.0, bar_h))
+    return verts, tris
 
 
 def _dedupe_xy(outline):
@@ -384,7 +324,6 @@ def build_track_3mf(
     if outline and len(outline) >= 2:
         ensure(GUIDE_COLOR)
     ensure(RULER_COLOR)
-    ensure(NUMBER_COLOR)
     if not color_list:
         ensure("7F8C8D")
 
@@ -430,15 +369,9 @@ def build_track_3mf(
 
     xs = [float(p.x) for p in poses] + [float(p[0]) for p in outline]
     ys = [float(p.y) for p in poses] + [float(p[1]) for p in outline]
-    axes = _ruler_axis_meshes(xs, ys)
-    if axes:
-        x_bar, y_bar = axes
-        add_parts("rulers", [
-            (*x_bar["white"], RULER_COLOR),
-            (*x_bar["black"], NUMBER_COLOR),
-            (*y_bar["white"], RULER_COLOR),
-            (*y_bar["black"], NUMBER_COLOR),
-        ])
+    axis = _ruler_axis_meshes(xs, ys)
+    if axis:
+        add_solid("rulers", axis[0], axis[1], RULER_COLOR)
 
     if not objects:
         add_solid("empty", *_box_mesh(0, 0, 10, 10, 0, 2), "7F8C8D")
