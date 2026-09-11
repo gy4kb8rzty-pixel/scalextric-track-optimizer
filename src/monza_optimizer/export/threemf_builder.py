@@ -1,4 +1,4 @@
-"""3MF that 3D Builder opens without Repair: one welded object, no per-triangle materials."""
+"""3MF: part colours via one object per colour (object-level material, no triangle p1)."""
 
 from __future__ import annotations
 
@@ -13,11 +13,22 @@ from monza_optimizer.geometry.pose import Pose
 from monza_optimizer.geometry.path import compute_track_path, path_length
 
 PART_COLORS = {
-    "C8205": "808890", "C8207": "B0B8C0", "C8200": "D0D8E0", "C8236": "F1C40F",
-    "C8204": "2E86DE", "C8206": "27AE60", "C8235": "E67E22", "C187": "FFFFFF",
-    "C8234": "1ABC9C", "C156": "C0392B", "C8201": "C0392B", "C8202": "E91E63",
-    "C8203": "6C3483", "C8010": "5DADE2",
+    "C8205": "808890",
+    "C8207": "B0B8C0",
+    "C8200": "D0D8E0",
+    "C8236": "F1C40F",
+    "C8204": "2E86DE",
+    "C8206": "27AE60",
+    "C8235": "E67E22",
+    "C187": "FFFFFF",
+    "C8234": "1ABC9C",
+    "C156": "C0392B",
+    "C8201": "C0392B",
+    "C8202": "E91E63",
+    "C8203": "6C3483",
+    "C8010": "5DADE2",
 }
+GUIDE_COLOR = "C0392B"
 
 
 def _signed_angle(part, code: str) -> float:
@@ -92,23 +103,20 @@ def _weld(verts, tris):
     return out_v, out_t
 
 
-def _tube(points_hd, half_w, z0, h):
-    if len(points_hd) < 2:
-        return [], []
-    verts = []
-    for x, y, hd in points_hd:
-        verts.extend(_ring(x, y, hd, half_w, z0, h))
-    tris = []
-    for i in range(len(points_hd) - 1):
-        a, b = 4 * i, 4 * (i + 1)
-        tris += [
-            (a + 2, b + 2, b + 3), (a + 2, b + 3, a + 3),
-            (a, a + 1, b + 1), (a, b + 1, b),
-            (a, a + 2, b + 2), (a, b + 2, b),
-            (a + 1, b + 1, b + 3), (a + 1, b + 3, a + 3),
-        ]
-    s, e = 0, 4 * (len(points_hd) - 1)
-    tris += [(s, s + 2, s + 3), (s, s + 3, s + 1), (e, e + 1, e + 3), (e, e + 3, e + 2)]
+def _segment_box(p0, p1, half_w, z0, h):
+    x0, y0, h0 = p0
+    x1, y1, h1 = p1
+    v0 = _ring(x0, y0, h0, half_w, z0, h)
+    v1 = _ring(x1, y1, h1, half_w, z0, h)
+    verts = v0 + v1
+    tris = [
+        (2, 6, 7), (2, 7, 3),
+        (0, 1, 5), (0, 5, 4),
+        (0, 2, 6), (0, 6, 4),
+        (1, 5, 7), (1, 7, 3),
+        (0, 2, 3), (0, 3, 1),
+        (4, 5, 7), (4, 7, 6),
+    ]
     return _weld(verts, tris)
 
 
@@ -154,6 +162,15 @@ def _dedupe_xy(outline):
     return pts
 
 
+def _mesh_xml(verts, tris) -> str:
+    verts, tris = _weld(verts, tris)
+    if not verts or not tris:
+        return ""
+    vxml = "".join(f'<vertex x="{x:.3f}" y="{y:.3f}" z="{z:.3f}" />' for x, y, z in verts)
+    txml = "".join(f'<triangle v1="{a}" v2="{b}" v3="{c}" />' for a, b, c in tris)
+    return f"<mesh><vertices>{vxml}</vertices><triangles>{txml}</triangles></mesh>"
+
+
 def build_track_3mf(
     sequence: Sequence[str],
     get_part: Callable,
@@ -166,7 +183,7 @@ def build_track_3mf(
     include_legend: bool = False,
     include_ground: bool = False,
 ) -> Path:
-    del include_legend, include_ground, base_id, PART_COLORS
+    del include_legend, include_ground
     out_path = Path(out_path)
     outline = list(outline_points or [])
     codes = [c for c in sequence if get_part(c) is not None]
@@ -180,22 +197,47 @@ def build_track_3mf(
         start = Pose(0.0, 0.0, 0.0)
     poses = compute_track_path(parts, start=start) if parts else [start]
 
+    color_list: list[str] = []
+    color_index: dict[str, int] = {}
+
+    def ensure(col: str) -> int:
+        if col not in color_index:
+            color_index[col] = len(color_list)
+            color_list.append(col)
+        return color_index[col]
+
+    def color_for(code: str) -> str:
+        return PART_COLORS.get(base_id(code), "7F8C8D")
+
+    buckets: dict[str, tuple[list, list]] = {}
+
+    def add_to(col: str, v, t):
+        ensure(col)
+        if col not in buckets:
+            buckets[col] = ([], [])
+        bv, bt = buckets[col]
+        off = len(bv)
+        bv.extend(v)
+        bt.extend((a + off, b + off, c + off) for a, b, c in t)
+
     stations = []
+    colors = []
     for i, code in enumerate(codes):
         st = _piece_stations(parts[i], code, poses[i])
+        col = color_for(code)
         if stations:
             st = st[1:]
-        stations.extend(st)
-
-    verts, tris = [], []
-
-    def append_mesh(v, t):
-        off = len(verts)
-        verts.extend(v)
-        tris.extend((a + off, b + off, c + off) for a, b, c in t)
-
-    if len(stations) >= 2:
-        append_mesh(*_tube(stations, 78.0, track_z, 8.0))
+        if not st:
+            continue
+        if stations:
+            colors.append(col)
+        stations.append(st[0])
+        for nxt in st[1:]:
+            stations.append(nxt)
+            colors.append(col)
+    for i in range(len(stations) - 1):
+        v, t = _segment_box(stations[i], stations[i + 1], 78.0, track_z, 8.0)
+        add_to(colors[i] if i < len(colors) else "7F8C8D", v, t)
 
     pts = _dedupe_xy(outline)
     if len(pts) >= 2:
@@ -206,26 +248,45 @@ def build_track_3mf(
             else:
                 dx, dy = x - pts[i - 1][0], y - pts[i - 1][1]
             g.append((x, y, math.degrees(math.atan2(dy, dx))))
-        append_mesh(*_tube(g, 5.0, tube_z, 6.0))
+        for i in range(len(g) - 1):
+            v, t = _segment_box(g[i], g[i + 1], 5.0, tube_z, 6.0)
+            add_to(GUIDE_COLOR, v, t)
 
-    verts, tris = _weld(verts, tris)
-    if not verts or not tris:
-        verts = [(0, 0, 0), (10, 0, 0), (10, 10, 0), (0, 10, 0), (0, 0, 2), (10, 0, 2), (10, 10, 2), (0, 10, 2)]
-        tris = [(0, 1, 2), (0, 2, 3), (4, 6, 5), (4, 7, 6), (0, 4, 5), (0, 5, 1),
-                (1, 5, 6), (1, 6, 2), (2, 6, 7), (2, 7, 3), (3, 7, 4), (3, 4, 0)]
+    objects, items = [], []
+    oid = 2
+    for col, (v, t) in buckets.items():
+        mesh = _mesh_xml(v, t)
+        if not mesh:
+            continue
+        pi = ensure(col)
+        objects.append(
+            f'<object id="{oid}" name="part_{col}" type="model" pid="1" pindex="{pi}">{mesh}</object>'
+        )
+        items.append(f'<item objectid="{oid}" />')
+        oid += 1
+    if not objects:
+        objects.append(
+            '<object id="2" name="empty" type="model"><mesh>'
+            '<vertices><vertex x="0" y="0" z="0" /><vertex x="10" y="0" z="0" />'
+            '<vertex x="10" y="10" z="0" /></vertices>'
+            '<triangles><triangle v1="0" v2="1" v3="2" /></triangles></mesh></object>'
+        )
+        items.append('<item objectid="2" />')
+        ensure("7F8C8D")
 
-    vxml = "".join(f'<vertex x="{x:.3f}" y="{y:.3f}" z="{z:.3f}" />' for x, y, z in verts)
-    txml = "".join(f'<triangle v1="{a}" v2="{b}" v3="{c}" />' for a, b, c in tris)
-    mesh = f"<mesh><vertices>{vxml}</vertices><triangles>{txml}</triangles></mesh>"
     safe_title = title.replace("&", "&").replace("<", "<").replace(">", ">")
+    bases = "".join(
+        f'<base name="mat{i}" displaycolor="#{col}FF" />' for i, col in enumerate(color_list)
+    )
     model = (
         '<?xml version="1.0" encoding="UTF-8"?>'
         '<model unit="millimeter" xml:lang="en-US" '
         'xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">'
         f'<metadata name="Title">{safe_title}</metadata>'
         '<metadata name="Application">Track Optimizer</metadata>'
-        f'<resources><object id="1" name="track" type="model">{mesh}</object></resources>'
-        '<build><item objectid="1" /></build></model>'
+        f'<resources><basematerials id="1">{bases}</basematerials>'
+        f'{ "".join(objects) }</resources>'
+        f'<build>{ "".join(items) }</build></model>'
     )
     ct = (
         '<?xml version="1.0" encoding="UTF-8"?>'
