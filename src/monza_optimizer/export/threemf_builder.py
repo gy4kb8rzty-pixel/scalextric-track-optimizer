@@ -1,4 +1,4 @@
-"""3MF for Microsoft 3D Builder: watertight coloured pieces, red guide, rulers."""
+"""3MF for Microsoft 3D Builder: coloured track tube + red guide. No rulers."""
 
 from __future__ import annotations
 
@@ -29,8 +29,6 @@ PART_COLORS = {
     "C8010": "5DADE2",
 }
 GUIDE_COLOR = "C0392B"
-RULER_COLOR = "FFFFFF"
-NUMBER_COLOR = "1A1A1A"
 
 
 def _signed_angle(part, code: str) -> float:
@@ -288,7 +286,6 @@ def build_track_3mf(
         ensure(color_for(code))
     if outline and len(outline) >= 2:
         ensure(GUIDE_COLOR)
-    ensure(RULER_COLOR)
     if not color_list:
         ensure("7F8C8D")
 
@@ -341,25 +338,6 @@ def build_track_3mf(
     if outline and len(outline) >= 2:
         gv, gt = _guide_mesh(outline, z0=tube_z)
         add_solid("red_guide", gv, gt, GUIDE_COLOR)
-
-    xs = [float(p.x) for p in poses] + [float(p[0]) for p in outline]
-    ys = [float(p.y) for p in poses] + [float(p[1]) for p in outline]
-    if xs and ys:
-        pad = 200.0
-        xmin, xmax = min(xs) - pad, max(xs) + pad
-        ymin, ymax = min(ys) - pad, max(ys) + pad
-        step = 1000.0
-        nx = max(1, int(round(max(1.0, xmax - xmin) / step)))
-        ny = max(1, int(round(max(1.0, ymax - ymin) / step)))
-        bar_h, bar_w, gap = 12.0, 180.0, 160.0
-        x_end = xmin + nx * step
-        y_end = ymin + ny * step
-        y0 = ymin - gap - bar_w
-        y1 = ymin - gap
-        x0 = xmin - gap - bar_w
-        x1 = xmin - gap
-        add_solid("ruler_x", *_box_mesh(x0, y0, x_end, y1, 0.0, bar_h), RULER_COLOR)
-        add_solid("ruler_y", *_box_mesh(x0, y1, x1, y_end, 0.0, bar_h), RULER_COLOR)
 
     if not objects:
         add_solid("empty", *_box_mesh(0, 0, 10, 10, 0, 2), "7F8C8D")
