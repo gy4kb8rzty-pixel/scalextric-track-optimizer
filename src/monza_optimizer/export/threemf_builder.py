@@ -236,7 +236,6 @@ def _digit_on_plate(n, ox, oy, rotate90=False, z0=1.0, z1=18.0):
 
 
 def _ruler_axis_meshes(xs, ys):
-    """One fused object per axis: wide white plate + black digits sunk into the plate."""
     if not xs or not ys:
         return None
     pad = 200.0
@@ -413,6 +412,7 @@ def build_track_3mf(
     def add_solid(name: str, verts, tris, col: str):
         add_parts(name, [(verts, tris, col)])
 
+    lap_parts = []
     for i, code in enumerate(codes):
         part = parts[i]
         pose0 = poses[i]
@@ -420,8 +420,9 @@ def build_track_3mf(
             lv, lt = _curve_mesh(part, code, z0=track_z)
         else:
             lv, lt = _straight_mesh(part, z0=track_z)
-        wv = _xform(lv, pose0)
-        add_solid(f"{code}_{i + 1}", wv, lt, color_for(code))
+        lap_parts.append((_xform(lv, pose0), lt, color_for(code)))
+    if lap_parts:
+        add_parts("track", lap_parts)
 
     if outline and len(outline) >= 2:
         gv, gt = _guide_mesh(outline, z0=tube_z)
@@ -432,11 +433,9 @@ def build_track_3mf(
     axes = _ruler_axis_meshes(xs, ys)
     if axes:
         x_bar, y_bar = axes
-        add_parts("ruler_x", [
+        add_parts("rulers", [
             (*x_bar["white"], RULER_COLOR),
             (*x_bar["black"], NUMBER_COLOR),
-        ])
-        add_parts("ruler_y", [
             (*y_bar["white"], RULER_COLOR),
             (*y_bar["black"], NUMBER_COLOR),
         ])
@@ -444,9 +443,7 @@ def build_track_3mf(
     if not objects:
         add_solid("empty", *_box_mesh(0, 0, 10, 10, 0, 2), "7F8C8D")
 
-    safe_title = (
-        title.replace("&", "&").replace("<", "<").replace(">", ">")
-    )
+    safe_title = title.replace("&", "&").replace("<", "<").replace(">", ">")
     bases = "".join(
         f'<base name="mat{i}" displaycolor="#{col}FF" />' for i, col in enumerate(color_list)
     )
