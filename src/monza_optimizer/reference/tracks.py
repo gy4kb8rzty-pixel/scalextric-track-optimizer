@@ -117,7 +117,16 @@ def list_tracks() -> list[dict]:
         if src:
             out.append({**src, "id": alias, "note": f"alias of {target}"})
     out = [r for r in out if r.get("selectable")]
-    out.sort(key=lambda r: (not r.get("featured"), r.get("series") or "", r["name"]))
+    try:
+        from monza_optimizer.reference.next_race import attach_next_race
+        out = [attach_next_race(r) for r in out]
+        out.sort(key=lambda r: (
+            r.get("next_race_date") is None,
+            r.get("next_race_date") or "9999-12-31",
+            r.get("name") or "",
+        ))
+    except Exception:
+        out.sort(key=lambda r: (not r.get("featured"), r.get("series") or "", r["name"]))
     out.append({
         "id": AD_LIB_ID,
         "name": "Create your own",
