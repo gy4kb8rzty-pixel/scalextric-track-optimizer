@@ -1,4 +1,4 @@
-"""3MF: part colours via one object per colour (object-level material, no triangle p1)."""
+"""3MF: one fused object, part colours on triangles."""
 
 from __future__ import annotations
 
@@ -76,50 +76,6 @@ def _ring(x, y, heading_deg, half_w, z0, h):
     ]
 
 
-def _weld(verts, tris):
-    key_map, remap, out_v = {}, [], []
-    for x, y, z in verts:
-        key = (round(x, 2), round(y, 2), round(z, 2))
-        if key not in key_map:
-            key_map[key] = len(out_v)
-            out_v.append((float(x), float(y), float(z)))
-        remap.append(key_map[key])
-    out_t = []
-    for a, b, c in tris:
-        a, b, c = remap[a], remap[b], remap[c]
-        if len({a, b, c}) < 3:
-            continue
-        ax, ay, az = out_v[a]
-        bx, by, bz = out_v[b]
-        cx, cy, cz = out_v[c]
-        ux, uy, uz = bx - ax, by - ay, bz - az
-        vx, vy, vz = cx - ax, cy - ay, cz - az
-        nx = uy * vz - uz * vy
-        ny = uz * vx - ux * vz
-        nz = ux * vy - uy * vx
-        if nx * nx + ny * ny + nz * nz < 1e-8:
-            continue
-        out_t.append((a, b, c))
-    return out_v, out_t
-
-
-def _segment_box(p0, p1, half_w, z0, h):
-    x0, y0, h0 = p0
-    x1, y1, h1 = p1
-    v0 = _ring(x0, y0, h0, half_w, z0, h)
-    v1 = _ring(x1, y1, h1, half_w, z0, h)
-    verts = v0 + v1
-    tris = [
-        (2, 6, 7), (2, 7, 3),
-        (0, 1, 5), (0, 5, 4),
-        (0, 2, 6), (0, 6, 4),
-        (1, 5, 7), (1, 7, 3),
-        (0, 2, 3), (0, 3, 1),
-        (4, 5, 7), (4, 7, 6),
-    ]
-    return _weld(verts, tris)
-
-
 def _piece_stations(part, code, pose0, steps=8):
     if isinstance(part.geometry, CurveGeometry) and abs(_signed_angle(part, code)) >= 0.5:
         ang = _signed_angle(part, code)
@@ -162,15 +118,6 @@ def _dedupe_xy(outline):
     return pts
 
 
-def _mesh_xml(verts, tris) -> str:
-    verts, tris = _weld(verts, tris)
-    if not verts or not tris:
-        return ""
-    vxml = "".join(f'<vertex x="{x:.3f}" y="{y:.3f}" z="{z:.3f}" />' for x, y, z in verts)
-    txml = "".join(f'<triangle v1="{a}" v2="{b}" v3="{c}" />' for a, b, c in tris)
-    return f"<mesh><vertices>{vxml}</vertices><triangles>{txml}</triangles></mesh>"
-
-
 def build_track_3mf(
     sequence: Sequence[str],
     get_part: Callable,
@@ -191,10 +138,11 @@ def build_track_3mf(
     built = path_length(parts) if parts else 0.0
     if outline and len(outline) >= 2 and built > 1.0:
         outline = _fit_outline(outline, built)
-    if outline and len(outline) >= 2:
-        start = Pose(float(outline[0][0]), float(outline[0][1]), _heading_of(outline))
-    else:
-        start = Pose(0.0, 0.0, 0.0)
+    start = (
+        Pose(float(outline[0][0]), float(outline[0][1]), _heading_of(outline))
+        if outline and len(outline) >= 2
+        else Pose(0.0, 0.0, 0.0)
+    )
     poses = compute_track_path(parts, start=start) if parts else [start]
 
     color_list: list[str] = []
@@ -209,20 +157,29 @@ def build_track_3mf(
     def color_for(code: str) -> str:
         return PART_COLORS.get(base_id(code), "7F8C8D")
 
-    buckets: dict[str, tuple[list, list]] = {}
+    verts: list[tuple[float, float, float]] = []
+    tris: list[tuple[int, int, int, int]] = []
 
-    def add_to(col: str, v, t):
-        ensure(col)
-        if col not in buckets:
-            buckets[col] = ([], [])
-        bv, bt = buckets[col]
-        off = len(bv)
-        bv.extend(v)
-        bt.extend((a + off, b + off, c + off) for a, b, c in t)
+    def add_seg(p0, p1, half_w, z0, h, pi):
+        x0, y0, h0 = p0
+        x1, y1, h1 = p1
+        off = len(verts)
+        verts.extend(_ring(x0, y0, h0, half_w, z0, h))
+        verts.extend(_ring(x1, y1, h1, half_w, z0, h))
+        for a, b, c in (
+            (2, 6, 7), (2, 7, 3),
+            (0, 1, 5), (0, 5, 4),
+            (0, 2, 6), (0, 6, 4),
+            (1, 5, 7), (1, 7, 3),
+            (0, 2, 3), (0, 3, 1),
+            (4, 5, 7), (4, 7, 6),
+        ):
+            tris.append((a + off, b + off, c + off, pi))
 
     stations = []
-    colors = []
+    seg_col = []
     for i, code in enumerate(codes):
+        ensure(color_for(code))
         st = _piece_stations(parts[i], code, poses[i])
         col = color_for(code)
         if stations:
@@ -230,17 +187,17 @@ def build_track_3mf(
         if not st:
             continue
         if stations:
-            colors.append(col)
+            seg_col.append(col)
         stations.append(st[0])
         for nxt in st[1:]:
             stations.append(nxt)
-            colors.append(col)
+            seg_col.append(col)
     for i in range(len(stations) - 1):
-        v, t = _segment_box(stations[i], stations[i + 1], 78.0, track_z, 8.0)
-        add_to(colors[i] if i < len(colors) else "7F8C8D", v, t)
+        add_seg(stations[i], stations[i + 1], 78.0, track_z, 8.0, ensure(seg_col[i] if i < len(seg_col) else "7F8C8D"))
 
     pts = _dedupe_xy(outline)
     if len(pts) >= 2:
+        gpi = ensure(GUIDE_COLOR)
         g = []
         for i, (x, y) in enumerate(pts):
             if i < len(pts) - 1:
@@ -249,31 +206,18 @@ def build_track_3mf(
                 dx, dy = x - pts[i - 1][0], y - pts[i - 1][1]
             g.append((x, y, math.degrees(math.atan2(dy, dx))))
         for i in range(len(g) - 1):
-            v, t = _segment_box(g[i], g[i + 1], 5.0, tube_z, 6.0)
-            add_to(GUIDE_COLOR, v, t)
+            add_seg(g[i], g[i + 1], 5.0, tube_z, 6.0, gpi)
 
-    objects, items = [], []
-    oid = 2
-    for col, (v, t) in buckets.items():
-        mesh = _mesh_xml(v, t)
-        if not mesh:
-            continue
-        pi = ensure(col)
-        objects.append(
-            f'<object id="{oid}" name="part_{col}" type="model" pid="1" pindex="{pi}">{mesh}</object>'
-        )
-        items.append(f'<item objectid="{oid}" />')
-        oid += 1
-    if not objects:
-        objects.append(
-            '<object id="2" name="empty" type="model"><mesh>'
-            '<vertices><vertex x="0" y="0" z="0" /><vertex x="10" y="0" z="0" />'
-            '<vertex x="10" y="10" z="0" /></vertices>'
-            '<triangles><triangle v1="0" v2="1" v3="2" /></triangles></mesh></object>'
-        )
-        items.append('<item objectid="2" />')
+    if not verts:
         ensure("7F8C8D")
+        verts = [(0, 0, 0), (10, 0, 0), (10, 10, 0)]
+        tris = [(0, 1, 2, 0)]
 
+    vxml = "".join(f'<vertex x="{x:.3f}" y="{y:.3f}" z="{z:.3f}" />' for x, y, z in verts)
+    txml = "".join(
+        f'<triangle v1="{a}" v2="{b}" v3="{c}" p1="{pi}" />' for a, b, c, pi in tris
+    )
+    mesh = f"<mesh><vertices>{vxml}</vertices><triangles>{txml}</triangles></mesh>"
     safe_title = title.replace("&", "&").replace("<", "<").replace(">", ">")
     bases = "".join(
         f'<base name="mat{i}" displaycolor="#{col}FF" />' for i, col in enumerate(color_list)
@@ -285,8 +229,8 @@ def build_track_3mf(
         f'<metadata name="Title">{safe_title}</metadata>'
         '<metadata name="Application">Track Optimizer</metadata>'
         f'<resources><basematerials id="1">{bases}</basematerials>'
-        f'{ "".join(objects) }</resources>'
-        f'<build>{ "".join(items) }</build></model>'
+        f'<object id="1" name="track" type="model" pid="1" pindex="0">{mesh}</object>'
+        '</resources><build><item objectid="1" /></build></model>'
     )
     ct = (
         '<?xml version="1.0" encoding="UTF-8"?>'
