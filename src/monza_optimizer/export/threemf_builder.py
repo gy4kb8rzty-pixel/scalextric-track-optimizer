@@ -1,4 +1,4 @@
-"""3MF for Microsoft 3D Builder: coloured track tube + red guide. No rulers."""
+"""3MF for 3D Builder: one welded track tube + red guide."""
 
 from __future__ import annotations
 
@@ -46,19 +46,14 @@ def _signed_angle(part, code: str) -> float:
 def _heading_of(outline: Sequence[tuple[float, float]]) -> float:
     if not outline or len(outline) < 2:
         return 0.0
-    x0, y0 = outline[0]
-    x1, y1 = outline[1]
-    return math.degrees(math.atan2(y1 - y0, x1 - x0))
+    return math.degrees(math.atan2(outline[1][1] - outline[0][1], outline[1][0] - outline[0][0]))
 
 
-def _poly_len(pts: Sequence[tuple[float, float]]) -> float:
-    total = 0.0
-    for i in range(len(pts) - 1):
-        total += math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1])
-    return total
+def _poly_len(pts):
+    return sum(math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]) for i in range(len(pts) - 1))
 
 
-def _fit_outline(outline: Sequence[tuple[float, float]], built_mm: float):
+def _fit_outline(outline, built_mm):
     pts = [(float(x), float(y)) for x, y in outline]
     if len(pts) < 2 or built_mm < 1.0:
         return pts
@@ -81,54 +76,45 @@ def _ring(pose: Pose, half_w: float, z0: float, h: float):
     ]
 
 
-def _tri_area2(verts, a, b, c) -> float:
-    ax, ay, az = verts[a]
-    bx, by, bz = verts[b]
-    cx, cy, cz = verts[c]
-    ux, uy, uz = bx - ax, by - ay, bz - az
-    vx, vy, vz = cx - ax, cy - ay, cz - az
-    nx = uy * vz - uz * vy
-    ny = uz * vx - ux * vz
-    nz = ux * vy - uy * vx
-    return nx * nx + ny * ny + nz * nz
-
-
-def _clean_mesh(verts, tris, min_area2: float = 1e-8):
-    n = len(verts)
-    out = []
-    for a, b, c in tris:
+def _repair_mesh(verts, labeled):
+    """Weld coincident verts and drop degenerate triangles. labeled: (a,b,c,pi)."""
+    key_map = {}
+    remap = []
+    out_v = []
+    for x, y, z in verts:
+        key = (round(x, 2), round(y, 2), round(z, 2))
+        if key not in key_map:
+            key_map[key] = len(out_v)
+            out_v.append((float(x), float(y), float(z)))
+        remap.append(key_map[key])
+    out_t = []
+    for a, b, c, pi in labeled:
+        a, b, c = remap[a], remap[b], remap[c]
         if a == b or b == c or a == c:
             continue
-        if min(a, b, c) < 0 or max(a, b, c) >= n:
+        ax, ay, az = out_v[a]
+        bx, by, bz = out_v[b]
+        cx, cy, cz = out_v[c]
+        ux, uy, uz = bx - ax, by - ay, bz - az
+        vx, vy, vz = cx - ax, cy - ay, cz - az
+        nx = uy * vz - uz * vy
+        ny = uz * vx - ux * vz
+        nz = ux * vy - uy * vx
+        if nx * nx + ny * ny + nz * nz < 1e-8:
             continue
-        if _tri_area2(verts, a, b, c) < min_area2:
-            continue
-        out.append((a, b, c))
-    return verts, out
+        out_t.append((a, b, c, pi))
+    return out_v, out_t
 
 
-def _box_mesh(x0, y0, x1, y1, z0=0.0, z1=10.0):
-    if x1 < x0:
-        x0, x1 = x1, x0
-    if y1 < y0:
-        y0, y1 = y1, y0
-    if z1 < z0:
-        z0, z1 = z1, z0
-    if (x1 - x0) < 0.5 or (y1 - y0) < 0.5 or (z1 - z0) < 0.5:
-        return [], []
-    verts = [
-        (x0, y0, z0), (x1, y0, z0), (x1, y1, z0), (x0, y1, z0),
-        (x0, y0, z1), (x1, y0, z1), (x1, y1, z1), (x0, y1, z1),
-    ]
-    tris = [
-        (0, 1, 2), (0, 2, 3),
-        (4, 6, 5), (4, 7, 6),
-        (0, 4, 5), (0, 5, 1),
-        (1, 5, 6), (1, 6, 2),
-        (2, 6, 7), (2, 7, 3),
-        (3, 7, 4), (3, 4, 0),
-    ]
-    return _clean_mesh(verts, tris)
+def _mesh_xml(verts, labeled) -> str:
+    verts, labeled = _repair_mesh(verts, labeled)
+    if not verts or not labeled:
+        return ""
+    vxml = "".join(f'<vertex x="{x:.3f}" y="{y:.3f}" z="{z:.3f}" />' for x, y, z in verts)
+    txml = "".join(
+        f'<triangle v1="{a}" v2="{b}" v3="{c}" p1="{pi}" />' for a, b, c, pi in labeled
+    )
+    return f"<mesh><vertices>{vxml}</vertices><triangles>{txml}</triangles></mesh>"
 
 
 def _dedupe_xy(outline):
@@ -153,37 +139,22 @@ def _guide_mesh(outline, half=5.0, z0=14.0, h=6.0):
         else:
             dx, dy = pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]
         headings.append(math.degrees(math.atan2(dy, dx)))
-    verts: list[tuple[float, float, float]] = []
+    verts = []
     for (x, y), hd in zip(pts, headings):
         verts.extend(_ring(Pose(x, y, hd), half, z0, h))
-    tris: list[tuple[int, int, int]] = []
+    labeled = []
     for i in range(len(pts) - 1):
         a, b = 4 * i, 4 * (i + 1)
-        tris += [(a + 2, b + 2, b + 3), (a + 2, b + 3, a + 3)]
-        tris += [(a, a + 1, b + 1), (a, b + 1, b)]
-        tris += [(a, a + 2, b + 2), (a, b + 2, b)]
-        tris += [(a + 1, b + 1, b + 3), (a + 1, b + 3, a + 3)]
+        labeled += [
+            (a + 2, b + 2, b + 3, 0), (a + 2, b + 3, a + 3, 0),
+            (a, a + 1, b + 1, 0), (a, b + 1, b, 0),
+            (a, a + 2, b + 2, 0), (a, b + 2, b, 0),
+            (a + 1, b + 1, b + 3, 0), (a + 1, b + 3, a + 3, 0),
+        ]
     s = 0
     e = 4 * (len(pts) - 1)
-    tris += [(s, s + 2, s + 3), (s, s + 3, s + 1)]
-    tris += [(e, e + 1, e + 3), (e, e + 3, e + 2)]
-    return _clean_mesh(verts, tris)
-
-
-def _mesh_xml_parts(parts) -> str:
-    verts, tris_xml = [], []
-    for v, t, pi in parts:
-        v, t = _clean_mesh(v, t)
-        if not v or not t:
-            continue
-        off = len(verts)
-        verts.extend(v)
-        for a, b, c in t:
-            tris_xml.append(f'<triangle v1="{a + off}" v2="{b + off}" v3="{c + off}" p1="{pi}" />')
-    if not verts or not tris_xml:
-        return ""
-    vxml = "".join(f'<vertex x="{x:.3f}" y="{y:.3f}" z="{z:.3f}" />' for x, y, z in verts)
-    return f"<mesh><vertices>{vxml}</vertices><triangles>{''.join(tris_xml)}</triangles></mesh>"
+    labeled += [(s, s + 2, s + 3, 0), (s, s + 3, s + 1, 0), (e, e + 1, e + 3, 0), (e, e + 3, e + 2, 0)]
+    return verts, labeled
 
 
 def _piece_stations(part, code: str, pose0: Pose, steps: int = 8):
@@ -207,9 +178,9 @@ def _piece_stations(part, code: str, pose0: Pose, steps: int = 8):
     else:
         L = max(1.0, float(getattr(part.geometry, "length", 350.0)))
         local = [Pose(0, 0, 0), Pose(L, 0, 0)]
-    out = []
     hr0 = math.radians(pose0.heading_degrees)
     c, s = math.cos(hr0), math.sin(hr0)
+    out = []
     for lp in local:
         x = pose0.x + lp.x * c - lp.y * s
         y = pose0.y + lp.x * s + lp.y * c
@@ -217,31 +188,29 @@ def _piece_stations(part, code: str, pose0: Pose, steps: int = 8):
     return out
 
 
-def _tube_from_stations(stations, colors, half_w=78.0, z0=0.0, h=8.0):
+def _tube_from_stations(stations, color_ids, half_w=78.0, z0=0.0, h=8.0):
     if len(stations) < 2:
-        return [], [], []
+        return [], []
     verts = []
     for st in stations:
         verts.extend(_ring(st, half_w, z0, h))
-    tris = []
-    p1 = []
+    labeled = []
     for i in range(len(stations) - 1):
         a, b = 4 * i, 4 * (i + 1)
-        segs = [
-            (a + 2, b + 2, b + 3), (a + 2, b + 3, a + 3),
-            (a, a + 1, b + 1), (a, b + 1, b),
-            (a, a + 2, b + 2), (a, b + 2, b),
-            (a + 1, b + 1, b + 3), (a + 1, b + 3, a + 3),
+        pi = color_ids[i] if i < len(color_ids) else color_ids[-1]
+        labeled += [
+            (a + 2, b + 2, b + 3, pi), (a + 2, b + 3, a + 3, pi),
+            (a, a + 1, b + 1, pi), (a, b + 1, b, pi),
+            (a, a + 2, b + 2, pi), (a, b + 2, b, pi),
+            (a + 1, b + 1, b + 3, pi), (a + 1, b + 3, a + 3, pi),
         ]
-        col = colors[i] if i < len(colors) else colors[-1]
-        tris.extend(segs)
-        p1.extend([col] * len(segs))
     s = 0
     e = 4 * (len(stations) - 1)
-    cap = [(s, s + 2, s + 3), (s, s + 3, s + 1), (e, e + 1, e + 3), (e, e + 3, e + 2)]
-    tris.extend(cap)
-    p1.extend([colors[0], colors[0], colors[-1], colors[-1]])
-    return verts, tris, p1
+    labeled += [
+        (s, s + 2, s + 3, color_ids[0]), (s, s + 3, s + 1, color_ids[0]),
+        (e, e + 1, e + 3, color_ids[-1]), (e, e + 3, e + 2, color_ids[-1]),
+    ]
+    return verts, labeled
 
 
 def build_track_3mf(
@@ -293,15 +262,9 @@ def build_track_3mf(
     items: list[str] = []
     oid = 2
 
-    def add_parts(name: str, colored):
+    def add_object(name: str, verts, labeled, default_pi: int):
         nonlocal oid
-        packed = []
-        default_pi = 0
-        for v, t, col in colored:
-            pi = ensure(col)
-            default_pi = pi
-            packed.append((v, t, pi))
-        mesh = _mesh_xml_parts(packed)
+        mesh = _mesh_xml(verts, labeled)
         if not mesh:
             return
         objects.append(
@@ -310,37 +273,36 @@ def build_track_3mf(
         items.append(f'<item objectid="{oid}" />')
         oid += 1
 
-    def add_solid(name: str, verts, tris, col: str):
-        add_parts(name, [(verts, tris, col)])
-
     stations = []
-    seg_cols = []
+    seg_ids = []
     for i, code in enumerate(codes):
         st = _piece_stations(parts[i], code, poses[i])
-        col = color_for(code)
+        pi = ensure(color_for(code))
         if stations:
             st = st[1:]
         if not st:
             continue
         if stations:
-            seg_cols.append(col)
+            seg_ids.append(pi)
         stations.append(st[0])
         for nxt in st[1:]:
             stations.append(nxt)
-            seg_cols.append(col)
-    if len(stations) >= 2:
-        tv, tt, tp_cols = _tube_from_stations(stations, seg_cols, z0=track_z)
-        by = {}
-        for tri, col in zip(tt, tp_cols):
-            by.setdefault(col, []).append(tri)
-        add_parts("track", [(tv, tris, col) for col, tris in by.items()])
+            seg_ids.append(pi)
+    if len(stations) >= 2 and seg_ids:
+        tv, labeled = _tube_from_stations(stations, seg_ids, z0=track_z)
+        add_object("track", tv, labeled, seg_ids[0])
 
     if outline and len(outline) >= 2:
-        gv, gt = _guide_mesh(outline, z0=tube_z)
-        add_solid("red_guide", gv, gt, GUIDE_COLOR)
+        gv, gl = _guide_mesh(outline, z0=tube_z)
+        gpi = ensure(GUIDE_COLOR)
+        gl = [(a, b, c, gpi) for a, b, c, _ in gl]
+        add_object("red_guide", gv, gl, gpi)
 
     if not objects:
-        add_solid("empty", *_box_mesh(0, 0, 10, 10, 0, 2), "7F8C8D")
+        add_object("empty", [(0, 0, 0), (10, 0, 0), (10, 10, 0), (0, 10, 0), (0, 0, 2), (10, 0, 2), (10, 10, 2), (0, 10, 2)],
+                   [(0, 1, 2, 0), (0, 2, 3, 0), (4, 6, 5, 0), (4, 7, 6, 0),
+                    (0, 4, 5, 0), (0, 5, 1, 0), (1, 5, 6, 0), (1, 6, 2, 0),
+                    (2, 6, 7, 0), (2, 7, 3, 0), (3, 7, 4, 0), (3, 4, 0, 0)], 0)
 
     safe_title = title.replace("&", "&").replace("<", "<").replace(">", ">")
     bases = "".join(
