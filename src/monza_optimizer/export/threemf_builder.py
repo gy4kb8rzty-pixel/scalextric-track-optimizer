@@ -1,4 +1,4 @@
-"""3MF: one fused object, part colours on triangles."""
+"""3MF: one fused coloured object. Unique resource ids for 3D Builder."""
 
 from __future__ import annotations
 
@@ -229,8 +229,8 @@ def build_track_3mf(
         f'<metadata name="Title">{safe_title}</metadata>'
         '<metadata name="Application">Track Optimizer</metadata>'
         f'<resources><basematerials id="1">{bases}</basematerials>'
-        f'<object id="1" name="track" type="model" pid="1" pindex="0">{mesh}</object>'
-        '</resources><build><item objectid="1" /></build></model>'
+        f'<object id="2" name="track" type="model" pid="1" pindex="0">{mesh}</object>'
+        '</resources><build><item objectid="2" /></build></model>'
     )
     ct = (
         '<?xml version="1.0" encoding="UTF-8"?>'
