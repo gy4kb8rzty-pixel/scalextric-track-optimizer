@@ -1,4 +1,4 @@
-"""3MF for Microsoft 3D Builder: coloured pieces plus red guide centreline."""
+"""3MF for Microsoft 3D Builder: watertight coloured pieces, red guide, rulers."""
 
 from __future__ import annotations
 
@@ -82,9 +82,37 @@ def _ring(pose: Pose, half_w: float, z0: float, h: float):
     ]
 
 
+def _tri_area2(verts, a, b, c) -> float:
+    ax, ay, az = verts[a]
+    bx, by, bz = verts[b]
+    cx, cy, cz = verts[c]
+    ux, uy, uz = bx - ax, by - ay, bz - az
+    vx, vy, vz = cx - ax, cy - ay, cz - az
+    nx = uy * vz - uz * vy
+    ny = uz * vx - ux * vz
+    nz = ux * vy - uy * vx
+    return nx * nx + ny * ny + nz * nz
+
+
+def _clean_mesh(verts, tris, min_area2: float = 1e-8):
+    n = len(verts)
+    out = []
+    for a, b, c in tris:
+        if a == b or b == c or a == c:
+            continue
+        if min(a, b, c) < 0 or max(a, b, c) >= n:
+            continue
+        if _tri_area2(verts, a, b, c) < min_area2:
+            continue
+        out.append((a, b, c))
+    return verts, out
+
+
 def _curve_mesh(part, code: str, half_w: float = 78.0, h: float = 8.0, steps: int = 8, z0: float = 0.0):
     ang = _signed_angle(part, code)
-    R = part.geometry.radius
+    if abs(ang) < 0.5:
+        return _straight_mesh(part, half_w=half_w, h=h, z0=z0)
+    R = float(part.geometry.radius)
     n = max(4, steps)
     pose = Pose(0, 0, 0)
     stations = [pose]
@@ -113,11 +141,11 @@ def _curve_mesh(part, code: str, half_w: float = 78.0, h: float = 8.0, steps: in
     e = 4 * (len(stations) - 1)
     tris += [(s, s + 2, s + 3), (s, s + 3, s + 1)]
     tris += [(e, e + 1, e + 3), (e, e + 3, e + 2)]
-    return verts, tris
+    return _clean_mesh(verts, tris)
 
 
 def _straight_mesh(part, half_w: float = 78.0, h: float = 8.0, z0: float = 0.0):
-    L = part.geometry.length
+    L = max(1.0, float(part.geometry.length))
     verts = [
         (0, -half_w, z0), (L, -half_w, z0), (L, half_w, z0), (0, half_w, z0),
         (0, -half_w, z0 + h), (L, -half_w, z0 + h), (L, half_w, z0 + h), (0, half_w, z0 + h),
@@ -130,10 +158,18 @@ def _straight_mesh(part, half_w: float = 78.0, h: float = 8.0, z0: float = 0.0):
         (0, 4, 7), (0, 7, 3),
         (1, 2, 6), (1, 6, 5),
     ]
-    return verts, tris
+    return _clean_mesh(verts, tris)
 
 
 def _box_mesh(x0, y0, x1, y1, z0=0.0, z1=10.0):
+    if x1 < x0:
+        x0, x1 = x1, x0
+    if y1 < y0:
+        y0, y1 = y1, y0
+    if z1 < z0:
+        z0, z1 = z1, z0
+    if (x1 - x0) < 0.5 or (y1 - y0) < 0.5 or (z1 - z0) < 0.5:
+        return [], []
     verts = [
         (x0, y0, z0), (x1, y0, z0), (x1, y1, z0), (x0, y1, z0),
         (x0, y0, z1), (x1, y0, z1), (x1, y1, z1), (x0, y1, z1),
@@ -146,7 +182,7 @@ def _box_mesh(x0, y0, x1, y1, z0=0.0, z1=10.0):
         (2, 6, 7), (2, 7, 3),
         (3, 7, 4), (3, 4, 0),
     ]
-    return verts, tris
+    return _clean_mesh(verts, tris)
 
 
 _SEGMENTS = {
@@ -185,7 +221,7 @@ def _digit_mesh(ch, ox, oy, z0=0.0, z1=14.0, w=70.0, h=120.0, t=16.0):
 
 
 def _number_mesh(n, ox, oy, rotate90=False):
-    s = str(int(n))
+    s = str(int(abs(n)))
     verts, tris = [], []
     gap, w = 18.0, 70.0
     for i, ch in enumerate(s):
@@ -200,7 +236,7 @@ def _number_mesh(n, ox, oy, rotate90=False):
 
 def _ruler_meshes(xs, ys):
     if not xs or not ys:
-        return [], []
+        return [], [], [], []
     pad = 200.0
     xmin, xmax = min(xs) - pad, max(xs) + pad
     ymin, ymax = min(ys) - pad, max(ys) + pad
@@ -210,70 +246,85 @@ def _ruler_meshes(xs, ys):
     ny = max(1, int(round(wy / step)))
     thick, h, tick = 22.0, 12.0, 110.0
     gap = 280.0
-    verts, tris = [], []
+    bar_v, bar_t = [], []
+    num_v, num_t = [], []
 
-    def add(v, t):
-        off = len(verts)
-        verts.extend(v)
-        tris.extend((a + off, b + off, c + off) for a, b, c in t)
+    def add(target_v, target_t, v, t):
+        off = len(target_v)
+        target_v.extend(v)
+        target_t.extend((a + off, b + off, c + off) for a, b, c in t)
 
     yb = ymin - gap
     x_end = xmin + nx * step
-    add(*_box_mesh(xmin, yb - thick / 2, x_end, yb + thick / 2, 0.0, h))
+    add(bar_v, bar_t, *_box_mesh(xmin, yb - thick / 2, x_end, yb + thick / 2, 0.0, h))
     for i in range(nx + 1):
         x = xmin + i * step
-        add(*_box_mesh(x - thick / 2, yb - tick, x + thick / 2, yb + thick / 2, 0.0, h + 4))
-        add(*_number_mesh(i, x - 35.0, yb - tick - 150.0, False))
+        add(bar_v, bar_t, *_box_mesh(x - thick / 2, yb - tick, x + thick / 2, yb - thick / 2 - 2.0, 0.0, h + 4))
+        add(num_v, num_t, *_number_mesh(i, x - 35.0, yb - tick - 150.0, False))
     xl = xmin - gap
     y_end = ymin + ny * step
-    add(*_box_mesh(xl - thick / 2, ymin, xl + thick / 2, y_end, 0.0, h))
+    add(bar_v, bar_t, *_box_mesh(xl - thick / 2, ymin, xl + thick / 2, y_end, 0.0, h))
     for i in range(ny + 1):
         y = ymin + i * step
-        add(*_box_mesh(xl - tick, y - thick / 2, xl + thick / 2, y + thick / 2, 0.0, h + 4))
-        add(*_number_mesh(i, xl - tick - 40.0, y - 35.0, True))
-    return verts, tris
+        add(bar_v, bar_t, *_box_mesh(xl - tick, y - thick / 2, xl - thick / 2 - 2.0, y + thick / 2, 0.0, h + 4))
+        add(num_v, num_t, *_number_mesh(i, xl - tick - 40.0, y - 35.0, True))
+    return bar_v, bar_t, num_v, num_t
+
+
+def _dedupe_xy(outline):
+    pts = []
+    for x, y in outline:
+        if x is None or y is None:
+            continue
+        p = (float(x), float(y))
+        if not pts or math.hypot(p[0] - pts[-1][0], p[1] - pts[-1][1]) >= 1.0:
+            pts.append(p)
+    return pts
 
 
 def _guide_mesh(outline, half=5.0, z0=14.0, h=6.0):
-    pts = [(float(x), float(y)) for x, y in outline if x is not None and y is not None]
+    pts = _dedupe_xy(outline)
     if len(pts) < 2:
         return [], []
-    verts, tris = [], []
+    headings = []
+    for i in range(len(pts)):
+        if i < len(pts) - 1:
+            dx, dy = pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]
+        else:
+            dx, dy = pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]
+        headings.append(math.degrees(math.atan2(dy, dx)))
+    verts: list[tuple[float, float, float]] = []
+    for (x, y), hd in zip(pts, headings):
+        verts.extend(_ring(Pose(x, y, hd), half, z0, h))
+    tris: list[tuple[int, int, int]] = []
     for i in range(len(pts) - 1):
-        x0, y0 = pts[i]
-        x1, y1 = pts[i + 1]
-        dx, dy = x1 - x0, y1 - y0
-        L = math.hypot(dx, dy)
-        if L < 1.0:
-            continue
-        nx, ny = -dy / L, dx / L
-        base = len(verts)
-        verts += [
-            (x0 + nx * half, y0 + ny * half, z0),
-            (x0 - nx * half, y0 - ny * half, z0),
-            (x1 + nx * half, y1 + ny * half, z0),
-            (x1 - nx * half, y1 - ny * half, z0),
-            (x0 + nx * half, y0 + ny * half, z0 + h),
-            (x0 - nx * half, y0 - ny * half, z0 + h),
-            (x1 + nx * half, y1 + ny * half, z0 + h),
-            (x1 - nx * half, y1 - ny * half, z0 + h),
-        ]
-        a = base
-        tris += [
-            (a, a + 2, a + 3), (a, a + 3, a + 1),
-            (a + 4, a + 5, a + 7), (a + 4, a + 7, a + 6),
-            (a, a + 1, a + 5), (a, a + 5, a + 4),
-            (a + 2, a + 6, a + 7), (a + 2, a + 7, a + 3),
-            (a, a + 4, a + 6), (a, a + 6, a + 2),
-            (a + 1, a + 3, a + 7), (a + 1, a + 7, a + 5),
-        ]
-    return verts, tris
+        a, b = 4 * i, 4 * (i + 1)
+        tris += [(a + 2, b + 2, b + 3), (a + 2, b + 3, a + 3)]
+        tris += [(a, a + 1, b + 1), (a, b + 1, b)]
+        tris += [(a, a + 2, b + 2), (a, b + 2, b)]
+        tris += [(a + 1, b + 1, b + 3), (a + 1, b + 3, a + 3)]
+    s = 0
+    e = 4 * (len(pts) - 1)
+    tris += [(s, s + 2, s + 3), (s, s + 3, s + 1)]
+    tris += [(e, e + 1, e + 3), (e, e + 3, e + 2)]
+    return _clean_mesh(verts, tris)
 
 
 def _xform(verts, pose: Pose):
     hr = math.radians(pose.heading_degrees)
     c, s = math.cos(hr), math.sin(hr)
     return [(pose.x + x * c - y * s, pose.y + x * s + y * c, z) for x, y, z in verts]
+
+
+def _mesh_xml(verts, tris, pindex: int) -> str:
+    verts, tris = _clean_mesh(verts, tris)
+    if not verts or not tris:
+        return ""
+    vxml = "".join(f'<vertex x="{x:.3f}" y="{y:.3f}" z="{z:.3f}" />' for x, y, z in verts)
+    txml = "".join(
+        f'<triangle v1="{a}" v2="{b}" v3="{c}" p1="{pindex}" />' for a, b, c in tris
+    )
+    return f"<mesh><vertices>{vxml}</vertices><triangles>{txml}</triangles></mesh>"
 
 
 def build_track_3mf(
@@ -323,8 +374,21 @@ def build_track_3mf(
         ensure("7F8C8D")
 
     objects: list[str] = []
-    items: list[str] = []
+    components: list[str] = []
     oid = 2
+
+    def add_solid(name: str, verts, tris, col: str):
+        nonlocal oid
+        pi = ensure(col)
+        mesh = _mesh_xml(verts, tris, pi)
+        if not mesh:
+            return
+        objects.append(
+            f'<object id="{oid}" name="{name}" type="model" pid="1" pindex="{pi}">{mesh}</object>'
+        )
+        components.append(f'<component objectid="{oid}" />')
+        oid += 1
+
     for i, code in enumerate(codes):
         part = parts[i]
         pose0 = poses[i]
@@ -333,54 +397,42 @@ def build_track_3mf(
         else:
             lv, lt = _straight_mesh(part, z0=track_z)
         wv = _xform(lv, pose0)
-        vxml = "".join(f'<vertex x="{x:.3f}" y="{y:.3f}" z="{z:.3f}" />' for x, y, z in wv)
-        txml = "".join(f'<triangle v1="{a}" v2="{b}" v3="{c}" />' for a, b, c in lt)
-        pi = ensure(color_for(code))
-        objects.append(
-            f'<object id="{oid}" name="{code}_{i+1}" type="model" pid="1" pindex="{pi}">'
-            f"<mesh><vertices>{vxml}</vertices><triangles>{txml}</triangles></mesh></object>"
-        )
-        items.append(f'<item objectid="{oid}" />')
-        oid += 1
+        add_solid(f"{code}_{i + 1}", wv, lt, color_for(code))
 
     if outline and len(outline) >= 2:
         gv, gt = _guide_mesh(outline, z0=tube_z)
-        if gv and gt:
-            vxml = "".join(f'<vertex x="{x:.3f}" y="{y:.3f}" z="{z:.3f}" />' for x, y, z in gv)
-            txml = "".join(f'<triangle v1="{a}" v2="{b}" v3="{c}" />' for a, b, c in gt)
-            pi = ensure(GUIDE_COLOR)
-            objects.append(
-                f'<object id="{oid}" name="red_guide" type="model" pid="1" pindex="{pi}">'
-                f"<mesh><vertices>{vxml}</vertices><triangles>{txml}</triangles></mesh></object>"
-            )
-            items.append(f'<item objectid="{oid}" />')
-            oid += 1
+        add_solid("red_guide", gv, gt, GUIDE_COLOR)
 
     xs = [float(p.x) for p in poses] + [float(p[0]) for p in outline]
     ys = [float(p.y) for p in poses] + [float(p[1]) for p in outline]
-    rv, rt = _ruler_meshes(xs, ys)
-    if rv and rt:
-        vxml = "".join(f'<vertex x="{x:.3f}" y="{y:.3f}" z="{z:.3f}" />' for x, y, z in rv)
-        txml = "".join(f'<triangle v1="{a}" v2="{b}" v3="{c}" />' for a, b, c in rt)
-        pi = ensure(RULER_COLOR)
-        objects.append(
-            f'<object id="{oid}" name="xy_rulers" type="model" pid="1" pindex="{pi}">'
-            f"<mesh><vertices>{vxml}</vertices><triangles>{txml}</triangles></mesh></object>"
-        )
-        items.append(f'<item objectid="{oid}" />')
+    rv, rt, nv, nt = _ruler_meshes(xs, ys)
+    add_solid("xy_rulers", rv, rt, RULER_COLOR)
+    add_solid("xy_ruler_numbers", nv, nt, RULER_COLOR)
 
+    if not objects:
+        add_solid("empty", *_box_mesh(0, 0, 10, 10, 0, 2), "7F8C8D")
+
+    assembly_id = oid
+    objects.append(
+        f'<object id="{assembly_id}" name="assembly" type="model">'
+        f"<components>{''.join(components)}</components></object>"
+    )
+
+    safe_title = (
+        title.replace("&", "&").replace("<", "<").replace(">", ">")
+    )
     bases = "".join(
         f'<base name="mat{i}" displaycolor="#{col}FF" />' for i, col in enumerate(color_list)
     )
     model = (
         '<?xml version="1.0" encoding="UTF-8"?>'
-        '<model unit="millimeter" '
+        '<model unit="millimeter" xml:lang="en-US" '
         'xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">'
-        f'<metadata name="Title">{title}</metadata>'
-        '<metadata name="Description">Coloured pieces, red guide, white X/Y rulers marked in metres</metadata>'
+        f'<metadata name="Title">{safe_title}</metadata>'
+        '<metadata name="Application">Track Optimizer</metadata>'
         f'<resources><basematerials id="1">{bases}</basematerials>'
         f'{ "".join(objects) }</resources>'
-        f'<build>{ "".join(items) }</build></model>'
+        f'<build><item objectid="{assembly_id}" /></build></model>'
     )
     ct = (
         '<?xml version="1.0" encoding="UTF-8"?>'
