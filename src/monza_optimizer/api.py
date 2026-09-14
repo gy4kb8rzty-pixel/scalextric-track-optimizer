@@ -14,6 +14,7 @@ from monza_optimizer.optimize.coverage_fill import coverage_fill
 from monza_optimizer.optimize.close_loop import close_loop
 from monza_optimizer.optimize.kit_loop import closed_kit_loop
 from monza_optimizer.optimize.silhouette import simplify_for_level_a, build_on_silhouette
+from monza_optimizer.optimize.b_guide import simplify_for_level_b
 from monza_optimizer.geometry.pose import Pose
 from monza_optimizer.geometry.path import path_length as _plen
 from monza_optimizer.optimize.accuracy_levels import (
@@ -87,7 +88,9 @@ def _look_ahead(profile, override: float | None = None) -> float:
     if override is not None:
         return float(override)
     if profile.letter == "B":
-        return 240.0
+        return 420.0
+    if profile.letter == "C":
+        return 300.0
     return 220.0
 
 
@@ -95,7 +98,7 @@ def _lap_closed(metrics: dict) -> bool:
     cover = float(metrics.get("cover_frac") or 0.0)
     pos = float(metrics.get("pos_mm") or 9999.0)
     n = int(metrics.get("n_pieces") or 0)
-    return (not metrics.get("collapsed")) and cover >= 0.92 and pos < 350.0 and n >= 50
+    return (not metrics.get("collapsed")) and cover >= 0.88 and pos < 450.0 and n >= 36
 
 
 def _run_pipeline(cl, get_part, avail, profile, cand, shop=None, look_ahead_mm=None):
@@ -112,7 +115,8 @@ def _run_pipeline(cl, get_part, avail, profile, cand, shop=None, look_ahead_mm=N
             dist_tol_mm=profile.dist_tol_mm,
             look_ahead_mm=_look_ahead(profile, look_ahead_mm),
             no_chord=True,
-            loose=profile.letter not in {"B", "C"},
+            loose=profile.letter == "B",
+            prefer_long=bool(profile.prefer_long_straights) or profile.letter in {"B", "C"},
         )
 
     if strategy == "sequential":
@@ -204,6 +208,11 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
     scaled = official
     if profile.letter == "A":
         scaled = simplify_for_level_a(official)
+    elif profile.letter == "B":
+        try:
+            scaled = simplify_for_level_b(official)
+        except Exception:
+            scaled = official
     cl = densify_polyline(scaled, step=profile.densify_step_mm)
 
     if req.strategy:
@@ -229,7 +238,7 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
         if profile.letter in {"B", "C"}:
             metrics.update({"from_scratch": from_scratch, "close_skipped": True})
             if profile.letter == "B":
-                metrics["follow_pass"] = "38/240"
+                metrics["follow_pass"] = "90/420"
         else:
             close_cands = [
                 "C8236", "C8200", "C8207", "C8205",
@@ -257,10 +266,10 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
     metrics["n_pieces"] = len(seq)
     metrics["cover_frac"] = built / max(target_mm, 1.0)
     if profile.letter == "B" and not _lap_closed(metrics):
-        fb_profile = LevelProfile(**{**profile.__dict__, "densify_step_mm": 24.0})
-        cl_fb = densify_polyline(scaled, step=24.0)
+        fb_profile = LevelProfile(**{**profile.__dict__, "densify_step_mm": 70.0, "dist_tol_mm": 380.0})
+        cl_fb = densify_polyline(scaled, step=70.0)
         seq_fb, metrics_fb, strategy_fb = _run_pipeline(
-            cl_fb, get_part, avail, fb_profile, cand, shop=shop, look_ahead_mm=180.0
+            cl_fb, get_part, avail, fb_profile, cand, shop=shop, look_ahead_mm=360.0
         )
         if not profile.ignore_inventory and not from_scratch:
             seq_fb = enforce_shop_cap(seq_fb, user_inv, fb_profile, get_part=get_part)
@@ -269,10 +278,10 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
         metrics_fb["target_length_mm"] = target_mm
         metrics_fb["n_pieces"] = len(seq_fb)
         metrics_fb["cover_frac"] = built_fb / max(target_mm, 1.0)
-        metrics_fb["from_scratch"] = from_scratch
+        metrics_fb["from_scratch": from_scratch]
         metrics_fb["close_skipped"] = True
-        metrics_fb["follow_pass"] = "24/180-fallback"
-        metrics_fb["fallback_from"] = "38/240"
+        metrics_fb["follow_pass"] = "70/360-fallback"
+        metrics_fb["fallback_from"] = "90/420"
         if _lap_closed(metrics_fb) or (metrics_fb.get("cover_frac") or 0) > (metrics.get("cover_frac") or 0):
             seq, metrics, strategy = seq_fb, metrics_fb, strategy_fb
             built = built_fb
