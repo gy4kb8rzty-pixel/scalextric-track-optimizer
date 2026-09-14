@@ -278,7 +278,7 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
         metrics_fb["target_length_mm"] = target_mm
         metrics_fb["n_pieces"] = len(seq_fb)
         metrics_fb["cover_frac"] = built_fb / max(target_mm, 1.0)
-        metrics_fb["from_scratch": from_scratch]
+        metrics_fb["from_scratch"] = from_scratch
         metrics_fb["close_skipped"] = True
         metrics_fb["follow_pass"] = "70/360-fallback"
         metrics_fb["fallback_from"] = "90/420"
