@@ -1,7 +1,7 @@
 """Sequential centreline follower.
 
-Long, low-curvature spans take official straights. Short opposite curves
-that turn a straight into a wiggle are rejected.
+Long, low-curvature spans take official straights. If no piece fits,
+retry once with short parts and a looser window so the lap does not die.
 """
 from __future__ import annotations
 import math
@@ -21,7 +21,8 @@ DEFAULT_CANDIDATES = [
 ]
 HAIRPINS = {"C8201", "C156"}
 HP_CODES = ("C8201L", "C8201R", "C8236", "C8200")
-LONG_STRAIGHTS = {"C8205", "C8207"}
+RESCUE = ["C8236", "C8200", "C8207", "C8234L", "C8234R", "C8206L", "C8206R",
+          "C8204L", "C8204R", "C8201L", "C8201R"]
 
 
 def _advance(pose, part):
@@ -82,7 +83,6 @@ def _recent_spiral(seq, get_part) -> float:
 
 
 def _wiggle_sign(seq, get_part):
-    """Last two curve signs if they flip."""
     signs = []
     for code in reversed(seq):
         part = get_part(code)
@@ -135,17 +135,17 @@ def sequential_follow(
     spans = find_hairpin_spans(cl)
     start = Pose(cl.points[0][0], cl.points[0][1], cl.heading(0))
     pose, seq, s_idx = start, [], 0
+    stalls = 0
     while s_idx < len(cl.points) - 8 and len(seq) < max_pieces:
         j = s_idx
         while j < len(cl.s) - 1 and cl.s[j] < cl.s[s_idx] + look_ahead_mm:
             j += 1
         turn_needed = normalize_heading(cl.heading(min(j, len(cl.points) - 2)) - pose.heading_degrees)
-        # longer window: is this a straight-ish run?
         k = s_idx
-        while k < len(cl.s) - 1 and cl.s[k] < cl.s[s_idx] + max(look_ahead_mm, 350.0):
+        while k < len(cl.s) - 1 and cl.s[k] < cl.s[s_idx] + 280.0:
             k += 1
         long_turn = normalize_heading(cl.heading(min(k, len(cl.points) - 2)) - pose.heading_degrees)
-        almost_straight = abs(turn_needed) < (18.0 if prefer_long else 12.0) and abs(long_turn) < 22.0
+        almost_straight = abs(turn_needed) < 10.0 and abs(long_turn) < 14.0
         hp_turn = _in_span(spans, s_idx)
         spiral = _recent_spiral(seq, get_part)
         wig = _wiggle_sign(seq, get_part)
@@ -155,11 +155,9 @@ def sequential_follow(
                 hairpin_run += 1
             else:
                 break
-        order = list(HP_CODES) + [c for c in codes if c not in HP_CODES] if hp_turn else list(codes)
-        best, best_sc = None, 1e18
-        for pass_id, pool in enumerate((order if not hp_turn else list(HP_CODES), codes) if hp_turn else (codes,)):
-            if pass_id == 1 and best is not None:
-                break
+
+        def _score_pool(pool, *, rescue=False):
+            best, best_sc = None, 1e18
             for code in pool:
                 if shop is not None:
                     if not may_place(code, used, avail, shop):
@@ -172,13 +170,13 @@ def sequential_follow(
                 is_hp = _root(code) in HAIRPINS
                 signed = _signed_angle(code, part)
                 is_straight = isinstance(part.geometry, StraightGeometry)
-                if is_straight:
-                    if (hp_turn or abs(turn_needed) > (28 if prefer_long else 22)) and part.geometry.length >= 250:
+                if is_straight and not rescue:
+                    if (hp_turn or abs(turn_needed) > 32) and part.geometry.length >= 250:
                         continue
-                if isinstance(part.geometry, CurveGeometry):
-                    if almost_straight and abs(signed) >= 20 and not hp_turn:
+                if isinstance(part.geometry, CurveGeometry) and not rescue:
+                    if almost_straight and abs(signed) >= 40 and not hp_turn:
                         continue
-                    if abs(turn_needed) > 10 and signed * turn_needed < 0 and abs(signed) > 18:
+                    if abs(turn_needed) > 12 and signed * turn_needed < 0 and abs(signed) > 22:
                         continue
                     if hp_turn and signed * hp_turn < 0 and abs(signed) > 15:
                         continue
@@ -186,51 +184,58 @@ def sequential_follow(
                         continue
                     if abs(spiral) >= 240 and signed * spiral > 0 and abs(signed) >= 20:
                         continue
-                    if wig and signed * wig < 0 and abs(signed) <= 24 and not hp_turn:
+                    if wig and signed * wig < 0 and abs(signed) <= 22 and not hp_turn:
                         continue
                     if is_hp and hairpin_run >= 2 and not hp_turn:
                         continue
                     if is_hp and hairpin_run >= 3:
                         continue
                 np = _advance(pose, part)
-                win = 80 if no_chord else (120 if hp_turn else 240)
-                if is_straight and part.geometry.length >= 300:
-                    win = max(win, 140)
+                win = 160 if rescue else (90 if no_chord else 200)
                 nidx, ndist = cl.closest(np.x, np.y, start=max(0, s_idx - 1), window=win)
-                tol = dist_tol_mm + (80 if (loose or prefer_long) and is_straight else 0)
-                if ndist > tol + (50 if hp_turn and is_hp else 0):
+                tol = dist_tol_mm * (1.8 if rescue else 1.0)
+                if is_straight and (loose or prefer_long):
+                    tol += 80
+                if ndist > tol:
                     continue
-                if no_chord:
+                if no_chord and not rescue:
                     mx, my = (pose.x + np.x) * 0.5, (pose.y + np.y) * 0.5
                     _, mid_d = cl.closest(mx, my, start=max(0, s_idx - 1), window=win)
-                    mid_lim = dist_tol_mm * (1.15 if prefer_long and is_straight else 0.9)
-                    if mid_d > mid_lim:
+                    if mid_d > dist_tol_mm * (1.2 if prefer_long and is_straight else 0.95):
                         continue
-                    if is_straight:
-                        plen = float(part.geometry.length)
-                    else:
-                        plen = abs(float(part.geometry.angle_degrees)) * math.pi / 180.0 * float(part.geometry.radius)
-                    prog_chk = cl.s[nidx] - cl.s[s_idx]
-                    if prog_chk > plen * 1.55 + 60:
-                        continue
+                if is_straight:
+                    plen = float(part.geometry.length)
+                else:
+                    plen = abs(float(part.geometry.angle_degrees)) * math.pi / 180.0 * float(part.geometry.radius)
                 prog = cl.s[nidx] - cl.s[s_idx]
                 if prog < 1:
+                    continue
+                if not rescue and prog > plen * 1.7 + 80:
                     continue
                 head_err = abs(normalize_heading(np.heading_degrees - cl.heading(min(nidx, len(cl.points) - 2))))
                 sc = ndist * 5.0 + head_err * 3.0 - prog * 0.5
                 if hp_turn and is_hp:
                     sc -= 55.0
-                if prefer_long and is_straight:
-                    if part.geometry.length >= 300 and abs(turn_needed) < 16:
+                if prefer_long and is_straight and abs(turn_needed) < 14:
+                    if part.geometry.length >= 300:
                         sc -= 90.0
-                    elif part.geometry.length >= 160 and abs(turn_needed) < 20:
-                        sc -= 40.0
-                if almost_straight and is_straight:
-                    sc -= 25.0
+                    elif part.geometry.length >= 160:
+                        sc -= 35.0
                 if sc < best_sc:
                     best_sc, best = sc, (code, np, nidx)
+            return best
+
+        best = _score_pool(codes)
         if best is None:
-            break
+            rescue_pool = [c for c in RESCUE if c in codes] or codes
+            best = _score_pool(rescue_pool, rescue=True)
+        if best is None:
+            stalls += 1
+            if stalls >= 3:
+                break
+            s_idx = min(s_idx + 4, len(cl.points) - 9)
+            continue
+        stalls = 0
         code, np, nidx = best
         seq.append(code)
         used[base_id(code)] += 1
