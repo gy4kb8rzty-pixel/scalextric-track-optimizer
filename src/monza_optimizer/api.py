@@ -1,12 +1,9 @@
 """High-level API for web / Lovable / wrapper integration."""
-
 from __future__ import annotations
-
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
-
 from monza_optimizer.catalog import load_parts, get_part_by_id, base_id
 from monza_optimizer.optimize import densify_polyline, corner_first_build
 from monza_optimizer.optimize.sequential import sequential_follow
@@ -14,7 +11,6 @@ from monza_optimizer.optimize.coverage_fill import coverage_fill
 from monza_optimizer.optimize.close_loop import close_loop
 from monza_optimizer.optimize.kit_loop import closed_kit_loop
 from monza_optimizer.optimize.silhouette import simplify_for_level_a, build_on_silhouette
-from monza_optimizer.optimize.b_guide import simplify_for_level_b
 from monza_optimizer.geometry.pose import Pose
 from monza_optimizer.geometry.path import path_length as _plen
 from monza_optimizer.optimize.accuracy_levels import (
@@ -23,7 +19,6 @@ from monza_optimizer.optimize.accuracy_levels import (
 )
 from monza_optimizer.reference import list_tracks, load_track_centreline, scale_centreline
 from monza_optimizer.export import build_track_3mf, build_output_pack, lay_payload, OUTPUT_MENU
-
 
 @dataclass
 class OptimizeRequest:
@@ -37,7 +32,6 @@ class OptimizeRequest:
     outputs: list[str] | None = None
     from_scratch: bool = False
 
-
 @dataclass
 class OptimizeResult:
     sequence: list[str]
@@ -50,19 +44,13 @@ class OptimizeResult:
     profile: dict[str, Any] = field(default_factory=dict)
     lay: dict[str, Any] = field(default_factory=dict)
     outputs: dict[str, Any] = field(default_factory=dict)
-
     def as_dict(self) -> dict[str, Any]:
         out = {
-            "track_id": self.track_id,
-            "accuracy_level": self.accuracy_level,
-            "strategy": self.strategy,
-            "sequence": list(self.sequence),
-            "bom": dict(self.bom),
-            "metrics": dict(self.metrics),
-            "shopping": dict(self.shopping),
-            "profile": dict(self.profile),
-            "lay": dict(self.lay),
-            "outputs": dict(self.outputs),
+            "track_id": self.track_id, "accuracy_level": self.accuracy_level,
+            "strategy": self.strategy, "sequence": list(self.sequence),
+            "bom": dict(self.bom), "metrics": dict(self.metrics),
+            "shopping": dict(self.shopping), "profile": dict(self.profile),
+            "lay": dict(self.lay), "outputs": dict(self.outputs),
         }
         try:
             from monza_optimizer.export.flyover import public_url
@@ -75,7 +63,6 @@ class OptimizeResult:
             pass
         return out
 
-
 def default_inventory_from_catalog(parts_json: str = "parts.json") -> dict[str, int]:
     parts = load_parts(parts_json)
     inv: dict[str, int] = {}
@@ -83,16 +70,14 @@ def default_inventory_from_catalog(parts_json: str = "parts.json") -> dict[str, 
         inv[base_id(p.id)] = inv.get(base_id(p.id), 0) + getattr(p, "quantity", 1)
     return inv
 
-
 def _look_ahead(profile, override: float | None = None) -> float:
     if override is not None:
         return float(override)
     if profile.letter == "B":
-        return 420.0
+        return 320.0
     if profile.letter == "C":
         return 300.0
     return 220.0
-
 
 def _lap_closed(metrics: dict) -> bool:
     cover = float(metrics.get("cover_frac") or 0.0)
@@ -100,25 +85,20 @@ def _lap_closed(metrics: dict) -> bool:
     n = int(metrics.get("n_pieces") or 0)
     return (not metrics.get("collapsed")) and cover >= 0.88 and pos < 450.0 and n >= 36
 
-
 def _run_pipeline(cl, get_part, avail, profile, cand, shop=None, look_ahead_mm=None):
     strategy = profile.strategy
     seq: list[str] = []
     metrics: dict[str, Any] = {}
-
     def _seq_kwargs():
         return dict(
-            candidates=cand,
-            max_pieces=profile.max_pieces,
+            candidates=cand, max_pieces=profile.max_pieces,
             sharp_turn_deg=profile.sharp_turn_deg,
             max_radius_on_sharp=profile.max_radius_on_sharp,
             dist_tol_mm=profile.dist_tol_mm,
             look_ahead_mm=_look_ahead(profile, look_ahead_mm),
-            no_chord=True,
-            loose=profile.letter == "B",
+            no_chord=True, loose=profile.letter == "B",
             prefer_long=bool(profile.prefer_long_straights) or profile.letter in {"B", "C"},
         )
-
     if strategy == "sequential":
         try:
             result = sequential_follow(cl, get_part, avail, shop=shop, **_seq_kwargs())
@@ -150,44 +130,32 @@ def _run_pipeline(cl, get_part, avail, profile, cand, shop=None, look_ahead_mm=N
             try:
                 alt = sequential_follow(cl, get_part, avail, shop=shop, **_seq_kwargs())
                 if len(alt.sequence) > len(seq):
-                    seq = list(alt.sequence)
-                    metrics = dict(alt.metrics)
-                    strategy = "sequential"
+                    seq = list(alt.sequence); metrics = dict(alt.metrics); strategy = "sequential"
             except TypeError:
                 alt = sequential_follow(cl, get_part, avail, **_seq_kwargs())
                 if len(alt.sequence) > len(seq):
-                    seq = list(alt.sequence)
-                    metrics = dict(alt.metrics)
-                    strategy = "sequential"
-
+                    seq = list(alt.sequence); metrics = dict(alt.metrics); strategy = "sequential"
     metrics["accuracy_level"] = profile.level.value
     metrics["accuracy_letter"] = profile.letter
     metrics["max_pieces_cap"] = profile.max_pieces
     return seq, metrics, strategy
 
-
 def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
     profile = get_profile(req.accuracy_level)
     parts = load_parts(req.parts_json)
-
     def get_part(c: str):
         return get_part_by_id(parts, c)
-
     catalog_ids = [p.id for p in parts] or candidates_for(profile)
     user_inv = dict(req.inventory or {})
     shopping_inv = dict(user_inv)
     from_scratch = bool(req.from_scratch)
     if from_scratch:
-        user_inv = {}
-        shopping_inv = {}
+        user_inv = {}; shopping_inv = {}
     if profile.ignore_inventory:
-        shopping_inv = {}
-        user_inv = {}
-
+        shopping_inv = {}; user_inv = {}
     unlimited = profile.unlimited if req.unlimited is None else bool(req.unlimited)
     if unlimited:
         profile = LevelProfile(**{**profile.__dict__, "unlimited": True, "inventory_only": False})
-
     if profile.ignore_inventory or from_scratch:
         avail = {base_id(i): 999 for i in catalog_ids}
         for code in candidates_for(profile):
@@ -196,11 +164,9 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
     else:
         avail = resolve_availability(profile, user_inv, catalog_ids)
         shop = ShopGate.from_profile(profile, user_inv)
-
     loaded = load_track_centreline(req.track_id)
     target_mm = target_length_for(
-        profile,
-        getattr(loaded, "official_length_m", None),
+        profile, getattr(loaded, "official_length_m", None),
         override_mm=float(req.target_length_mm) if req.target_length_mm else None,
         track_id=req.track_id,
     )
@@ -208,27 +174,15 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
     scaled = official
     if profile.letter == "A":
         scaled = simplify_for_level_a(official)
-    elif profile.letter == "B":
-        try:
-            scaled = simplify_for_level_b(official)
-        except Exception:
-            scaled = official
     cl = densify_polyline(scaled, step=profile.densify_step_mm)
-
     if req.strategy:
         from monza_optimizer.optimize.accuracy_levels import LevelProfile as LP
         profile = LP(**{**profile.__dict__, "strategy": req.strategy})
-
     if profile.letter == "A":
         seq = build_on_silhouette(scaled, get_part)
         strategy = "silhouette"
-        metrics = {
-            "accuracy_level": profile.level.value,
-            "accuracy_letter": "A",
-            "silhouette": True,
-            "silhouette_vertices": len(scaled),
-            "from_scratch": from_scratch,
-        }
+        metrics = {"accuracy_level": profile.level.value, "accuracy_letter": "A",
+                   "silhouette": True, "silhouette_vertices": len(scaled), "from_scratch": from_scratch}
     else:
         cand = candidates_for(profile)
         seq, metrics, strategy = _run_pipeline(cl, get_part, avail, profile, cand, shop=shop)
@@ -238,14 +192,11 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
         if profile.letter in {"B", "C"}:
             metrics.update({"from_scratch": from_scratch, "close_skipped": True})
             if profile.letter == "B":
-                metrics["follow_pass"] = "90/420"
+                metrics["follow_pass"] = "55/320"
         else:
-            close_cands = [
-                "C8236", "C8200", "C8207", "C8205",
-                "C8206L", "C8206R", "C8010L", "C8010R",
-                "C8204L", "C8204R", "C8235L", "C8235R",
-                "C8234L", "C8234R", "C8201L", "C8201R",
-            ]
+            close_cands = ["C8236", "C8200", "C8207", "C8205", "C8206L", "C8206R",
+                           "C8010L", "C8010R", "C8204L", "C8204R", "C8235L", "C8235R",
+                           "C8234L", "C8234R", "C8201L", "C8201R"]
             close_shop = ShopGate(owned={}, max_shop_pieces=999, max_shop_skus=99, unlimited=True)
             seq, close_stats = close_loop(
                 seq, start_pose, get_part, avail, close_shop,
@@ -256,20 +207,18 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
                 "head_deg": close_stats.get("head_deg", metrics.get("head_deg")),
                 "closed": close_stats.get("closed"),
                 "pos_before_close_mm": close_stats.get("pos_before_mm"),
-                "close_added": close_stats.get("added"),
-                "from_scratch": from_scratch,
+                "close_added": close_stats.get("added"), "from_scratch": from_scratch,
             })
-
     built = _plen([get_part(c) for c in seq if get_part(c)]) if seq else 0.0
     metrics["length_mm"] = built
     metrics["target_length_mm"] = target_mm
     metrics["n_pieces"] = len(seq)
     metrics["cover_frac"] = built / max(target_mm, 1.0)
     if profile.letter == "B" and not _lap_closed(metrics):
-        fb_profile = LevelProfile(**{**profile.__dict__, "densify_step_mm": 70.0, "dist_tol_mm": 380.0})
-        cl_fb = densify_polyline(scaled, step=70.0)
+        fb_profile = LevelProfile(**{**profile.__dict__, "densify_step_mm": 40.0, "dist_tol_mm": 400.0})
+        cl_fb = densify_polyline(scaled, step=40.0)
         seq_fb, metrics_fb, strategy_fb = _run_pipeline(
-            cl_fb, get_part, avail, fb_profile, cand, shop=shop, look_ahead_mm=360.0
+            cl_fb, get_part, avail, fb_profile, cand, shop=shop, look_ahead_mm=280.0
         )
         if not profile.ignore_inventory and not from_scratch:
             seq_fb = enforce_shop_cap(seq_fb, user_inv, fb_profile, get_part=get_part)
@@ -280,8 +229,8 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
         metrics_fb["cover_frac"] = built_fb / max(target_mm, 1.0)
         metrics_fb["from_scratch"] = from_scratch
         metrics_fb["close_skipped"] = True
-        metrics_fb["follow_pass"] = "70/360-fallback"
-        metrics_fb["fallback_from"] = "90/420"
+        metrics_fb["follow_pass"] = "40/280-fallback"
+        metrics_fb["fallback_from"] = "55/320"
         if _lap_closed(metrics_fb) or (metrics_fb.get("cover_frac") or 0) > (metrics.get("cover_frac") or 0):
             seq, metrics, strategy = seq_fb, metrics_fb, strategy_fb
             built = built_fb
@@ -302,7 +251,6 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
                 "Follow produced almost no pieces. Graphics show the closed kit oval. "
                 "Shopping list is still the gap to the named circuit."
             )
-
     bom = dict(Counter(base_id(c) for c in seq))
     shop_list = shopping_list(bom, shopping_inv, profile)
     basket = shop_list.as_dict()
@@ -316,14 +264,12 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
         basket["notes"] = list(basket.get("notes") or []) + [
             "Started from an empty box. Every piece on this list is to buy."
         ]
-
     title = f"{req.track_id} {profile.letter}"
     lay = lay_payload(seq, get_part, title=f"Lay-list - {title}")
     pack = build_output_pack(
         seq, get_part, title=title, wanted=req.outputs, shopping=basket,
         include_binary=bool(req.outputs), outline_points=official,
     )
-
     return OptimizeResult(
         sequence=seq, bom=bom, metrics=metrics, track_id=req.track_id, strategy=strategy,
         accuracy_level=profile.level.value, shopping=basket, lay=lay, outputs=pack,
@@ -335,13 +281,10 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
         },
     )
 
-
 def export_result_3mf(result: OptimizeResult, out_path: str | Path, parts_json: str = "parts.json", outline_from_track: bool = True, target_length_mm: float | None = None) -> Path:
     parts = load_parts(parts_json)
-
     def get_part(c: str):
         return get_part_by_id(parts, c)
-
     outline = None
     length = target_length_mm or result.metrics.get("target_length_mm") or 25000.0
     if outline_from_track:
@@ -353,16 +296,13 @@ def export_result_3mf(result: OptimizeResult, out_path: str | Path, parts_json: 
     title = f"{result.track_id} ({result.accuracy_level}/{result.strategy})"
     return build_track_3mf(result.sequence, get_part, out_path, outline_points=outline, title=title)
 
-
 def tracks_for_ui() -> list[dict]:
     from monza_optimizer.export.flyover import attach_to_track
     from monza_optimizer.export.card_outline import attach_outline
     return [attach_outline(attach_to_track(dict(r))) for r in list_tracks()]
 
-
 def accuracy_levels_for_ui() -> list[dict]:
     return levels_for_ui()
-
 
 def outputs_for_ui() -> list[dict]:
     return list(OUTPUT_MENU)
