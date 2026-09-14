@@ -106,9 +106,9 @@ LEVELS = {
     AccuracyLevel.BARE_BONES: _p(AccuracyLevel.BARE_BONES, "0", "Bare Bones", "Empty-box starter kit.", "sequential", False, False, 64, 6, 5000.0, 60.0, 80.0, 80.0, 2500.0, 1600.0, 1800.0, 64, True, False, False, "starter", ignore_inventory=True, scale_frac=0.18, min_target_mm=5500.0, max_target_mm=8000.0),
     AccuracyLevel.LEAN_BUDGET: _p(AccuracyLevel.LEAN_BUDGET, "A", "Lean Budget", "Manual only. Simple red outline ~11-16 m. One official piece at a time. Done builds the shopping list.", "manual", False, False, 80, 20, 13000.0, 36.0, 32.0, 28.0, 900.0, 280.0, 400.0, 140, True, False, False, "lean", scale_frac=0.48, min_target_mm=11000.0, max_target_mm=16000.0),
     AccuracyLevel.BUDGET: _p(AccuracyLevel.BUDGET, "B", "Budget",
-        "Fewer pieces, looser fit, still a closed lap. Long straights stay as C8205 — no wiggle-chopping. Shop cap 110 / 20 SKUs.",
-        "sequential", False, False, 110, 20, 24000.0, 90.0, 42.0, 36.0, 420.0, 340.0, 280.0, 220, True, False, False, "full",
-        scale_frac=0.82, min_target_mm=20000.0, max_target_mm=28000.0),
+        "Fewer pieces than C, looser fit, same official red line. Long straights stay C8205. Shop cap 140 / 22 SKUs.",
+        "sequential", False, False, 140, 22, 26000.0, 55.0, 36.0, 30.0, 420.0, 380.0, 260.0, 360, True, False, False, "full",
+        scale_frac=0.88, min_target_mm=20000.0, max_target_mm=30000.0),
     AccuracyLevel.DETAILED: _p(AccuracyLevel.DETAILED, "C", "Detailed", "Larger official red line scale profile ~34-48 meters so hairpins fit. Full catalogue. Shop cap 180 pieces / 28 SKUs. More accurate fit than B.", "sequential", False, False, 180, 28, 36000.0, 18.0, 26.0, 24.0, 380.0, 240.0, 200.0, 550, False, False, True, "full", scale_frac=1.15, min_target_mm=34000.0, max_target_mm=48000.0),
     AccuracyLevel.FULL_ACCURACY: _p(AccuracyLevel.FULL_ACCURACY, "D", "Full Accuracy", "Largest everyday official red line profile yields ~48-64 meters of track. Unlimited catalogue and buy list. Tightest follow of the red centreline. Output also features flyover.", "sequential", True, False, 10000, 10000, 50000.0, 12.0, 22.0, 22.0, 360.0, 280.0, 180.0, 900, False, False, True, "full", scale_frac=1.5, min_target_mm=48000.0, max_target_mm=64000.0),
     AccuracyLevel.EVENT_132: _p(
