@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "source": "bacinger/f1-circuits MIT",
+  "note": "Projected lon/lat to local millimetres. Madring is the 2026 Madrid street circuit. 2026 Bahrain GP listed at Sepang. Bahrain/Jeddah/Imola included as 2025 (cancelled or dropped for 2026).",
+  "circuits": [
+    {"id": "albert_park", "name": "Albert Park Circuit", "file": "data/tracks/albert_park_centerline_mm.json", "bacinger_id": "au-1953", "source_length_m": 5278, "polyline_length_m": 5279.242, "points": 146, "calendar": [2025, 2026]},
+    {"id": "shanghai", "name": "Shanghai International Circuit", "file": "data/tracks/shanghai_centerline_mm.json", "bacinger_id": "cn-2004", "source_length_m": 5451, "polyline_length_m": 5453.993, "points": 141, "calendar": [2025, 2026]},
+    {"id": "suzuka", "name": "Suzuka International Racing Course", "file": "data/tracks/suzuka_centerline_mm.json", "bacinger_id": "jp-1962", "source_length_m": 5807, "polyline_length_m": 5818.043, "points": 172, "calendar": [2025, 2026]},
+    {"id": "miami", "name": "Miami International Autodrome", "file": "data/tracks/miami_centerline_mm.json", "bacinger_id": "us-2022", "source_length_m": 5412, "polyline_length_m": 5421.515, "points": 103, "calendar": [2025, 2026]},
+    {"id": "montreal", "name": "Circuit Gilles-Villeneuve", "file": "data/tracks/montreal_centerline_mm.json", "bacinger_id": "ca-1978", "source_length_m": 4361, "polyline_length_m": 4369.949, "points": 102, "calendar": [2025, 2026]},
+    {"id": "monaco", "name": "Circuit de Monaco", "file": "data/tracks/monaco_centerline_mm.json", "bacinger_id": "mc-1929", "source_length_m": 3337, "polyline_length_m": 3328.014, "points": 160, "calendar": [2025, 2026]},
+    {"id": "barcelona", "name": "Circuit de Barcelona-Catalunya", "file": "data/tracks/barcelona_centerline_mm.json", "bacinger_id": "es-1991", "source_length_m": 4655, "polyline_length_m": 4669.556, "points": 150, "calendar": [2025, 2026]},
+    {"id": "red_bull_ring", "name": "Red Bull Ring", "file": "data/tracks/red_bull_ring_centerline_mm.json", "bacinger_id": "at-1969", "source_length_m": 4318, "polyline_length_m": 4307.069, "points": 81, "calendar": [2025, 2026]},
+    {"id": "silverstone", "name": "Silverstone Circuit", "file": "data/tracks/silverstone_centerline_mm.json", "bacinger_id": "gb-1948", "source_length_m": 5891, "polyline_length_m": 5884.436, "points": 135, "calendar": [2025, 2026]},
+    {"id": "spa", "name": "Circuit de Spa-Francorchamps", "file": "data/tracks/spa_centerline_mm.json", "bacinger_id": "be-1925", "source_length_m": 7004, "polyline_length_m": 6986.205, "points": 153, "calendar": [2025, 2026]},
+    {"id": "hungaroring", "name": "Hungaroring", "file": "data/tracks/hungaroring_centerline_mm.json", "bacinger_id": "hu-1986", "source_length_m": 4381, "polyline_length_m": 4380.97, "points": 141, "calendar": [2025, 2026]},
+    {"id": "zandvoort", "name": "Circuit Zandvoort", "file": "data/tracks/zandvoort_centerline_mm.json", "bacinger_id": "nl-1948", "source_length_m": 4259, "polyline_length_m": 4260.227, "points": 119, "calendar": [2025, 2026]},
+    {"id": "monza", "name": "Autodromo Nazionale Monza", "file": "data/tracks/monza_centerline_mm.json", "bacinger_id": "it-1922", "source_length_m": 5793, "polyline_length_m": 5793.044, "points": 125, "calendar": [2025, 2026]},
+    {"id": "madring", "name": "Circuito de Madring", "file": "data/tracks/madring_centerline_mm.json", "bacinger_id": "es-2026", "source_length_m": 5474, "polyline_length_m": 5436.345, "points": 116, "calendar": [2026]},
+    {"id": "baku", "name": "Baku City Circuit", "file": "data/tracks/baku_centerline_mm.json", "bacinger_id": "az-2016", "source_length_m": 6003, "polyline_length_m": 5948.68, "points": 86, "calendar": [2025, 2026]},
+    {"id": "sepang", "name": "Sepang International Circuit", "file": "data/tracks/sepang_centerline_mm.json", "bacinger_id": "my-1999", "source_length_m": 5543, "polyline_length_m": 5555.435, "points": 104, "calendar": [2026]},
+    {"id": "marina_bay", "name": "Marina Bay Street Circuit", "file": "data/tracks/marina_bay_centerline_mm.json", "bacinger_id": "sg-2008", "source_length_m": 4928, "polyline_length_m": 4948.184, "points": 116, "calendar": [2025, 2026]},
+    {"id": "cota", "name": "Circuit of the Americas", "file": "data/tracks/cota_centerline_mm.json", "bacinger_id": "us-2012", "source_length_m": 5514, "polyline_length_m": 5525.861, "points": 171, "calendar": [2025, 2026]},
+    {"id": "mexico", "name": "Autódromo Hermanos Rodríguez", "file": "data/tracks/mexico_centerline_mm.json", "bacinger_id": "mx-1962", "source_length_m": 4304, "polyline_length_m": 4307.282, "points": 101, "calendar": [2025, 2026]},
+    {"id": "interlagos", "name": "Autódromo Internacional Nelson Piquet", "file": "data/tracks/interlagos_centerline_mm.json", "bacinger_id": "br-1977", "source_length_m": 5031, "polyline_length_m": 4966.867, "points": 93, "calendar": [2025, 2026]},
+    {"id": "las_vegas", "name": "Las Vegas Street Circuit", "file": "data/tracks/las_vegas_centerline_mm.json", "bacinger_id": "us-2023", "source_length_m": 6201, "polyline_length_m": 6227.609, "points": 100, "calendar": [2025, 2026]},
+    {"id": "lusail", "name": "Losail International Circuit", "file": "data/tracks/lusail_centerline_mm.json", "bacinger_id": "qa-2004", "source_length_m": 5380, "polyline_length_m": 5426.801, "points": 107, "calendar": [2025, 2026]},
+    {"id": "yas_marina", "name": "Yas Marina Circuit", "file": "data/tracks/yas_marina_centerline_mm.json", "bacinger_id": "ae-2009", "source_length_m": 5281, "polyline_length_m": 5298.702, "points": 133, "calendar": [2025, 2026]},
+    {"id": "bahrain", "name": "Bahrain International Circuit", "file": "data/tracks/bahrain_centerline_mm.json", "bacinger_id": "bh-2002", "source_length_m": 5412, "polyline_length_m": 5424.525, "points": 94, "calendar": [2025]},
+    {"id": "jeddah", "name": "Jeddah Corniche Circuit", "file": "data/tracks/jeddah_centerline_mm.json", "bacinger_id": "sa-2021", "source_length_m": 6175, "polyline_length_m": 6203.275, "points": 152, "calendar": [2025]},
+    {"id": "imola", "name": "Autodromo Enzo e Dino Ferrari", "file": "data/tracks/imola_centerline_mm.json", "bacinger_id": "it-1953", "source_length_m": 4909, "polyline_length_m": 4903.671, "points": 84, "calendar": [2025]}
+  ]
+}
