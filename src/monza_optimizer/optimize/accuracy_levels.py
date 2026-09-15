@@ -107,7 +107,7 @@ LEVELS = {
     AccuracyLevel.LEAN_BUDGET: _p(AccuracyLevel.LEAN_BUDGET, "A", "Lean Budget", "Manual only. Simple red outline ~11-16 m. One official piece at a time. Done builds the shopping list.", "manual", False, False, 80, 20, 13000.0, 36.0, 32.0, 28.0, 900.0, 280.0, 400.0, 140, True, False, False, "lean", scale_frac=0.48, min_target_mm=11000.0, max_target_mm=16000.0),
     AccuracyLevel.BUDGET: _p(AccuracyLevel.BUDGET, "B", "Budget",
         "Trial: half-size lap vs previous B (~12-15 m, about 50% fewer pieces). Same official outline, looser fit, long straights preferred.",
-        "sequential", False, False, 70, 16, 13000.0, 55.0, 36.0, 30.0, 420.0, 380.0, 260.0, 90, True, False, False, "full",
+        "sequential", False, False, 70, 16, 13000.0, 55.0, 36.0, 30.0, 420.0, 380.0, 260.0, 110, True, False, False, "full",
         scale_frac=0.44, min_target_mm=10000.0, max_target_mm=15000.0),
     AccuracyLevel.DETAILED: _p(AccuracyLevel.DETAILED, "C", "Detailed", "Larger official red line scale profile ~34-48 meters so hairpins fit. Full catalogue. Shop cap 180 pieces / 28 SKUs. More accurate fit than B.", "sequential", False, False, 180, 28, 36000.0, 18.0, 26.0, 24.0, 380.0, 240.0, 200.0, 550, False, False, True, "full", scale_frac=1.15, min_target_mm=34000.0, max_target_mm=48000.0),
     AccuracyLevel.FULL_ACCURACY: _p(AccuracyLevel.FULL_ACCURACY, "D", "Full Accuracy", "Largest everyday official red line profile yields ~48-64 meters of track. Unlimited catalogue and buy list. Tightest follow of the red centreline. Output also features flyover.", "sequential", True, False, 10000, 10000, 50000.0, 12.0, 22.0, 22.0, 360.0, 280.0, 180.0, 900, False, False, True, "full", scale_frac=1.5, min_target_mm=48000.0, max_target_mm=64000.0),
@@ -137,6 +137,9 @@ def target_length_for(profile, official_length_m=None, override_mm=None, track_i
     if profile.letter in {"C", "D"} and tid in {"monaco", "monte_carlo"}:
         floor = 50000.0 if profile.letter == "D" else 36000.0
         lo, raw = max(lo, floor), max(raw, floor)
+    if profile.letter == "B" and tid in {"bahrain", "sakhir"}:
+        lo, hi = 12500.0, 17000.0
+        raw = max(raw * 1.16, 14500.0)
     return max(lo, min(hi, raw))
 
 def get_profile(level):
