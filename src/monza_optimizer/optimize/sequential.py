@@ -1,7 +1,7 @@
 """Sequential centreline follower.
 
-Long, low-curvature spans take official straights. If no piece fits,
-retry once with short parts and a looser window so the lap does not die.
+Long, low-curvature spans take official straights on B–E. 22.5/45 wiggle
+curves are rejected on those spans. Rescue keeps the lap from dying.
 """
 from __future__ import annotations
 import math
@@ -23,6 +23,7 @@ HAIRPINS = {"C8201", "C156"}
 HP_CODES = ("C8201L", "C8201R", "C8236", "C8200")
 RESCUE = ["C8236", "C8200", "C8207", "C8234L", "C8234R", "C8206L", "C8206R",
           "C8204L", "C8204R", "C8201L", "C8201R"]
+WIGGLE_SKUS = {"C8235", "C8206"}
 
 
 def _advance(pose, part):
@@ -126,10 +127,9 @@ def sequential_follow(
     **_kwargs,
 ):
     codes = list(candidates or DEFAULT_CANDIDATES)
-    if prefer_long:
-        longs = [c for c in ("C8205", "C8207", "C8200", "C8236") if c in codes]
-        rest = [c for c in codes if c not in longs]
-        codes = longs + rest
+    longs = [c for c in ("C8205", "C8207", "C8200", "C8236") if c in codes]
+    rest = [c for c in codes if c not in longs]
+    codes = longs + rest
     used = Counter()
     avail = avail or {base_id(c): 999 for c in codes}
     spans = find_hairpin_spans(cl)
@@ -142,10 +142,10 @@ def sequential_follow(
             j += 1
         turn_needed = normalize_heading(cl.heading(min(j, len(cl.points) - 2)) - pose.heading_degrees)
         k = s_idx
-        while k < len(cl.s) - 1 and cl.s[k] < cl.s[s_idx] + 280.0:
+        while k < len(cl.s) - 1 and cl.s[k] < cl.s[s_idx] + 320.0:
             k += 1
         long_turn = normalize_heading(cl.heading(min(k, len(cl.points) - 2)) - pose.heading_degrees)
-        almost_straight = abs(turn_needed) < 10.0 and abs(long_turn) < 14.0
+        almost_straight = abs(turn_needed) < 12.0 and abs(long_turn) < 16.0
         hp_turn = _in_span(spans, s_idx)
         spiral = _recent_spiral(seq, get_part)
         wig = _wiggle_sign(seq, get_part)
@@ -174,9 +174,13 @@ def sequential_follow(
                     if (hp_turn or abs(turn_needed) > 32) and part.geometry.length >= 250:
                         continue
                 if isinstance(part.geometry, CurveGeometry) and not rescue:
-                    if almost_straight and abs(signed) >= 40 and not hp_turn:
+                    if almost_straight and abs(signed) >= 20 and not hp_turn:
                         continue
-                    if abs(turn_needed) > 12 and signed * turn_needed < 0 and abs(signed) > 22:
+                    if almost_straight and _root(code) in WIGGLE_SKUS and not hp_turn:
+                        continue
+                    if abs(turn_needed) < 14 and _root(code) == "C8235" and not hp_turn:
+                        continue
+                    if abs(turn_needed) > 12 and signed * turn_needed < 0 and abs(signed) > 18:
                         continue
                     if hp_turn and signed * hp_turn < 0 and abs(signed) > 15:
                         continue
@@ -184,7 +188,7 @@ def sequential_follow(
                         continue
                     if abs(spiral) >= 240 and signed * spiral > 0 and abs(signed) >= 20:
                         continue
-                    if wig and signed * wig < 0 and abs(signed) <= 22 and not hp_turn:
+                    if wig and signed * wig < 0 and abs(signed) <= 24 and not hp_turn:
                         continue
                     if is_hp and hairpin_run >= 2 and not hp_turn:
                         continue
@@ -194,14 +198,14 @@ def sequential_follow(
                 win = 160 if rescue else (90 if no_chord else 200)
                 nidx, ndist = cl.closest(np.x, np.y, start=max(0, s_idx - 1), window=win)
                 tol = dist_tol_mm * (1.8 if rescue else 1.0)
-                if is_straight and (loose or prefer_long):
+                if is_straight:
                     tol += 80
                 if ndist > tol:
                     continue
                 if no_chord and not rescue:
                     mx, my = (pose.x + np.x) * 0.5, (pose.y + np.y) * 0.5
                     _, mid_d = cl.closest(mx, my, start=max(0, s_idx - 1), window=win)
-                    if mid_d > dist_tol_mm * (1.2 if prefer_long and is_straight else 0.95):
+                    if mid_d > dist_tol_mm * (1.25 if is_straight else 0.95):
                         continue
                 if is_straight:
                     plen = float(part.geometry.length)
@@ -216,11 +220,13 @@ def sequential_follow(
                 sc = ndist * 5.0 + head_err * 3.0 - prog * 0.5
                 if hp_turn and is_hp:
                     sc -= 55.0
-                if prefer_long and is_straight and abs(turn_needed) < 14:
+                if is_straight and abs(turn_needed) < 14:
                     if part.geometry.length >= 300:
                         sc -= 90.0
                     elif part.geometry.length >= 160:
                         sc -= 35.0
+                if almost_straight and is_straight:
+                    sc -= 40.0
                 if sc < best_sc:
                     best_sc, best = sc, (code, np, nidx)
             return best
