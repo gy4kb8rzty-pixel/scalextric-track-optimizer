@@ -1,4 +1,4 @@
-"""Plan-view graphics: filled pieces, colour key, red official centreline."""
+"""Plan-view graphics: filled pieces, colour key, red official centreline, XY rulers."""
 
 from __future__ import annotations
 
@@ -66,6 +66,8 @@ _GLYPH = {
     "S": [14, 17, 16, 14, 1, 17, 14],
     "T": [31, 4, 4, 4, 4, 4, 4],
     "U": [17, 17, 17, 17, 17, 17, 14],
+    "X": [17, 10, 4, 4, 4, 10, 17],
+    "Y": [17, 17, 10, 4, 4, 4, 4],
 }
 
 
@@ -86,6 +88,19 @@ def _ruler_label(mm: float) -> str:
     if mm >= 1000:
         return f"{int(round(mm / 1000.0))} M"
     return f"{int(round(mm))} MM"
+
+
+def _tick_step(span: float) -> float:
+    span = max(float(span), 1.0)
+    if span >= 8000:
+        return 2000.0
+    if span >= 3500:
+        return 1000.0
+    return 500.0
+
+
+def _space_label(w: float, h: float) -> str:
+    return f"{w / 1000.0:.1f} M X {h / 1000.0:.1f} M"
 
 
 def _blit_text(put, x: int, y: int, text: str, rgb=INK, scale: int = 2):
@@ -179,7 +194,7 @@ def keys_used(sequence: Sequence[str]) -> list[tuple[str, str]]:
     return [(sku, label) for sku, label in COLOR_KEY if sku in used]
 
 
-def _bounds(pieces, outline, pad: float = 80.0):
+def _bounds(pieces, outline, pad: float = 280.0):
     xs, ys = [], []
     for _, poly in pieces:
         for x, y in poly:
@@ -191,6 +206,18 @@ def _bounds(pieces, outline, pad: float = 80.0):
     if not xs:
         return -pad, -pad, pad, pad
     return min(xs) - pad, min(ys) - pad, max(xs) + pad, max(ys) + pad
+
+
+def _track_span(pieces, outline):
+    xs, ys = [], []
+    for _, poly in pieces:
+        for x, y in poly:
+            xs.append(x); ys.append(y)
+    for x, y in outline or []:
+        xs.append(x); ys.append(y)
+    if not xs:
+        return 0.0, 0.0, 0.0, 0.0, 1.0, 1.0
+    return min(xs), min(ys), max(xs), max(ys), max(max(xs) - min(xs), 1.0), max(max(ys) - min(ys), 1.0)
 
 
 def _rgb(sku: str) -> tuple[int, int, int]:
@@ -208,6 +235,7 @@ def render_svg(
     start = Pose(0.0, 0.0, _heading_of(outline))
     pieces, _ = layout_pieces(sequence, get_part, start=start)
     minx, miny, maxx, maxy = _bounds(pieces, outline)
+    tx0, ty0, tx1, ty1, tw, th = _track_span(pieces, outline)
     w = max(maxx - minx, 1.0)
     h = max(maxy - miny, 1.0)
     vw, vh = 900.0, max(260.0, 900.0 * h / w + 36)
@@ -230,13 +258,29 @@ def render_svg(
             f'<polyline points="{d}" fill="none" stroke="#c0392b" '
             f'stroke-width="2.4" stroke-linejoin="round"/>'
         )
-    ruler = _ruler_mm(w)
-    rx0, ry0 = xy(minx + 40, miny + 40)
-    rx1, ry1 = xy(minx + 40 + ruler, miny + 40)
-    paths.append(f'<line x1="{rx0:.1f}" y1="{ry0:.1f}" x2="{rx1:.1f}" y2="{ry1:.1f}" stroke="#111" stroke-width="3"/>')
-    paths.append(f'<line x1="{rx0:.1f}" y1="{ry0-8:.1f}" x2="{rx0:.1f}" y2="{ry0+8:.1f}" stroke="#111" stroke-width="2"/>')
-    paths.append(f'<line x1="{rx1:.1f}" y1="{ry1-8:.1f}" x2="{rx1:.1f}" y2="{ry1+8:.1f}" stroke="#111" stroke-width="2"/>')
-    paths.append(f'<text x="{(rx0+rx1)/2:.1f}" y="{ry0-12:.1f}" text-anchor="middle" font-size="12" font-family="sans-serif">{_ruler_label(ruler)}</text>')
+    ax0, ay0 = xy(tx0, ty0)
+    ax1, ay1 = xy(tx1, ty0)
+    ay_top = xy(tx0, ty1)[1]
+    paths.append(f'<line x1="{ax0:.1f}" y1="{ay0:.1f}" x2="{ax1:.1f}" y2="{ay1:.1f}" stroke="#111" stroke-width="2.2"/>')
+    paths.append(f'<line x1="{ax0:.1f}" y1="{ay0:.1f}" x2="{ax0:.1f}" y2="{ay_top:.1f}" stroke="#111" stroke-width="2.2"/>')
+    step = _tick_step(tw)
+    t = 0.0
+    while t <= tw + 1:
+        px, py = xy(tx0 + t, ty0)
+        paths.append(f'<line x1="{px:.1f}" y1="{py:.1f}" x2="{px:.1f}" y2="{py+8:.1f}" stroke="#111" stroke-width="1.6"/>')
+        paths.append(f'<text x="{px:.1f}" y="{py+20:.1f}" text-anchor="middle" font-size="10" font-family="sans-serif">{int(round(t/1000.0))}m</text>')
+        t += step
+    step_y = _tick_step(th)
+    t = 0.0
+    while t <= th + 1:
+        px, py = xy(tx0, ty0 + t)
+        paths.append(f'<line x1="{px:.1f}" y1="{py:.1f}" x2="{px-8:.1f}" y2="{py:.1f}" stroke="#111" stroke-width="1.6"/>')
+        paths.append(f'<text x="{px-12:.1f}" y="{py+4:.1f}" text-anchor="end" font-size="10" font-family="sans-serif">{int(round(t/1000.0))}m</text>')
+        t += step_y
+    paths.append(
+        f'<text x="{(ax0+ax1)/2:.1f}" y="{ay0+36:.1f}" text-anchor="middle" '
+        f'font-size="12" font-family="sans-serif">SPACE {_space_label(tw, th)}</text>'
+    )
     legend = []
     x = 16.0
     legend.append(
@@ -280,6 +324,7 @@ def render_png(
     start = Pose(0.0, 0.0, _heading_of(outline))
     pieces, _ = layout_pieces(sequence, get_part, start=start)
     minx, miny, maxx, maxy = _bounds(pieces, outline)
+    tx0, ty0, tx1, ty1, tw, th = _track_span(pieces, outline)
     w = max(maxx - minx, 1.0)
     h = max(maxy - miny, 1.0)
     canvas = size
@@ -307,13 +352,26 @@ def render_png(
         for i in range(len(opts) - 1):
             _line(opts[i][0], opts[i][1], opts[i + 1][0], opts[i + 1][1], lambda ix, iy: put(ix, iy, RED))
             _line(opts[i][0], opts[i][1] + 1, opts[i + 1][0], opts[i + 1][1] + 1, lambda ix, iy: put(ix, iy, RED))
-    ruler = _ruler_mm(w)
-    a = pix(minx + 40, miny + 40)
-    b = pix(minx + 40 + ruler, miny + 40)
+    a = pix(tx0, ty0)
+    b = pix(tx1, ty0)
+    c = pix(tx0, ty1)
     _line(a[0], a[1], b[0], b[1], lambda ix, iy: put(ix, iy, INK))
-    _line(a[0], a[1] - 6, a[0], a[1] + 6, lambda ix, iy: put(ix, iy, INK))
-    _line(b[0], b[1] - 6, b[0], b[1] + 6, lambda ix, iy: put(ix, iy, INK))
-    _blit_text(put, min(a[0], b[0]), min(a[1], b[1]) - 16, _ruler_label(ruler), INK, 2)
+    _line(a[0], a[1], c[0], c[1], lambda ix, iy: put(ix, iy, INK))
+    step = _tick_step(tw)
+    t = 0.0
+    while t <= tw + 1:
+        p = pix(tx0 + t, ty0)
+        _line(p[0], p[1], p[0], p[1] + 7, lambda ix, iy: put(ix, iy, INK))
+        _blit_text(put, p[0] - 6, p[1] + 10, f"{int(round(t/1000.0))}M", INK, 1)
+        t += step
+    step_y = _tick_step(th)
+    t = 0.0
+    while t <= th + 1:
+        p = pix(tx0, ty0 + t)
+        _line(p[0], p[1], p[0] - 7, p[1], lambda ix, iy: put(ix, iy, INK))
+        _blit_text(put, max(2, p[0] - 28), p[1] - 4, f"{int(round(t/1000.0))}M", INK, 1)
+        t += step_y
+    _blit_text(put, min(a[0], b[0]), min(a[1], b[1]) + 24, "SPACE " + _space_label(tw, th), INK, 2)
     ly = canvas - 44
     lx = 8
     for dx in range(14):
@@ -387,10 +445,11 @@ def render_pdf(
     start = Pose(0.0, 0.0, _heading_of(outline))
     pieces, _ = layout_pieces(sequence, get_part, start=start)
     minx, miny, maxx, maxy = _bounds(pieces, outline)
+    tx0, ty0, tx1, ty1, tw, th = _track_span(pieces, outline)
     w = max(maxx - minx, 1.0)
     h = max(maxy - miny, 1.0)
     pw, ph = 595.0, 842.0
-    box_x, box_y, box_w, box_h = 36.0, 80.0, 523.0, 680.0
+    box_x, box_y, box_w, box_h = 48.0, 96.0, 500.0, 660.0
     scale = min(box_w / w, box_h / h)
 
     def xy(x: float, y: float) -> tuple[float, float]:
@@ -417,15 +476,35 @@ def render_pdf(
             xx, yy = xy(x, y)
             ops.append(f"{xx:.1f} {yy:.1f} l")
         ops.append("S")
-    ruler = _ruler_mm(w)
-    x0, y0 = xy(minx + 40, miny + 40)
-    x1, y1 = xy(minx + 40 + ruler, miny + 40)
-    ops.append("0.05 0.05 0.05 RG 1.4 w")
-    ops.append(f"{x0:.1f} {y0:.1f} m {x1:.1f} {y1:.1f} l S")
-    ops.append(f"{x0:.1f} {y0-6:.1f} m {x0:.1f} {y0+6:.1f} l S")
-    ops.append(f"{x1:.1f} {y1-6:.1f} m {x1:.1f} {y1+6:.1f} l S")
+    ax0, ay0 = xy(tx0, ty0)
+    ax1, ay1 = xy(tx1, ty0)
+    ay_top = xy(tx0, ty1)[1]
+    ops.append("0.05 0.05 0.05 RG 1.3 w")
+    ops.append(f"{ax0:.1f} {ay0:.1f} m {ax1:.1f} {ay1:.1f} l S")
+    ops.append(f"{ax0:.1f} {ay0:.1f} m {ax0:.1f} {ay_top:.1f} l S")
+    step = _tick_step(tw)
+    t = 0.0
+    while t <= tw + 1:
+        px, py = xy(tx0 + t, ty0)
+        ops.append(f"{px:.1f} {py:.1f} m {px:.1f} {py-7:.1f} l S")
+        ops.append("0 0 0 rg")
+        ops.append(f"BT /F1 8 Tf {px-8:.1f} {py-18:.1f} Td ({int(round(t/1000.0))}m) Tj ET")
+        ops.append("0.05 0.05 0.05 RG 1.3 w")
+        t += step
+    step_y = _tick_step(th)
+    t = 0.0
+    while t <= th + 1:
+        px, py = xy(tx0, ty0 + t)
+        ops.append(f"{px:.1f} {py:.1f} m {px-7:.1f} {py:.1f} l S")
+        ops.append("0 0 0 rg")
+        ops.append(f"BT /F1 8 Tf {px-28:.1f} {py-3:.1f} Td ({int(round(t/1000.0))}m) Tj ET")
+        ops.append("0.05 0.05 0.05 RG 1.3 w")
+        t += step_y
     ops.append("0 0 0 rg")
-    ops.append(f"BT /F1 9 Tf {x0:.1f} {y0+10:.1f} Td ({_pdf_esc(_ruler_label(ruler))}) Tj ET")
+    ops.append(
+        f"BT /F1 10 Tf {ax0:.1f} {ay0-32:.1f} Td "
+        f"({_pdf_esc('Floor space ' + _space_label(tw, th))}) Tj ET"
+    )
     ops.append("BT /F1 10 Tf 36 56 Td (Red = target circuit. Colour key = parts.) Tj ET")
     x = 36.0
     ops.append("0.75 0.22 0.17 RG 2 w")
