@@ -75,7 +75,7 @@ def _look_ahead(profile, override: float | None = None) -> float:
         return float(override)
     if profile.letter == "B":
         return 320.0
-    if profile.letter == "C":
+    if profile.letter in {"C", "D", "E"}:
         return 300.0
     return 220.0
 
@@ -97,7 +97,7 @@ def _run_pipeline(cl, get_part, avail, profile, cand, shop=None, look_ahead_mm=N
             dist_tol_mm=profile.dist_tol_mm,
             look_ahead_mm=_look_ahead(profile, look_ahead_mm),
             no_chord=True, loose=profile.letter == "B",
-            prefer_long=bool(profile.prefer_long_straights) or profile.letter in {"B", "C"},
+            prefer_long=profile.letter in {"B", "C", "D", "E"},
         )
     if strategy == "sequential":
         try:
