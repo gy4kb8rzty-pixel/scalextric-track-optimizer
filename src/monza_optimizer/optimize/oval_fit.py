@@ -24,9 +24,13 @@ TRI_OVAL_IDS = {
     "chicago", "chicagoland", "las_vegas", "las_vegas_nascar", "vegas",
     "nashville", "nashville_superspeedway",
     "charlotte", "charlotte_motor_speedway", "cms",
-    "atlanta", "texas", "michigan", "homestead", "homestead_miami",
+    "atlanta", "texas", "michigan",
     "kentucky", "fontana", "pocono",
     "new_hampshire", "iowa", "world_wide_technology", "wwt", "gateway_oval",
+}
+
+STADIUM_IDS = {
+    "homestead", "homestead_miami", "homestead-miami",
 }
 
 RECT_IDS = {
@@ -74,9 +78,14 @@ def is_rounded_rect(track_id: str) -> bool:
     return tid in RECT_IDS or "indianap" in tid
 
 
+def is_stadium_oval(track_id: str) -> bool:
+    tid = str(track_id or "").strip().lower().replace("-", "_")
+    return tid in STADIUM_IDS or tid.startswith("homestead")
+
+
 def is_tri_oval(track_id: str) -> bool:
     tid = str(track_id or "").strip().lower().replace("-", "_")
-    if not tid or "roval" in tid or is_rounded_rect(tid):
+    if not tid or "roval" in tid or is_rounded_rect(tid) or is_stadium_oval(tid):
         return False
     if any(p == tid or p in tid for p in PAPERCLIP_IDS):
         return False
@@ -283,7 +292,8 @@ def oval_follow(cl, get_part, avail=None, shop=None, profile=None, track_id=None
     tid = str(track_id or "").strip().lower()
     aspect = length / max(width, 1.0)
     rect = is_rounded_rect(tid)
-    tri = (not rect) and (is_tri_oval(tid) or (not tid and aspect >= 1.35))
+    stadium = is_stadium_oval(tid)
+    tri = (not rect) and (not stadium) and (is_tri_oval(tid) or (not tid and aspect >= 1.35))
     if any(p in tid for p in PAPERCLIP_IDS):
         tri = False
     if rect:
