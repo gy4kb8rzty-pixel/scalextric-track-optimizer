@@ -53,10 +53,18 @@ def outline_svg(points: list[list[float]], vw: float = 400.0, vh: float = 140.0)
 def attach_outline(row: dict) -> dict:
     tid = row.get("id")
     pts = outline_points(tid, "D")
-    if not pts:
-        return row
-    row["outline_points"] = pts
-    svg = outline_svg(pts)
-    if svg:
-        row["outline_svg"] = svg
+    if pts:
+        row["outline_points"] = pts
+        svg = outline_svg(pts)
+        if svg:
+            row["outline_svg"] = svg
+    try:
+        from monza_optimizer.optimize.nascar_levels import NASCAR_R4_NOTE, nascar_hides_cde
+        if nascar_hides_cde(tid):
+            row["nascar_r4_only"] = True
+            row["max_letter"] = "B"
+            row["allowed_levels"] = ["A", "B"]
+            row["level_notice"] = NASCAR_R4_NOTE
+    except Exception:
+        pass
     return row
