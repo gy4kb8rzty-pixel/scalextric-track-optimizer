@@ -1,5 +1,6 @@
 """High-level API for web / Lovable / wrapper integration."""
 from __future__ import annotations
+import math
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -171,6 +172,17 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
         track_id=req.track_id,
     )
     official = scale_centreline(loaded.points_m, target_mm, close=True)
+    try:
+        from monza_optimizer.optimize.oval_fit import is_nascar_oval, scale_guide_to_r4
+        if profile.letter != "A" and is_nascar_oval(req.track_id):
+            official, _f = scale_guide_to_r4(official, get_part)
+            if len(official) > 1:
+                target_mm = sum(
+                    math.hypot(official[i + 1][0] - official[i][0], official[i + 1][1] - official[i][1])
+                    for i in range(len(official) - 1)
+                ) or target_mm
+    except Exception:
+        pass
     scaled = official
     if profile.letter == "A":
         scaled = simplify_for_level_a(official)
