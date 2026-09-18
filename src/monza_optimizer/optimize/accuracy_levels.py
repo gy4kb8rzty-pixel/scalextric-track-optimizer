@@ -184,4 +184,9 @@ def levels_for_ui(track_id: str | None = None):
             "manual": p.letter == "A",
             "manual_endpoint": "/manual/a" if p.letter == "A" else None,
         })
+    try:
+        from monza_optimizer.optimize.nascar_levels import apply_nascar_level_policy
+        rows = apply_nascar_level_policy(rows, track_id)
+    except Exception:
+        pass
     return rows
