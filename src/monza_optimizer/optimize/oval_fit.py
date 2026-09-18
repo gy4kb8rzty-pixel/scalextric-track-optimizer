@@ -16,7 +16,7 @@ OVAL_IDS = {
     "martinsville", "phoenix", "dover", "new_hampshire", "iowa",
     "world_wide_technology", "wwt", "gateway_oval", "nashville_superspeedway",
     "homestead_miami", "charlotte", "charlotte_motor_speedway", "cms",
-    "chicago", "las_vegas", "vegas", "indy", "ims",
+    "chicago", "las_vegas", "vegas", "indy", "ims", "indianapolis_oval",
 }
 
 TRI_OVAL_IDS = {
@@ -30,7 +30,7 @@ TRI_OVAL_IDS = {
 }
 
 RECT_IDS = {
-    "indianapolis", "indy", "ims", "indianapolis_motor_speedway",
+    "indianapolis", "indy", "ims", "indianapolis_motor_speedway", "indianapolis_oval",
 }
 
 PAPERCLIP_IDS = {
@@ -140,10 +140,22 @@ def _pca(pts):
     return cx, cy, math.degrees(ang), max(length, 1.0), max(width, 1.0)
 
 
+def _rotate90(pts):
+    if not pts:
+        return pts
+    cx = sum(p[0] for p in pts) / len(pts)
+    cy = sum(p[1] for p in pts) / len(pts)
+    return [(-(y - cy) + cx, (x - cx) + cy) for x, y in pts]
+
+
 def scale_guide_to_r4(points, get_part, track_id=None):
     pts = [(float(x), float(y)) for x, y in (points or [])]
     if len(pts) < 4:
         return pts, 1.0
+    if is_rounded_rect(track_id):
+        minx, miny, maxx, maxy = _bbox(pts)
+        if (maxy - miny) > (maxx - minx):
+            pts = _rotate90(pts)
     cx, cy, _ang, length, width = _pca(pts)
     r4 = r4_radius_mm(get_part)
     extra = 350.0 if is_rounded_rect(track_id) else 0.0
@@ -192,6 +204,16 @@ def _straight_pack(length_mm: float, get_part) -> list[str]:
     return out or [sizes[-1][1]]
 
 
+def _plus_c8205(side: list[str], get_part) -> list[str]:
+    extra = "C8205"
+    try:
+        if get_part("C8205") is None:
+            extra = side[-1] if side else "C8205"
+    except Exception:
+        extra = "C8205"
+    return list(side) + [extra]
+
+
 def _short_r4(get_part) -> str:
     for code in ("C8235L", "C8235R"):
         try:
@@ -232,16 +254,6 @@ def _gap(seq, start, get_part):
     return math.hypot(end_p.x - start.x, end_p.y - start.y), end_p
 
 
-def _snap_heading(pts, pca_ang):
-    minx, miny, maxx, maxy = _bbox(pts)
-    w, h = maxx - minx, maxy - miny
-    if h > w * 1.12:
-        return 90.0
-    if w > h * 1.12:
-        return 0.0
-    return pca_ang
-
-
 def oval_follow(cl, get_part, avail=None, shop=None, profile=None, track_id=None, **_kwargs) -> OvalResult:
     pts = list(getattr(cl, "points", []) or [])
     if len(pts) < 8:
@@ -255,12 +267,13 @@ def oval_follow(cl, get_part, avail=None, shop=None, profile=None, track_id=None
     tri = (not rect) and (is_tri_oval(tid) or (not tid and aspect >= 1.35))
     if any(p in tid for p in PAPERCLIP_IDS):
         tri = False
-    ang = _snap_heading(pts, pca_ang) if rect else pca_ang
+    # Indy plastic is laid landscape; guide is rotated to match before we get here.
+    ang = 0.0 if rect else pca_ang
     long_s = max(length - 2.0 * r4, 80.0)
     short_s = max(width - 2.0 * r4, 80.0)
     if rect:
-        long_side = _straight_pack(long_s, get_part) or ["C8205"]
-        short_side = _straight_pack(short_s, get_part) or ["C8236"]
+        long_side = _plus_c8205(_straight_pack(long_s, get_part) or ["C8205"], get_part)
+        short_side = _plus_c8205(_straight_pack(short_s, get_part) or ["C8236"], get_part)
         corner = _corner90(get_part)
         seq = list(long_side) + corner + list(short_side) + corner + list(long_side) + corner + list(short_side) + corner
         kind = "rounded_rect"
@@ -275,11 +288,9 @@ def oval_follow(cl, get_part, avail=None, shop=None, profile=None, track_id=None
         actual = sum(_part_len(c, get_part) for c in side)
         ox, oy = _rot(-actual * 0.5, -r4, ang)
         start = Pose(cx + ox, cy + oy, ang)
-        from_loop = True
         seq = list(side) + _end_n(get_part, 7) + list(side) + _end_n(get_part, 7)
         pos, _ = _gap(seq, start, get_part)
-        best = seq
-        best_g = pos
+        best, best_g = seq, pos
         for n1 in (6, 7, 8):
             for n2 in (6, 7, 8):
                 trial = list(side) + _end_n(get_part, n1) + list(side) + _end_n(get_part, n2)
