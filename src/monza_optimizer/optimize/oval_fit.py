@@ -148,6 +148,22 @@ def _rotate90(pts):
     return [(-(y - cy) + cx, (x - cx) + cy) for x, y in pts]
 
 
+def _roll_to_bottom(pts):
+    if len(pts) < 4:
+        return pts
+    minx, miny, maxx, maxy = _bbox(pts)
+    best_i, best = 0, 1e18
+    n = len(pts)
+    for i in range(n):
+        x, y = pts[i]
+        nx, ny = pts[(i + 1) % n]
+        dx, dy = nx - x, ny - y
+        score = abs(y - miny) + abs(dy) - dx
+        if score < best:
+            best, best_i = score, i
+    return list(pts[best_i:]) + list(pts[:best_i])
+
+
 def scale_guide_to_r4(points, get_part, track_id=None):
     pts = [(float(x), float(y)) for x, y in (points or [])]
     if len(pts) < 4:
@@ -156,11 +172,14 @@ def scale_guide_to_r4(points, get_part, track_id=None):
         minx, miny, maxx, maxy = _bbox(pts)
         if (maxy - miny) > (maxx - minx):
             pts = _rotate90(pts)
+        pts = _roll_to_bottom(pts)
     cx, cy, _ang, length, width = _pca(pts)
     r4 = r4_radius_mm(get_part)
     extra = 350.0 if is_rounded_rect(track_id) else 0.0
     factor = (2.0 * r4 + extra) / max(width, 1.0)
     out = [((x - cx) * factor, (y - cy) * factor) for x, y in pts]
+    if is_rounded_rect(track_id):
+        out = _roll_to_bottom(out)
     return out, factor
 
 
@@ -267,23 +286,22 @@ def oval_follow(cl, get_part, avail=None, shop=None, profile=None, track_id=None
     tri = (not rect) and (is_tri_oval(tid) or (not tid and aspect >= 1.35))
     if any(p in tid for p in PAPERCLIP_IDS):
         tri = False
-    # Indy plastic is laid landscape; guide is rotated to match before we get here.
-    ang = 0.0 if rect else pca_ang
-    long_s = max(length - 2.0 * r4, 80.0)
-    short_s = max(width - 2.0 * r4, 80.0)
     if rect:
-        long_side = _plus_c8205(_straight_pack(long_s, get_part) or ["C8205"], get_part)
-        short_side = _plus_c8205(_straight_pack(short_s, get_part) or ["C8236"], get_part)
+        minx, miny, maxx, maxy = _bbox(pts)
+        gw, gh = maxx - minx, maxy - miny
+        horiz = _plus_c8205(_straight_pack(max(gw - 2.0 * r4, 80.0), get_part) or ["C8205"], get_part)
+        vert = _plus_c8205(_straight_pack(max(gh - 2.0 * r4, 80.0), get_part) or ["C8236"], get_part)
         corner = _corner90(get_part)
-        seq = list(long_side) + corner + list(short_side) + corner + list(long_side) + corner + list(short_side) + corner
-        kind = "rounded_rect"
-        actual = sum(_part_len(c, get_part) for c in long_side)
-        ox, oy = _rot(-actual * 0.5, -width * 0.5, ang)
-        start = Pose(cx + ox, cy + oy, ang)
+        seq = list(horiz) + corner + list(vert) + corner + list(horiz) + corner + list(vert) + corner
+        start = Pose(minx + r4, miny, 0.0)
         pos, _ = _gap(seq, start, get_part)
+        kind = "rounded_rect"
         end_pieces = len(corner)
-        side_n = len(long_side)
+        side_n = len(horiz)
+        ang = 0.0
     elif tri:
+        ang = pca_ang
+        long_s = max(length - 2.0 * r4, 80.0)
         side = _tri_side(long_s, get_part)
         actual = sum(_part_len(c, get_part) for c in side)
         ox, oy = _rot(-actual * 0.5, -r4, ang)
@@ -302,6 +320,8 @@ def oval_follow(cl, get_part, avail=None, shop=None, profile=None, track_id=None
         end_pieces = 7
         side_n = len(side)
     else:
+        ang = pca_ang
+        long_s = max(length - 2.0 * r4, 80.0)
         side = _straight_pack(long_s, get_part) or ["C8236"]
         end = _end_n(get_part, max(4, int(round(180.0 / max(mid_ang, 10.0)))))
         seq = list(side) + list(end) + list(side) + list(end)
@@ -326,7 +346,7 @@ def oval_follow(cl, get_part, avail=None, shop=None, profile=None, track_id=None
         "guide_length_mm": length,
         "guide_width_mm": width,
         "aspect": aspect,
-        "heading_deg": ang,
+        "heading_deg": ang if rect else pca_ang,
         "end_pieces": end_pieces,
         "side_pieces": side_n,
         "guide_scaled_to_r4": True,
