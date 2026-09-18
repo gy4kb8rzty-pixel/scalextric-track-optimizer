@@ -1,4 +1,4 @@
-"""NASCAR oval: R4 stadium; selected tracks get a 22.5 R4 mid-stretch."""
+"""NASCAR oval: R4 stadium; long ovals get a 22.5 R4 mid-stretch."""
 from __future__ import annotations
 
 import math
@@ -18,11 +18,22 @@ OVAL_IDS = {
     "fontana", "pocono", "indianapolis", "nashville", "richmond",
     "martinsville", "phoenix", "dover", "new_hampshire", "iowa",
     "world_wide_technology", "wwt", "gateway_oval", "nashville_superspeedway",
-    "homestead_miami",
+    "homestead_miami", "charlotte", "charlotte_motor_speedway", "cms",
+    "chicago", "las_vegas", "vegas",
 }
 
 TRI_OVAL_IDS = {
     "kansas", "phoenix", "daytona", "talladega",
+    "chicago", "chicagoland", "las_vegas", "las_vegas_nascar", "vegas",
+    "nashville", "nashville_superspeedway",
+    "charlotte", "charlotte_motor_speedway", "cms",
+    "atlanta", "texas", "michigan", "homestead", "homestead_miami",
+    "kentucky", "fontana", "pocono", "indianapolis",
+    "new_hampshire", "iowa", "world_wide_technology", "wwt", "gateway_oval",
+}
+
+PAPERCLIP_IDS = {
+    "bristol", "martinsville", "richmond",
 }
 
 STRAIGHTS = ("C8205", "C8207", "C8200", "C8236")
@@ -35,7 +46,7 @@ def is_nascar_oval(track_id: str) -> bool:
     tid = str(track_id or "").strip().lower().replace("-", "_")
     if not tid or "roval" in tid:
         return False
-    if tid in OVAL_IDS or tid.startswith("homestead"):
+    if tid in OVAL_IDS or tid.startswith("homestead") or tid.startswith("charlotte"):
         return True
     try:
         row = next((r for r in list_tracks() if str(r.get("id") or "").lower().replace("-", "_") == tid), None)
@@ -48,7 +59,9 @@ def is_nascar_oval(track_id: str) -> bool:
     name = str(row.get("name") or "").lower()
     if "roval" in name or "roval" in kind:
         return False
-    if "homestead" in name or tid in OVAL_IDS:
+    if any(k in name for k in ("homestead", "charlotte motor", "chicagoland", "las vegas")):
+        return True
+    if tid in OVAL_IDS:
         return True
     if "nascar" not in series:
         return False
@@ -59,6 +72,10 @@ def is_nascar_oval(track_id: str) -> bool:
 
 def is_tri_oval(track_id: str) -> bool:
     tid = str(track_id or "").strip().lower().replace("-", "_")
+    if not tid or "roval" in tid:
+        return False
+    if any(p == tid or p in tid for p in PAPERCLIP_IDS):
+        return False
     if tid in TRI_OVAL_IDS:
         return True
     return any(key in tid for key in TRI_OVAL_IDS)
@@ -196,11 +213,13 @@ def oval_follow(cl, get_part, avail=None, shop=None, profile=None, track_id=None
     r4 = r4_radius_mm(get_part)
     cx, cy, ang, length, width = _pca(pts)
     tid = str(track_id or "").strip().lower()
-    tri = is_tri_oval(tid) or (not tid and length / max(width, 1.0) >= 1.5)
+    aspect = length / max(width, 1.0)
+    tri = is_tri_oval(tid) or (not tid and aspect >= 1.35 and not any(p in tid for p in PAPERCLIP_IDS))
+    if any(p in tid for p in PAPERCLIP_IDS):
+        tri = False
     straight_mm = max(length - 2.0 * r4, 0.0)
-    side = _straight_pack(straight_mm, get_part) or ["C8236"]
-    if tri:
-        side = _with_mid_r4(_straight_pack(straight_mm, get_part) or ["C8236"], get_part)
+    packed = _straight_pack(straight_mm, get_part) or ["C8236"]
+    side = _with_mid_r4(packed, get_part) if tri else packed
     end = _end_pack(get_part)
     seq = list(side) + list(end) + list(side) + list(end)
     if shop is not None or avail:
@@ -240,7 +259,7 @@ def oval_follow(cl, get_part, avail=None, shop=None, profile=None, track_id=None
         "r4_mm": r4,
         "guide_length_mm": length,
         "guide_width_mm": width,
-        "aspect": length / max(width, 1.0),
+        "aspect": aspect,
         "heading_deg": ang,
         "end_pieces": len(end),
         "side_pieces": len(side),
