@@ -1,4 +1,4 @@
-"""NASCAR oval: shrink the red guide to Sport R4, then lay two straights + two 180 R4 ends."""
+"""NASCAR oval: R4 stadium whose length/width matches the red guide."""
 from __future__ import annotations
 
 import math
@@ -76,25 +76,39 @@ def r4_angle_deg(get_part) -> float:
     return 22.5
 
 
-def _bbox(pts):
-    xs = [p[0] for p in pts]
-    ys = [p[1] for p in pts]
-    return min(xs), min(ys), max(xs), max(ys)
+def _pca(pts):
+    n = max(len(pts), 1)
+    cx = sum(p[0] for p in pts) / n
+    cy = sum(p[1] for p in pts) / n
+    sxx = sxy = syy = 0.0
+    for x, y in pts:
+        dx, dy = x - cx, y - cy
+        sxx += dx * dx
+        sxy += dx * dy
+        syy += dy * dy
+    ang = 0.5 * math.atan2(2.0 * sxy, sxx - syy + 1e-12)
+    c, s = math.cos(ang), math.sin(ang)
+    us = []
+    vs = []
+    for x, y in pts:
+        dx, dy = x - cx, y - cy
+        us.append(dx * c + dy * s)
+        vs.append(-dx * s + dy * c)
+    length = max(us) - min(us) if us else 1.0
+    width = max(vs) - min(vs) if vs else 1.0
+    if width > length:
+        length, width = width, length
+        ang += math.pi / 2.0
+    return cx, cy, math.degrees(ang), max(length, 1.0), max(width, 1.0)
 
 
 def scale_guide_to_r4(points, get_part):
     pts = [(float(x), float(y)) for x, y in (points or [])]
     if len(pts) < 4:
         return pts, 1.0
-    minx, miny, maxx, maxy = _bbox(pts)
-    w, h = maxx - minx, maxy - miny
-    short = min(w, h)
-    if short < 1:
-        return pts, 1.0
+    cx, cy, _ang, length, width = _pca(pts)
     r4 = r4_radius_mm(get_part)
-    factor = (2.0 * r4) / short
-    cx = (minx + maxx) * 0.5
-    cy = (miny + maxy) * 0.5
+    factor = (2.0 * r4) / max(width, 1.0)
     out = [((x - cx) * factor, (y - cy) * factor) for x, y in pts]
     return out, factor
 
@@ -114,17 +128,19 @@ def _straight_pack(length_mm: float, get_part) -> list[str]:
         sizes.append((float(part.geometry.length), code))
     sizes.sort(reverse=True)
     if not sizes:
-        return ["C8205"] * max(2, int(max(length_mm, 700) / 350))
+        return ["C8205"] * max(2, int(max(length_mm, 350) / 350))
     out = []
-    left = max(length_mm, sizes[-1][0])
+    left = max(length_mm, 0.0)
+    if left < sizes[-1][0] * 0.5:
+        return [sizes[-1][1]]
     for ln, code in sizes:
         n = int(left // ln)
         out.extend([code] * n)
         left -= n * ln
-    if left > 50 and sizes:
+    if left > 40 and sizes:
         best = min(sizes, key=lambda t: abs(t[0] - left))
         out.append(best[1])
-    return out or [sizes[0][1], sizes[0][1]]
+    return out or [sizes[-1][1]]
 
 
 def _end_pack(get_part) -> list[str]:
@@ -139,16 +155,22 @@ def _end_pack(get_part) -> list[str]:
     return [code] * n
 
 
+def _rot(x, y, deg):
+    a = math.radians(deg)
+    return x * math.cos(a) - y * math.sin(a), x * math.sin(a) + y * math.cos(a)
+
+
 def oval_follow(cl, get_part, avail=None, shop=None, profile=None) -> OvalResult:
     pts = list(getattr(cl, "points", []) or [])
     if len(pts) < 8:
         return OvalResult([], {"nascar_oval": False})
     r4 = r4_radius_mm(get_part)
-    minx, miny, maxx, maxy = _bbox(pts)
-    w, h = maxx - minx, maxy - miny
-    long_mm = max(w, h)
-    straight_mm = max(long_mm - 2.0 * r4, 700.0)
+    cx, cy, ang, length, width = _pca(pts)
+    # After R4 scale, width ~= 2*R4. Straights carry the leftover length.
+    straight_mm = max(length - 2.0 * r4, 0.0)
     side = _straight_pack(straight_mm, get_part)
+    if not side:
+        side = ["C8236"]
     end = _end_pack(get_part)
     seq = list(side) + list(end) + list(side) + list(end)
     if shop is not None or avail:
@@ -167,8 +189,14 @@ def oval_follow(cl, get_part, avail=None, shop=None, profile=None) -> OvalResult
             used[base_id(code)] += 1
         if len(kept) >= 16:
             seq = kept
-    heading0 = 0.0 if w >= h else 90.0
-    start = Pose(float(pts[0][0]), float(pts[0][1]), heading0)
+    # Place first straight on the major axis, offset by R4 on the minor axis.
+    actual_straight = 0.0
+    for code in side:
+        part = get_part(code)
+        if part is not None and isinstance(part.geometry, StraightGeometry):
+            actual_straight += float(part.geometry.length)
+    ox, oy = _rot(-actual_straight * 0.5, -r4, ang)
+    start = Pose(cx + ox, cy + oy, ang)
     built = path_length([get_part(c) for c in seq if get_part(c)]) if seq else 0.0
     poses = compute_track_path([get_part(c) for c in seq if get_part(c)], start=start) if seq else [start]
     end_p = poses[-1]
@@ -178,8 +206,12 @@ def oval_follow(cl, get_part, avail=None, shop=None, profile=None) -> OvalResult
         "n_pieces": len(seq),
         "length_mm": built,
         "pos_mm": pos,
-        "straight_mm": straight_mm,
+        "straight_mm": actual_straight or straight_mm,
         "r4_mm": r4,
+        "guide_length_mm": length,
+        "guide_width_mm": width,
+        "aspect": length / max(width, 1.0),
+        "heading_deg": ang,
         "end_pieces": len(end),
         "side_pieces": len(side),
         "guide_scaled_to_r4": True,
