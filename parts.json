@@ -1,26 +1,40 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
+  "notes": "Official Sport catalogue with parametric centerline geometry.",
   "parts": [
-    {
-      "id": "C8205",
-      "name": "Standard Straight",
-      "type": "straight",
-      "verified_geometry": false,
-      "geometry": null
-    },
-    {
-      "id": "C8206",
-      "name": "Half Straight",
-      "type": "straight",
-      "verified_geometry": false,
-      "geometry": null
-    },
-    {
-      "id": "C8202",
-      "name": "Radius 2 Curve 45 Degree",
-      "type": "curve",
-      "verified_geometry": false,
-      "geometry": null
-    }
+    {"id": "C8205", "name": "Standard Straight", "type": "straight", "quantity": 39, "verified_geometry": true, "geometry": {"kind": "straight", "length": 350.0}, "aliases": ["C160", "MM"], "track_width_mm": 156.0},
+    {"id": "C8207", "name": "Half Straight", "type": "straight", "quantity": 1, "verified_geometry": true, "geometry": {"kind": "straight", "length": 175.0}, "aliases": ["C159"], "track_width_mm": 156.0},
+    {"id": "C8200", "name": "Quarter Straight", "type": "straight", "quantity": 1, "verified_geometry": true, "geometry": {"kind": "straight", "length": 87.0}, "aliases": ["C158"], "track_width_mm": 156.0},
+    {"id": "C8236", "name": "Short Straight 78 mm", "type": "straight", "quantity": 1, "verified_geometry": true, "geometry": {"kind": "straight", "length": 78.0}, "aliases": ["C157"], "track_width_mm": 156.0},
+    {"id": "C8206", "name": "R2 Curve 45", "type": "curve", "quantity": 11, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 294.0, "angle_degrees": 45.0}, "aliases": ["C151"], "track_width_mm": 156.0},
+    {"id": "C8206L", "name": "R2 Curve 45 Left", "type": "curve", "quantity": 11, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 294.0, "angle_degrees": 45.0}, "aliases": ["C151L", "C8206"], "track_width_mm": 156.0},
+    {"id": "C8206R", "name": "R2 Curve 45 Right", "type": "curve", "quantity": 11, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 294.0, "angle_degrees": -45.0}, "aliases": ["C151R", "C8206"], "track_width_mm": 156.0},
+    {"id": "C8204", "name": "R3 Curve 22.5", "type": "curve", "quantity": 26, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 449.0, "angle_degrees": 22.5}, "aliases": ["C153"], "track_width_mm": 156.0},
+    {"id": "C8204L", "name": "R3 Curve 22.5 Left", "type": "curve", "quantity": 26, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 449.0, "angle_degrees": 22.5}, "aliases": ["C153L", "C8204"], "track_width_mm": 156.0},
+    {"id": "C8204R", "name": "R3 Curve 22.5 Right", "type": "curve", "quantity": 26, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 449.0, "angle_degrees": -22.5}, "aliases": ["C153R", "C8204"], "track_width_mm": 156.0},
+    {"id": "C8235", "name": "R4 Curve 22.5", "type": "curve", "quantity": 5, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 608.0, "angle_degrees": 22.5}, "aliases": [], "track_width_mm": 156.0},
+    {"id": "C8235L", "name": "R4 Curve 22.5 Left", "type": "curve", "quantity": 5, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 608.0, "angle_degrees": 22.5}, "aliases": ["C8235"], "track_width_mm": 156.0},
+    {"id": "C8235R", "name": "R4 Curve 22.5 Right", "type": "curve", "quantity": 5, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 608.0, "angle_degrees": -22.5}, "aliases": ["C8235"], "track_width_mm": 156.0},
+    {"id": "C156", "name": "R1 Curve 90", "type": "curve", "quantity": 7, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 137.0, "angle_degrees": 90.0}, "aliases": ["C8201"], "track_width_mm": 156.0},
+    {"id": "C156L", "name": "R1 Curve 90 Left", "type": "curve", "quantity": 7, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 137.0, "angle_degrees": 90.0}, "aliases": ["C156", "C8201L"], "track_width_mm": 156.0},
+    {"id": "C156R", "name": "R1 Curve 90 Right", "type": "curve", "quantity": 7, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 137.0, "angle_degrees": -90.0}, "aliases": ["C156", "C8201R"], "track_width_mm": 156.0},
+    {"id": "C8201", "name": "R1 Hairpin 90", "type": "curve", "quantity": 7, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 137.0, "angle_degrees": 90.0}, "aliases": ["C156"], "track_width_mm": 156.0},
+    {"id": "C8201L", "name": "R1 Hairpin 90 Left", "type": "curve", "quantity": 7, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 137.0, "angle_degrees": 90.0}, "aliases": ["C8201", "C156L"], "track_width_mm": 156.0},
+    {"id": "C8201R", "name": "R1 Hairpin 90 Right", "type": "curve", "quantity": 7, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 137.0, "angle_degrees": -90.0}, "aliases": ["C8201", "C156R"], "track_width_mm": 156.0},
+    {"id": "C8202", "name": "R1 Inner 45", "type": "curve", "quantity": 0, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 137.0, "angle_degrees": 45.0}, "aliases": [], "track_width_mm": 156.0},
+    {"id": "C8202L", "name": "R1 Inner 45 Left", "type": "curve", "quantity": 0, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 137.0, "angle_degrees": 45.0}, "aliases": ["C8202"], "track_width_mm": 156.0},
+    {"id": "C8202R", "name": "R1 Inner 45 Right", "type": "curve", "quantity": 0, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 137.0, "angle_degrees": -45.0}, "aliases": ["C8202"], "track_width_mm": 156.0},
+    {"id": "C8203", "name": "R2 Racing Curve 90", "type": "curve", "quantity": 0, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 294.0, "angle_degrees": 90.0}, "aliases": [], "track_width_mm": 156.0},
+    {"id": "C8203L", "name": "R2 Racing Curve 90 Left", "type": "curve", "quantity": 0, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 294.0, "angle_degrees": 90.0}, "aliases": ["C8203"], "track_width_mm": 156.0},
+    {"id": "C8203R", "name": "R2 Racing Curve 90 Right", "type": "curve", "quantity": 0, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 294.0, "angle_degrees": -90.0}, "aliases": ["C8203"], "track_width_mm": 156.0},
+    {"id": "C8234", "name": "R2 Curve 11.25", "type": "curve", "quantity": 2, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 294.0, "angle_degrees": 11.25}, "aliases": ["C154"], "track_width_mm": 156.0},
+    {"id": "C8234L", "name": "R2 Curve 11.25 Left", "type": "curve", "quantity": 2, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 294.0, "angle_degrees": 11.25}, "aliases": ["C154L", "C8234"], "track_width_mm": 156.0},
+    {"id": "C8234R", "name": "R2 Curve 11.25 Right", "type": "curve", "quantity": 2, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 294.0, "angle_degrees": -11.25}, "aliases": ["C154R", "C8234"], "track_width_mm": 156.0},
+    {"id": "C187", "name": "Banked Curve 45", "type": "curve", "quantity": 7, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 280.0, "angle_degrees": 45.0}, "aliases": [], "track_width_mm": 156.0},
+    {"id": "C187L", "name": "Banked Curve 45 Left", "type": "curve", "quantity": 7, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 280.0, "angle_degrees": 45.0}, "aliases": ["C187"], "track_width_mm": 156.0},
+    {"id": "C187R", "name": "Banked Curve 45 Right", "type": "curve", "quantity": 7, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 280.0, "angle_degrees": -45.0}, "aliases": ["C187"], "track_width_mm": 156.0},
+    {"id": "C8010", "name": "Chicane Curve 22.5", "type": "curve", "quantity": 1, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 294.0, "angle_degrees": 22.5}, "aliases": [], "track_width_mm": 156.0},
+    {"id": "C8010L", "name": "Chicane Curve 22.5 Left", "type": "curve", "quantity": 1, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 294.0, "angle_degrees": 22.5}, "aliases": ["C8010"], "track_width_mm": 156.0},
+    {"id": "C8010R", "name": "Chicane Curve 22.5 Right", "type": "curve", "quantity": 1, "verified_geometry": true, "geometry": {"kind": "curve", "radius": 294.0, "angle_degrees": -22.5}, "aliases": ["C8010"], "track_width_mm": 156.0}
   ]
 }

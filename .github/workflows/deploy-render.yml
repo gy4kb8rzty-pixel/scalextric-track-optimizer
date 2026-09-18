@@ -1,0 +1,28 @@
+name: Deploy Render
+
+on:
+  push:
+    branches: [monza-optimizer-v1]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy hook
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${HOOK}" ]; then
+            echo "RENDER_DEPLOY_HOOK_URL secret is missing"
+            exit 1
+          fi
+          code=$(curl -sS -o /tmp/render-hook.json -w "%{http_code}" -X POST "$HOOK")
+          echo "Render hook HTTP $code"
+          cat /tmp/render-hook.json || true
+          echo
+          case "$code" in
+            200|201|202) exit 0 ;;
+            *) echo "Hook failed"; exit 1 ;;
+          esac
