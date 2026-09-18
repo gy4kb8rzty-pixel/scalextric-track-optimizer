@@ -1,4 +1,4 @@
-"""NASCAR oval: R4 stadium; tri-ovals close by cutting each end 22.5."""
+"""NASCAR oval: R4 stadium; tri-ovals search end count so the long side meets."""
 from __future__ import annotations
 
 import math
@@ -181,13 +181,6 @@ def _straight_pack(length_mm: float, get_part) -> list[str]:
     return out or [sizes[-1][1]]
 
 
-def _end_pack(get_part, turn_deg: float = 180.0) -> list[str]:
-    ang = r4_angle_deg(get_part)
-    n = max(3, int(round(float(turn_deg) / max(ang, 10.0))))
-    code = _short_r4(get_part)
-    return [code] * n
-
-
 def _short_r4(get_part) -> str:
     for code in ("C8235L", "C8235R"):
         try:
@@ -198,8 +191,11 @@ def _short_r4(get_part) -> str:
     return SHORT_R4
 
 
+def _end_n(get_part, n: int) -> list[str]:
+    return [_short_r4(get_part)] * max(3, int(n))
+
+
 def _tri_side(straight_mm: float, get_part) -> list[str]:
-    """Two equal half-straights with the shortest R4 between them."""
     kink = _short_r4(get_part)
     half = _straight_pack(max(straight_mm * 0.5, 80.0), get_part) or ["C8236"]
     return list(half) + [kink] + list(half)
@@ -219,38 +215,38 @@ def _gap(seq, start, get_part):
     return math.hypot(end_p.x - start.x, end_p.y - start.y), end_p
 
 
-def _close_on_straight(seq, start, get_part) -> list[str]:
-    """Pad the first long side with short straights until the join meets."""
-    sizes = []
+def _pads(get_part):
+    out = []
     for code in ("C8236", "C8200", "C8207", "C8205"):
         part = get_part(code)
         if part is not None and isinstance(part.geometry, StraightGeometry):
-            sizes.append((float(part.geometry.length), code))
-    if not sizes:
-        return seq
-    sizes.sort()
-    best = list(seq)
-    best_gap, _ = _gap(best, start, get_part)
-    for _ in range(8):
-        if best_gap < 35.0:
-            break
-        improved = False
-        for _ln, code in sizes:
-            trial = [code] + list(best)
-            g, _ = _gap(trial, start, get_part)
-            if g + 8.0 < best_gap:
-                best, best_gap = trial, g
-                improved = True
-                break
-            trial = list(best) + [code]
-            g, _ = _gap(trial, start, get_part)
-            if g + 8.0 < best_gap:
-                best, best_gap = trial, g
-                improved = True
-                break
-        if not improved:
-            break
-    return best
+            out.append(code)
+    return out or ["C8236"]
+
+
+def _close_tri(side, get_part, start) -> tuple[list[str], int, float]:
+    """Human join: same two longs, vary how many R4 sit in each end, pad one long."""
+    pads = _pads(get_part)
+    best_seq = list(side) + _end_n(get_part, 7) + list(side) + _end_n(get_part, 7)
+    best_gap, _ = _gap(best_seq, start, get_part)
+    best_n = 7
+    for n1 in (6, 7, 8):
+        for n2 in (6, 7, 8):
+            end_a = _end_n(get_part, n1)
+            end_b = _end_n(get_part, n2)
+            base = list(side) + end_a + list(side) + end_b
+            candidates = [base]
+            for p in pads:
+                candidates.append([p] + base)
+                candidates.append(list(side) + [p] + end_a + list(side) + end_b)
+                candidates.append(list(side) + end_a + [p] + list(side) + end_b)
+            for seq in candidates:
+                g, _ = _gap(seq, start, get_part)
+                if g < best_gap:
+                    best_seq, best_gap, best_n = seq, g, n1
+                    if g < 30.0:
+                        return best_seq, best_n, best_gap
+    return best_seq, best_n, best_gap
 
 
 def oval_follow(cl, get_part, avail=None, shop=None, profile=None, track_id=None, **_kwargs) -> OvalResult:
@@ -267,40 +263,24 @@ def oval_follow(cl, get_part, avail=None, shop=None, profile=None, track_id=None
         tri = False
     straight_mm = max(length - 2.0 * r4, 0.0)
     if tri:
-        # Mid R4 on each long side. Each end loses that same 22.5 so 360 closes.
         side = _tri_side(straight_mm, get_part)
-        end = _end_pack(get_part, turn_deg=180.0 - mid_ang)
     else:
         side = _straight_pack(straight_mm, get_part) or ["C8236"]
-        end = _end_pack(get_part, turn_deg=180.0)
-    seq = list(side) + list(end) + list(side) + list(end)
-    if shop is not None or avail:
-        used = Counter()
-        avail = avail or {}
-        kept = []
-        for code in seq:
-            ok = True
-            if shop is not None:
-                ok = may_place(code, used, avail, shop)
-            elif used[base_id(code)] >= avail.get(base_id(code), 999):
-                ok = False
-            if not ok:
-                continue
-            kept.append(code)
-            used[base_id(code)] += 1
-        if len(kept) >= 16:
-            seq = kept
     actual_straight = sum(_part_len(c, get_part) for c in side)
     ox, oy = _rot(-actual_straight * 0.5, -r4, ang)
     start = Pose(cx + ox, cy + oy, ang)
     if tri:
-        seq = _close_on_straight(seq, start, get_part)
+        seq, end_n, pos = _close_tri(side, get_part, start)
+        end_pieces = end_n
+    else:
+        end = _end_n(get_part, max(4, int(round(180.0 / max(mid_ang, 10.0)))))
+        seq = list(side) + list(end) + list(side) + list(end)
+        pos, _ = _gap(seq, start, get_part)
+        end_pieces = len(end)
     built = path_length([get_part(c) for c in seq if get_part(c)]) if seq else 0.0
-    pos, _end = _gap(seq, start, get_part)
     metrics = {
         "nascar_oval": True,
         "tri_oval": bool(tri),
-        "tri_end_deg": (180.0 - mid_ang) if tri else 180.0,
         "n_pieces": len(seq),
         "length_mm": built,
         "pos_mm": pos,
@@ -311,7 +291,7 @@ def oval_follow(cl, get_part, avail=None, shop=None, profile=None, track_id=None
         "guide_width_mm": width,
         "aspect": aspect,
         "heading_deg": ang,
-        "end_pieces": len(end),
+        "end_pieces": end_pieces,
         "side_pieces": len(side),
         "guide_scaled_to_r4": True,
     }
