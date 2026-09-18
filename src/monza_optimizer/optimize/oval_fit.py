@@ -1,4 +1,4 @@
-"""NASCAR oval: R4 stadium whose length/width matches the red guide."""
+"""NASCAR oval: R4 stadium; selected tracks get a 22.5 R4 mid-stretch."""
 from __future__ import annotations
 
 import math
@@ -21,9 +21,14 @@ OVAL_IDS = {
     "homestead_miami",
 }
 
+TRI_OVAL_IDS = {
+    "kansas", "phoenix", "daytona", "talladega",
+}
+
 STRAIGHTS = ("C8205", "C8207", "C8200", "C8236")
 R4_CODES = ("C8235L", "C8235R", "C8235")
 DEFAULT_R4_MM = 454.0
+SHORT_R4 = "C8235L"
 
 
 def is_nascar_oval(track_id: str) -> bool:
@@ -50,6 +55,13 @@ def is_nascar_oval(track_id: str) -> bool:
     if any(k in kind for k in ("road", "street")):
         return False
     return kind in {"oval", "superspeedway", "short_track", "speedway", ""} or "speedway" in name
+
+
+def is_tri_oval(track_id: str) -> bool:
+    tid = str(track_id or "").strip().lower().replace("-", "_")
+    if tid in TRI_OVAL_IDS:
+        return True
+    return any(key in tid for key in TRI_OVAL_IDS)
 
 
 def r4_radius_mm(get_part) -> float:
@@ -88,8 +100,7 @@ def _pca(pts):
         syy += dy * dy
     ang = 0.5 * math.atan2(2.0 * sxy, sxx - syy + 1e-12)
     c, s = math.cos(ang), math.sin(ang)
-    us = []
-    vs = []
+    us, vs = [], []
     for x, y in pts:
         dx, dy = x - cx, y - cy
         us.append(dx * c + dy * s)
@@ -155,22 +166,41 @@ def _end_pack(get_part) -> list[str]:
     return [code] * n
 
 
+def _short_r4(get_part) -> str:
+    for code in ("C8235L", "C8235R"):
+        try:
+            if get_part(code) is not None:
+                return code
+        except Exception:
+            continue
+    return SHORT_R4
+
+
+def _with_mid_r4(side: list[str], get_part) -> list[str]:
+    kink = _short_r4(get_part)
+    if not side:
+        return [kink]
+    mid = max(1, len(side) // 2)
+    return list(side[:mid]) + [kink] + list(side[mid:])
+
+
 def _rot(x, y, deg):
     a = math.radians(deg)
     return x * math.cos(a) - y * math.sin(a), x * math.sin(a) + y * math.cos(a)
 
 
-def oval_follow(cl, get_part, avail=None, shop=None, profile=None) -> OvalResult:
+def oval_follow(cl, get_part, avail=None, shop=None, profile=None, track_id=None, **_kwargs) -> OvalResult:
     pts = list(getattr(cl, "points", []) or [])
     if len(pts) < 8:
         return OvalResult([], {"nascar_oval": False})
     r4 = r4_radius_mm(get_part)
     cx, cy, ang, length, width = _pca(pts)
-    # After R4 scale, width ~= 2*R4. Straights carry the leftover length.
+    tid = str(track_id or "").strip().lower()
+    tri = is_tri_oval(tid) or (not tid and length / max(width, 1.0) >= 1.5)
     straight_mm = max(length - 2.0 * r4, 0.0)
-    side = _straight_pack(straight_mm, get_part)
-    if not side:
-        side = ["C8236"]
+    side = _straight_pack(straight_mm, get_part) or ["C8236"]
+    if tri:
+        side = _with_mid_r4(_straight_pack(straight_mm, get_part) or ["C8236"], get_part)
     end = _end_pack(get_part)
     seq = list(side) + list(end) + list(side) + list(end)
     if shop is not None or avail:
@@ -189,7 +219,6 @@ def oval_follow(cl, get_part, avail=None, shop=None, profile=None) -> OvalResult
             used[base_id(code)] += 1
         if len(kept) >= 16:
             seq = kept
-    # Place first straight on the major axis, offset by R4 on the minor axis.
     actual_straight = 0.0
     for code in side:
         part = get_part(code)
@@ -203,6 +232,7 @@ def oval_follow(cl, get_part, avail=None, shop=None, profile=None) -> OvalResult
     pos = math.hypot(end_p.x - start.x, end_p.y - start.y)
     metrics = {
         "nascar_oval": True,
+        "tri_oval": bool(tri),
         "n_pieces": len(seq),
         "length_mm": built,
         "pos_mm": pos,
