@@ -201,7 +201,7 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
         try:
             from monza_optimizer.optimize.oval_fit import is_nascar_oval, oval_follow
             if is_nascar_oval(req.track_id):
-                ov = oval_follow(cl, get_part, avail, shop, profile)
+                ov = oval_follow(cl, get_part, avail, shop, profile, track_id=req.track_id)
                 if ov.sequence and len(ov.sequence) >= 20:
                     seq, metrics, strategy = list(ov.sequence), dict(ov.metrics), "nascar_oval"
                     used_oval = True
