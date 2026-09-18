@@ -1,15 +1,12 @@
-"""NASCAR oval: R4 stadium; tri-ovals search end count so the long side meets."""
+"""NASCAR oval / rounded-rect / tri-oval builders."""
 from __future__ import annotations
 
 import math
-from collections import Counter
 from dataclasses import dataclass, field
 
 from monza_optimizer.catalog.geometry_types import CurveGeometry, StraightGeometry
-from monza_optimizer.catalog.parts import base_id
 from monza_optimizer.geometry.path import compute_track_path, path_length
 from monza_optimizer.geometry.pose import Pose
-from monza_optimizer.optimize.accuracy_levels import may_place
 from monza_optimizer.reference import list_tracks
 
 OVAL_IDS = {
@@ -19,7 +16,7 @@ OVAL_IDS = {
     "martinsville", "phoenix", "dover", "new_hampshire", "iowa",
     "world_wide_technology", "wwt", "gateway_oval", "nashville_superspeedway",
     "homestead_miami", "charlotte", "charlotte_motor_speedway", "cms",
-    "chicago", "las_vegas", "vegas",
+    "chicago", "las_vegas", "vegas", "indy", "ims",
 }
 
 TRI_OVAL_IDS = {
@@ -28,8 +25,12 @@ TRI_OVAL_IDS = {
     "nashville", "nashville_superspeedway",
     "charlotte", "charlotte_motor_speedway", "cms",
     "atlanta", "texas", "michigan", "homestead", "homestead_miami",
-    "kentucky", "fontana", "pocono", "indianapolis",
+    "kentucky", "fontana", "pocono",
     "new_hampshire", "iowa", "world_wide_technology", "wwt", "gateway_oval",
+}
+
+RECT_IDS = {
+    "indianapolis", "indy", "ims", "indianapolis_motor_speedway",
 }
 
 PAPERCLIP_IDS = {
@@ -46,7 +47,7 @@ def is_nascar_oval(track_id: str) -> bool:
     tid = str(track_id or "").strip().lower().replace("-", "_")
     if not tid or "roval" in tid:
         return False
-    if tid in OVAL_IDS or tid.startswith("homestead") or tid.startswith("charlotte"):
+    if tid in OVAL_IDS or tid.startswith("homestead") or tid.startswith("charlotte") or "indianap" in tid:
         return True
     try:
         row = next((r for r in list_tracks() if str(r.get("id") or "").lower().replace("-", "_") == tid), None)
@@ -59,9 +60,7 @@ def is_nascar_oval(track_id: str) -> bool:
     name = str(row.get("name") or "").lower()
     if "roval" in name or "roval" in kind:
         return False
-    if any(k in name for k in ("homestead", "charlotte motor", "chicagoland", "las vegas")):
-        return True
-    if tid in OVAL_IDS:
+    if "indianap" in name or tid in OVAL_IDS:
         return True
     if "nascar" not in series:
         return False
@@ -70,9 +69,14 @@ def is_nascar_oval(track_id: str) -> bool:
     return kind in {"oval", "superspeedway", "short_track", "speedway", ""} or "speedway" in name
 
 
+def is_rounded_rect(track_id: str) -> bool:
+    tid = str(track_id or "").strip().lower().replace("-", "_")
+    return tid in RECT_IDS or "indianap" in tid
+
+
 def is_tri_oval(track_id: str) -> bool:
     tid = str(track_id or "").strip().lower().replace("-", "_")
-    if not tid or "roval" in tid:
+    if not tid or "roval" in tid or is_rounded_rect(tid):
         return False
     if any(p == tid or p in tid for p in PAPERCLIP_IDS):
         return False
@@ -105,6 +109,12 @@ def r4_angle_deg(get_part) -> float:
     return 22.5
 
 
+def _bbox(pts):
+    xs = [p[0] for p in pts]
+    ys = [p[1] for p in pts]
+    return min(xs), min(ys), max(xs), max(ys)
+
+
 def _pca(pts):
     n = max(len(pts), 1)
     cx = sum(p[0] for p in pts) / n
@@ -130,13 +140,14 @@ def _pca(pts):
     return cx, cy, math.degrees(ang), max(length, 1.0), max(width, 1.0)
 
 
-def scale_guide_to_r4(points, get_part):
+def scale_guide_to_r4(points, get_part, track_id=None):
     pts = [(float(x), float(y)) for x, y in (points or [])]
     if len(pts) < 4:
         return pts, 1.0
     cx, cy, _ang, length, width = _pca(pts)
     r4 = r4_radius_mm(get_part)
-    factor = (2.0 * r4) / max(width, 1.0)
+    extra = 350.0 if is_rounded_rect(track_id) else 0.0
+    factor = (2.0 * r4 + extra) / max(width, 1.0)
     out = [((x - cx) * factor, (y - cy) * factor) for x, y in pts]
     return out, factor
 
@@ -166,10 +177,10 @@ def _straight_pack(length_mm: float, get_part) -> list[str]:
         sizes.append((float(part.geometry.length), code))
     sizes.sort(reverse=True)
     if not sizes:
-        return ["C8205"] * max(2, int(max(length_mm, 350) / 350))
+        return ["C8205"] * max(1, int(max(length_mm, 350) / 350))
     out = []
     left = max(length_mm, 0.0)
-    if left < sizes[-1][0] * 0.5:
+    if left < sizes[-1][0] * 0.45:
         return [sizes[-1][1]]
     for ln, code in sizes:
         n = int(left // ln)
@@ -195,6 +206,12 @@ def _end_n(get_part, n: int) -> list[str]:
     return [_short_r4(get_part)] * max(3, int(n))
 
 
+def _corner90(get_part) -> list[str]:
+    ang = r4_angle_deg(get_part)
+    n = max(3, int(round(90.0 / max(ang, 10.0))))
+    return _end_n(get_part, n)
+
+
 def _tri_side(straight_mm: float, get_part) -> list[str]:
     kink = _short_r4(get_part)
     half = _straight_pack(max(straight_mm * 0.5, 80.0), get_part) or ["C8236"]
@@ -215,38 +232,14 @@ def _gap(seq, start, get_part):
     return math.hypot(end_p.x - start.x, end_p.y - start.y), end_p
 
 
-def _pads(get_part):
-    out = []
-    for code in ("C8236", "C8200", "C8207", "C8205"):
-        part = get_part(code)
-        if part is not None and isinstance(part.geometry, StraightGeometry):
-            out.append(code)
-    return out or ["C8236"]
-
-
-def _close_tri(side, get_part, start) -> tuple[list[str], int, float]:
-    """Human join: same two longs, vary how many R4 sit in each end, pad one long."""
-    pads = _pads(get_part)
-    best_seq = list(side) + _end_n(get_part, 7) + list(side) + _end_n(get_part, 7)
-    best_gap, _ = _gap(best_seq, start, get_part)
-    best_n = 7
-    for n1 in (6, 7, 8):
-        for n2 in (6, 7, 8):
-            end_a = _end_n(get_part, n1)
-            end_b = _end_n(get_part, n2)
-            base = list(side) + end_a + list(side) + end_b
-            candidates = [base]
-            for p in pads:
-                candidates.append([p] + base)
-                candidates.append(list(side) + [p] + end_a + list(side) + end_b)
-                candidates.append(list(side) + end_a + [p] + list(side) + end_b)
-            for seq in candidates:
-                g, _ = _gap(seq, start, get_part)
-                if g < best_gap:
-                    best_seq, best_gap, best_n = seq, g, n1
-                    if g < 30.0:
-                        return best_seq, best_n, best_gap
-    return best_seq, best_n, best_gap
+def _snap_heading(pts, pca_ang):
+    minx, miny, maxx, maxy = _bbox(pts)
+    w, h = maxx - minx, maxy - miny
+    if h > w * 1.12:
+        return 90.0
+    if w > h * 1.12:
+        return 0.0
+    return pca_ang
 
 
 def oval_follow(cl, get_part, avail=None, shop=None, profile=None, track_id=None, **_kwargs) -> OvalResult:
@@ -255,44 +248,76 @@ def oval_follow(cl, get_part, avail=None, shop=None, profile=None, track_id=None
         return OvalResult([], {"nascar_oval": False})
     r4 = r4_radius_mm(get_part)
     mid_ang = r4_angle_deg(get_part)
-    cx, cy, ang, length, width = _pca(pts)
+    cx, cy, pca_ang, length, width = _pca(pts)
     tid = str(track_id or "").strip().lower()
     aspect = length / max(width, 1.0)
-    tri = is_tri_oval(tid) or (not tid and aspect >= 1.35)
+    rect = is_rounded_rect(tid)
+    tri = (not rect) and (is_tri_oval(tid) or (not tid and aspect >= 1.35))
     if any(p in tid for p in PAPERCLIP_IDS):
         tri = False
-    straight_mm = max(length - 2.0 * r4, 0.0)
-    if tri:
-        side = _tri_side(straight_mm, get_part)
+    ang = _snap_heading(pts, pca_ang) if rect else pca_ang
+    long_s = max(length - 2.0 * r4, 80.0)
+    short_s = max(width - 2.0 * r4, 80.0)
+    if rect:
+        long_side = _straight_pack(long_s, get_part) or ["C8205"]
+        short_side = _straight_pack(short_s, get_part) or ["C8236"]
+        corner = _corner90(get_part)
+        seq = list(long_side) + corner + list(short_side) + corner + list(long_side) + corner + list(short_side) + corner
+        kind = "rounded_rect"
+        actual = sum(_part_len(c, get_part) for c in long_side)
+        ox, oy = _rot(-actual * 0.5, -width * 0.5, ang)
+        start = Pose(cx + ox, cy + oy, ang)
+        pos, _ = _gap(seq, start, get_part)
+        end_pieces = len(corner)
+        side_n = len(long_side)
+    elif tri:
+        side = _tri_side(long_s, get_part)
+        actual = sum(_part_len(c, get_part) for c in side)
+        ox, oy = _rot(-actual * 0.5, -r4, ang)
+        start = Pose(cx + ox, cy + oy, ang)
+        from_loop = True
+        seq = list(side) + _end_n(get_part, 7) + list(side) + _end_n(get_part, 7)
+        pos, _ = _gap(seq, start, get_part)
+        best = seq
+        best_g = pos
+        for n1 in (6, 7, 8):
+            for n2 in (6, 7, 8):
+                trial = list(side) + _end_n(get_part, n1) + list(side) + _end_n(get_part, n2)
+                g, _ = _gap(trial, start, get_part)
+                if g < best_g:
+                    best, best_g = trial, g
+        seq, pos = best, best_g
+        kind = "tri_oval"
+        end_pieces = 7
+        side_n = len(side)
     else:
-        side = _straight_pack(straight_mm, get_part) or ["C8236"]
-    actual_straight = sum(_part_len(c, get_part) for c in side)
-    ox, oy = _rot(-actual_straight * 0.5, -r4, ang)
-    start = Pose(cx + ox, cy + oy, ang)
-    if tri:
-        seq, end_n, pos = _close_tri(side, get_part, start)
-        end_pieces = end_n
-    else:
+        side = _straight_pack(long_s, get_part) or ["C8236"]
         end = _end_n(get_part, max(4, int(round(180.0 / max(mid_ang, 10.0)))))
         seq = list(side) + list(end) + list(side) + list(end)
+        actual = sum(_part_len(c, get_part) for c in side)
+        ox, oy = _rot(-actual * 0.5, -r4, ang)
+        start = Pose(cx + ox, cy + oy, ang)
         pos, _ = _gap(seq, start, get_part)
+        kind = "stadium"
         end_pieces = len(end)
+        side_n = len(side)
     built = path_length([get_part(c) for c in seq if get_part(c)]) if seq else 0.0
     metrics = {
         "nascar_oval": True,
-        "tri_oval": bool(tri),
+        "tri_oval": kind == "tri_oval",
+        "rounded_rect": kind == "rounded_rect",
+        "oval_kind": kind,
         "n_pieces": len(seq),
         "length_mm": built,
         "pos_mm": pos,
         "closed": pos < 80.0,
-        "straight_mm": actual_straight or straight_mm,
         "r4_mm": r4,
         "guide_length_mm": length,
         "guide_width_mm": width,
         "aspect": aspect,
         "heading_deg": ang,
         "end_pieces": end_pieces,
-        "side_pieces": len(side),
+        "side_pieces": side_n,
         "guide_scaled_to_r4": True,
     }
     return OvalResult(seq, metrics)
