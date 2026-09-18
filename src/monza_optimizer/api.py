@@ -175,7 +175,7 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
     try:
         from monza_optimizer.optimize.oval_fit import is_nascar_oval, scale_guide_to_r4
         if profile.letter != "A" and is_nascar_oval(req.track_id):
-            official, _f = scale_guide_to_r4(official, get_part)
+            official, _f = scale_guide_to_r4(official, get_part, req.track_id)
             if len(official) > 1:
                 target_mm = sum(
                     math.hypot(official[i + 1][0] - official[i][0], official[i + 1][1] - official[i][1])
