@@ -110,7 +110,7 @@ def build_output_pack(
             }
         if "pdf" in want:
             text = pack.get("lay", {}).get("text") or ""
-            pdf = render_pdf(sequence, get_part, title, text, outline_points=outline_points)
+            pdf = render_pdf(sequence, get_part, title, text, outline_points=outline_points, inventory=inventory)
             files["pdf"] = {
                 "filename": _fname(title, "pdf"),
                 "media_type": "application/pdf",
