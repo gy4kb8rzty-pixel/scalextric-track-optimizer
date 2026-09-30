@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "pitch": "Lean Budget · Budget · Detailed · Full Accuracy",
+  "levels": [
+    {
+      "letter": "A",
+      "id": "lean_budget",
+      "label": "Lean Budget",
+      "pitch": "Fewest pieces. The silhouette of the circuit. The small living room.",
+      "inventory_only": true,
+      "unlimited": false,
+      "max_shop_pieces": 0,
+      "max_shop_skus": 0,
+      "target_length_mm": 14000,
+      "strategy": "sequential"
+    },
+    {
+      "letter": "B",
+      "id": "budget",
+      "label": "Budget",
+      "pitch": "Only their inventory. A short missing-parts list — the smallest cart that finishes the lap.",
+      "inventory_only": false,
+      "unlimited": false,
+      "max_shop_pieces": 8,
+      "max_shop_skus": 3,
+      "target_length_mm": 18000,
+      "strategy": "hybrid"
+    },
+    {
+      "letter": "C",
+      "id": "detailed",
+      "label": "Detailed",
+      "pitch": "Hairpins first. Closer to the real outline. Full bill of materials plus a shopping list.",
+      "inventory_only": false,
+      "unlimited": false,
+      "max_shop_pieces": 40,
+      "max_shop_skus": 12,
+      "target_length_mm": 25000,
+      "strategy": "hybrid"
+    },
+    {
+      "letter": "D",
+      "id": "full_accuracy",
+      "label": "Full Accuracy",
+      "pitch": "Unlimited official catalogue. The ceiling — and a complete SKU map for the collector.",
+      "inventory_only": false,
+      "unlimited": true,
+      "max_shop_pieces": 10000,
+      "max_shop_skus": 10000,
+      "target_length_mm": 32000,
+      "strategy": "hybrid"
+    }
+  ]
+}

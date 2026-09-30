@@ -1,16 +1,51 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "scalextric-track-optimizer"
-version = "0.1.0"
-description = "Phase 1 foundation for a generic Scalextric track optimizer."
+name = "monza-optimizer"
+version = "1.0.0"
+description = "Monza Optimizer 1.0 — Scalextric track layout optimizer matching real circuit outlines"
 readme = "README.md"
 requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Monza Optimizer Team" }]
+keywords = ["scalextric", "slot-car", "track", "optimizer", "monza"]
+dependencies = [
+    "numpy>=1.26",
+]
 
 [project.optional-dependencies]
-dev = ["pytest>=8"]
+dev = [
+    "pytest>=8",
+    "httpx>=0.27",
+]
+gui = [
+    "PySide6>=6.6",
+    "pytest-qt>=4.4",
+    "pyinstaller>=6.0",
+]
+api = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+]
+export = [
+    "Pillow>=10.0",
+    "reportlab>=4.0",
+]
+
+[project.scripts]
+monza-optimizer = "monza_optimizer.app:main"
+
+[project.gui-scripts]
+monza-optimizer-gui = "monza_optimizer.app:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["monza_optimizer*", "scalextric_optimizer*"]
+
+[tool.setuptools.package-data]
+monza_optimizer = ["resources/*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
