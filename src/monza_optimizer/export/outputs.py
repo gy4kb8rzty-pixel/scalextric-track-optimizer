@@ -11,6 +11,11 @@ from monza_optimizer.export.lay_list import lay_payload
 from monza_optimizer.export.plan_view import render_pdf, render_png, render_svg
 from monza_optimizer.export.threemf_builder import build_track_3mf
 
+BLACK_PIECE_NOTE = (
+    "Black pieces are missing from your box. "
+    "They are the parts listed on the shopping list."
+)
+
 OUTPUT_MENU = [
     {
         "id": "shopping",
@@ -43,13 +48,14 @@ OUTPUT_MENU = [
         "label": "Plan PDF",
         "default": False,
         "kind": "application/pdf",
+        "note": BLACK_PIECE_NOTE,
     },
     {
         "id": "3mf",
         "label": "3D Builder 3MF",
         "default": True,
         "kind": "model/3mf",
-        "note": "Default export. Owned pieces keep SKU colour; pieces still to buy are black when inventory is set.",
+        "note": BLACK_PIECE_NOTE,
     },
 ]
 
@@ -87,8 +93,17 @@ def build_output_pack(
     inventory: dict[str, int] | None = None,
 ) -> dict[str, Any]:
     want = normalize_wanted(wanted)
-    pack: dict[str, Any] = {"wanted": want, "available": [r["id"] for r in OUTPUT_MENU]}
+    pack: dict[str, Any] = {
+        "wanted": want,
+        "available": [r["id"] for r in OUTPUT_MENU],
+        "colour_note": BLACK_PIECE_NOTE,
+    }
     if "shopping" in want and shopping is not None:
+        notes = list(shopping.get("notes") or [])
+        if inventory and BLACK_PIECE_NOTE not in notes:
+            notes.append(BLACK_PIECE_NOTE)
+            shopping = dict(shopping)
+            shopping["notes"] = notes
         pack["shopping"] = shopping
     if "lay" in want or "pdf" in want:
         pack["lay"] = lay_payload(list(sequence), get_part, title=f"Lay-list - {title}")
@@ -115,6 +130,7 @@ def build_output_pack(
                 "filename": _fname(title, "pdf"),
                 "media_type": "application/pdf",
                 "base64": base64.b64encode(pdf).decode("ascii"),
+                "note": BLACK_PIECE_NOTE,
             }
         if "3mf" in want:
             with TemporaryDirectory() as tmp:
@@ -132,6 +148,7 @@ def build_output_pack(
                 "filename": _fname(title, "3mf"),
                 "media_type": "model/3mf",
                 "base64": base64.b64encode(blob).decode("ascii"),
+                "note": BLACK_PIECE_NOTE,
             }
     pack["files"] = files
     return pack
