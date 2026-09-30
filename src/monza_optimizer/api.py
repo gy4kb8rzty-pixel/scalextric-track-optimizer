@@ -320,6 +320,7 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
     pack = build_output_pack(
         seq, get_part, title=title, wanted=req.outputs, shopping=basket,
         include_binary=bool(req.outputs), outline_points=official,
+        inventory=shopping_inv,
     )
     return OptimizeResult(
         sequence=seq, bom=bom, metrics=metrics, track_id=req.track_id, strategy=strategy,
