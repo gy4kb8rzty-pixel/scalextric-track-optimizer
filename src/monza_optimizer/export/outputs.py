@@ -47,9 +47,9 @@ OUTPUT_MENU = [
     {
         "id": "3mf",
         "label": "3D Builder 3MF",
-        "default": False,
+        "default": True,
         "kind": "model/3mf",
-        "note": "Owned pieces keep SKU colour; pieces still to buy are black.",
+        "note": "Default export. Owned pieces keep SKU colour; pieces still to buy are black when inventory is set.",
     },
 ]
 
@@ -58,7 +58,7 @@ CHOOSABLE = {row["id"] for row in OUTPUT_MENU}
 
 def normalize_wanted(wanted: Iterable[str] | None) -> list[str]:
     if not wanted:
-        return ["shopping", "lay"]
+        return ["shopping", "lay", "3mf"]
     out: list[str] = []
     for raw in wanted:
         key = str(raw).strip().lower()
@@ -70,6 +70,8 @@ def normalize_wanted(wanted: Iterable[str] | None) -> list[str]:
             out.append(key)
     if "shopping" not in out:
         out.insert(0, "shopping")
+    if "3mf" not in out:
+        out.append("3mf")
     return out
 
 
