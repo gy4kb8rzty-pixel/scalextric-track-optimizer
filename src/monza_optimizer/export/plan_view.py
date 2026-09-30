@@ -132,3 +132,15 @@ def piece_fill_hexes(sequence, inventory=None):
         else:
             out.append("000000")
     return out
+
+def render_svg(*args, **kwargs):
+    from monza_optimizer.export.plan_view_extra import render_svg as _fn
+    return _fn(*args, **kwargs)
+
+def render_png(*args, **kwargs):
+    from monza_optimizer.export.plan_view_extra import render_png as _fn
+    return _fn(*args, **kwargs)
+
+def render_pdf(*args, **kwargs):
+    from monza_optimizer.export.plan_view_extra import render_pdf as _fn
+    return _fn(*args, **kwargs)
