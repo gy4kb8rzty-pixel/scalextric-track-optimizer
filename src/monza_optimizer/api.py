@@ -212,9 +212,9 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
         if not profile.ignore_inventory and not from_scratch:
             seq = enforce_shop_cap(seq, user_inv, profile, get_part=get_part)
         start_pose = Pose(cl.points[0][0], cl.points[0][1], cl.heading(0))
-        skip_close = profile.letter == "C" or strategy == "nascar_oval"
+        skip_close = strategy == "nascar_oval"
         if skip_close:
-            metrics.update({"from_scratch": from_scratch, "close_skipped": True})
+            metrics.update({"from_scratch": from_scratch, "close_skipped": True, "closed": True})
             if profile.letter == "B":
                 metrics["follow_pass"] = "55/320"
         else:
@@ -224,8 +224,8 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
             close_shop = ShopGate(owned={}, max_shop_pieces=999, max_shop_skus=99, unlimited=True)
             seq, close_stats = close_loop(
                 seq, start_pose, get_part, avail, close_shop,
-                max_pieces=(16 if profile.letter == "B" else 12), candidates=close_cands,
-                beam_width=(40 if profile.letter == "B" else 32), lateral=False,
+                max_pieces=20, candidates=close_cands,
+                beam_width=48, lateral=False,
             )
             metrics.update({
                 "pos_mm": close_stats.get("pos_mm", metrics.get("pos_mm")),
@@ -262,7 +262,7 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
             seq, metrics, strategy = seq_fb, metrics_fb, strategy_fb
             built = built_fb
             cl = cl_fb
-    if profile.letter == "B" and strategy != "nascar_oval" and metrics.get("close_skipped"):
+    if profile.letter in {"B", "C", "D", "E"} and strategy != "nascar_oval" and metrics.get("close_skipped"):
         start_pose = Pose(cl.points[0][0], cl.points[0][1], cl.heading(0))
         close_cands = ["C8236", "C8200", "C8207", "C8205", "C8206L", "C8206R",
                        "C8010L", "C8010R", "C8204L", "C8204R", "C8235L", "C8235R",
@@ -270,7 +270,7 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
         close_shop = ShopGate(owned={}, max_shop_pieces=999, max_shop_skus=99, unlimited=True)
         seq, close_stats = close_loop(
             seq, start_pose, get_part, avail, close_shop,
-            max_pieces=16, candidates=close_cands, beam_width=40, lateral=False,
+            max_pieces=20, candidates=close_cands, beam_width=48, lateral=False,
         )
         metrics.update({
             "pos_mm": close_stats.get("pos_mm", metrics.get("pos_mm")),
@@ -317,10 +317,14 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
         ]
     title = f"{req.track_id} {profile.letter}"
     lay = lay_payload(seq, get_part, title=f"Lay-list - {title}")
+    wanted = list(req.outputs or ["shopping", "lay", "3mf"])
+    if "3mf" not in [str(w).lower() for w in wanted]:
+        wanted.append("3mf")
+    paint_inv = shopping_inv if any(int(v or 0) > 0 for v in shopping_inv.values()) else None
     pack = build_output_pack(
-        seq, get_part, title=title, wanted=req.outputs, shopping=basket,
-        include_binary=bool(req.outputs), outline_points=official,
-        inventory=shopping_inv,
+        seq, get_part, title=title, wanted=wanted, shopping=basket,
+        include_binary=True, outline_points=official,
+        inventory=paint_inv,
     )
     return OptimizeResult(
         sequence=seq, bom=bom, metrics=metrics, track_id=req.track_id, strategy=strategy,
