@@ -49,7 +49,7 @@ OUTPUT_MENU = [
         "label": "3D Builder 3MF",
         "default": False,
         "kind": "model/3mf",
-        "note": "Colour-coded pieces plus raised red official centreline.",
+        "note": "Owned pieces keep SKU colour; pieces still to buy are black.",
     },
 ]
 
@@ -82,6 +82,7 @@ def build_output_pack(
     shopping: dict[str, Any] | None = None,
     include_binary: bool = True,
     outline_points: Sequence[tuple[float, float]] | None = None,
+    inventory: dict[str, int] | None = None,
 ) -> dict[str, Any]:
     want = normalize_wanted(wanted)
     pack: dict[str, Any] = {"wanted": want, "available": [r["id"] for r in OUTPUT_MENU]}
@@ -122,6 +123,7 @@ def build_output_pack(
                     path,
                     title=title,
                     outline_points=outline_points,
+                    inventory=inventory,
                 )
                 blob = path.read_bytes()
             files["3mf"] = {
