@@ -186,7 +186,7 @@ def render_pdf(sequence, get_part, title, lay_text, outline_points=None, invento
     ops.append("0 0 0 rg")
     note="Red = target circuit. Colour key = parts."
     if inventory is not None and any(h=="000000" for h in fills):
-        note="Red = target. Black = still to buy."
+        note="Black pieces are missing from your box. They are the parts on the shopping list."
     ops.append("BT /F1 9 Tf 36 54 Td ("+_pdf_esc(note)+") Tj ET")
     x=36.0
     ops.append("0.75 0.22 0.17 RG 2 w")
