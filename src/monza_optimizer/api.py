@@ -212,7 +212,8 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
         if not profile.ignore_inventory and not from_scratch:
             seq = enforce_shop_cap(seq, user_inv, profile, get_part=get_part)
         start_pose = Pose(cl.points[0][0], cl.points[0][1], cl.heading(0))
-        if profile.letter in {"B", "C"}:
+        skip_close = profile.letter == "C" or strategy == "nascar_oval"
+        if skip_close:
             metrics.update({"from_scratch": from_scratch, "close_skipped": True})
             if profile.letter == "B":
                 metrics["follow_pass"] = "55/320"
@@ -223,7 +224,8 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
             close_shop = ShopGate(owned={}, max_shop_pieces=999, max_shop_skus=99, unlimited=True)
             seq, close_stats = close_loop(
                 seq, start_pose, get_part, avail, close_shop,
-                max_pieces=12, candidates=close_cands, beam_width=32, lateral=False,
+                max_pieces=(16 if profile.letter == "B" else 12), candidates=close_cands,
+                beam_width=(40 if profile.letter == "B" else 32), lateral=False,
             )
             metrics.update({
                 "pos_mm": close_stats.get("pos_mm", metrics.get("pos_mm")),
@@ -232,6 +234,8 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
                 "pos_before_close_mm": close_stats.get("pos_before_mm"),
                 "close_added": close_stats.get("added"), "from_scratch": from_scratch,
             })
+            if profile.letter == "B":
+                metrics["follow_pass"] = "55/320"
     built = _plen([get_part(c) for c in seq if get_part(c)]) if seq else 0.0
     metrics["length_mm"] = built
     metrics["target_length_mm"] = target_mm
@@ -258,6 +262,30 @@ def optimize_layout(req: OptimizeRequest) -> OptimizeResult:
             seq, metrics, strategy = seq_fb, metrics_fb, strategy_fb
             built = built_fb
             cl = cl_fb
+    if profile.letter == "B" and strategy != "nascar_oval" and metrics.get("close_skipped"):
+        start_pose = Pose(cl.points[0][0], cl.points[0][1], cl.heading(0))
+        close_cands = ["C8236", "C8200", "C8207", "C8205", "C8206L", "C8206R",
+                       "C8010L", "C8010R", "C8204L", "C8204R", "C8235L", "C8235R",
+                       "C8234L", "C8234R", "C8201L", "C8201R"]
+        close_shop = ShopGate(owned={}, max_shop_pieces=999, max_shop_skus=99, unlimited=True)
+        seq, close_stats = close_loop(
+            seq, start_pose, get_part, avail, close_shop,
+            max_pieces=16, candidates=close_cands, beam_width=40, lateral=False,
+        )
+        metrics.update({
+            "pos_mm": close_stats.get("pos_mm", metrics.get("pos_mm")),
+            "head_deg": close_stats.get("head_deg", metrics.get("head_deg")),
+            "closed": close_stats.get("closed"),
+            "pos_before_close_mm": close_stats.get("pos_before_mm"),
+            "close_added": close_stats.get("added"),
+            "close_skipped": False,
+            "from_scratch": from_scratch,
+            "follow_pass": metrics.get("follow_pass") or "55/320",
+        })
+        built = _plen([get_part(c) for c in seq if get_part(c)]) if seq else 0.0
+        metrics["length_mm"] = built
+        metrics["n_pieces"] = len(seq)
+        metrics["cover_frac"] = built / max(target_mm, 1.0)
     tiny = profile.letter not in {"A", "B", "C"} and ((not seq) or len(seq) < 8 or built < 1500.0)
     metrics["collapsed"] = tiny
     if tiny:
