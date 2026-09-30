@@ -29,6 +29,7 @@ PART_COLORS = {
     "C8010": "5DADE2",
 }
 GUIDE_COLOR = "C0392B"
+MISSING_COLOR = "000000"
 
 
 def _signed_angle(part, code: str) -> float:
@@ -129,6 +130,7 @@ def build_track_3mf(
     tube_z: float = 14.0,
     include_legend: bool = False,
     include_ground: bool = False,
+    inventory: dict[str, int] | None = None,
 ) -> Path:
     del include_legend, include_ground
     out_path = Path(out_path)
@@ -147,6 +149,7 @@ def build_track_3mf(
 
     color_list: list[str] = []
     color_index: dict[str, int] = {}
+    remaining = {str(k): int(v) for k, v in (inventory or {}).items()} if inventory is not None else None
 
     def ensure(col: str) -> int:
         if col not in color_index:
@@ -155,7 +158,15 @@ def build_track_3mf(
         return color_index[col]
 
     def color_for(code: str) -> str:
-        return PART_COLORS.get(base_id(code), "7F8C8D")
+        sku = base_id(code)
+        sku_col = PART_COLORS.get(sku, "7F8C8D")
+        if remaining is None:
+            return sku_col
+        left = int(remaining.get(sku, 0) or 0)
+        if left > 0:
+            remaining[sku] = left - 1
+            return sku_col
+        return MISSING_COLOR
 
     verts: list[tuple[float, float, float]] = []
     tris: list[tuple[int, int, int, int]] = []
@@ -179,9 +190,9 @@ def build_track_3mf(
     stations = []
     seg_col = []
     for i, code in enumerate(codes):
-        ensure(color_for(code))
-        st = _piece_stations(parts[i], code, poses[i])
         col = color_for(code)
+        ensure(col)
+        st = _piece_stations(parts[i], code, poses[i])
         if stations:
             st = st[1:]
         if not st:
