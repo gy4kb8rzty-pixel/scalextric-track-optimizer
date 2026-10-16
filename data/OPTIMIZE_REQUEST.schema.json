@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OptimizeRequest",
+  "type": "object",
+  "required": ["track_id", "inventory", "accuracy_level"],
+  "properties": {
+    "track_id": {
+      "type": "string",
+      "description": "Id from data/tracks/CIRCUITS_INDEX.json"
+    },
+    "inventory": {
+      "type": "object",
+      "description": "Base SKU to owned quantity",
+      "additionalProperties": {"type": "integer", "minimum": 0}
+    },
+    "accuracy_level": {
+      "type": "string"
+    },
+    "target_length_mm": {"type": ["number", "null"]},
+    "strategy": {"type": ["string", "null"]},
+    "unlimited": {"type": ["boolean", "null"]}
+  }
+}
