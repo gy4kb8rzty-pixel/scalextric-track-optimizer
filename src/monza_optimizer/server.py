@@ -265,6 +265,13 @@ def optimize(body: OptimizeBody) -> dict[str, Any]:
     shop = payload.get("shopping") or {}
     payload["inventory_status"] = inventory_status(inventory, used=shop.get("owned_used") or shop.get("used"), missing=shop.get("missing"), leftover=shop.get("leftover"), track_id=payload.get("track_id"), accuracy_level=payload.get("accuracy_level"))
     if body.group_members:
+        if isinstance(payload.get("shopping"), dict):
+            payload["shopping"]["group_level"] = True
+            notes = list(payload["shopping"].get("notes") or [])
+            group_note = "This is the shopping list for the whole group. Black pieces are missing from the pooled boxes."
+            if group_note not in notes:
+                notes.append(group_note)
+            payload["shopping"]["notes"] = notes
         payload["group"] = {
             "name": (body.group_name or "").strip() or None,
             "count": len(body.group_members),
@@ -273,6 +280,7 @@ def optimize(body: OptimizeBody) -> dict[str, Any]:
                 for m in body.group_members
             ],
             "pooled_inventory": group_sum,
+            "shopping_is_group_level": True,
             "note": "Black pieces are missing from the pooled boxes. They are the parts on the shopping list.",
         }
     return payload
