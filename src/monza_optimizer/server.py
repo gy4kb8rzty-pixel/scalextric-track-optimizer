@@ -42,6 +42,7 @@ class OptimizeBody(BaseModel):
     parts_json: str = "parts.json"
     outputs: list[str] | None = None
     from_scratch: bool = False
+    group_name: str | None = None
     group_members: list[GroupMember] | None = None
 
 class TicksBody(BaseModel):
@@ -265,6 +266,7 @@ def optimize(body: OptimizeBody) -> dict[str, Any]:
     payload["inventory_status"] = inventory_status(inventory, used=shop.get("owned_used") or shop.get("used"), missing=shop.get("missing"), leftover=shop.get("leftover"), track_id=payload.get("track_id"), accuracy_level=payload.get("accuracy_level"))
     if body.group_members:
         payload["group"] = {
+            "name": (body.group_name or "").strip() or None,
             "count": len(body.group_members),
             "members": [
                 {"initials": m.initials, "inventory": dict(m.inventory or {}), "piece_count": sum(int(v or 0) for v in (m.inventory or {}).values())}
