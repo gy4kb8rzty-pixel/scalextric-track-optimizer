@@ -26,6 +26,11 @@ _fly_dir = flyover_dir()
 _fly_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/static/flyovers", StaticFiles(directory=str(_fly_dir)), name="flyovers")
 
+class GroupMember(BaseModel):
+    initials: str = ""
+    inventory: dict[str, int] = Field(default_factory=dict)
+    ticks: list[dict[str, Any]] | None = None
+
 class OptimizeBody(BaseModel):
     track_id: str = "monza"
     inventory: dict[str, int] = Field(default_factory=dict)
@@ -37,6 +42,7 @@ class OptimizeBody(BaseModel):
     parts_json: str = "parts.json"
     outputs: list[str] | None = None
     from_scratch: bool = False
+    group_members: list[GroupMember] | None = None
 
 class TicksBody(BaseModel):
     ticks: list[dict[str, Any]] = Field(default_factory=list)
@@ -222,11 +228,28 @@ def inventory_apply_purchase(body: BookBody) -> dict[str, Any]:
     status = inventory_status(owned, used=body.used, missing={}, leftover=body.leftover, track_id=body.track_id, accuracy_level=body.accuracy_level)
     return {"owned": owned, "added": {k: int(v) for k, v in dict(body.purchased or {}).items() if int(v) > 0}, "status": status}
 
+def _sum_group(members: list[GroupMember] | None) -> dict[str, int]:
+    out: dict[str, int] = {}
+    if not members:
+        return out
+    for m in members:
+        inv = dict(m.inventory or {})
+        if m.ticks:
+            inv.update(ticks_to_inventory(m.ticks))
+        for sku, qty in inv.items():
+            if int(qty or 0) > 0:
+                out[sku] = out.get(sku, 0) + int(qty)
+    return out
+
 @app.post("/optimize")
 def optimize(body: OptimizeBody) -> dict[str, Any]:
     inventory = dict(body.inventory or {})
     if body.ticks:
         inventory.update(ticks_to_inventory(body.ticks))
+    group_sum = _sum_group(body.group_members)
+    if group_sum:
+        for sku, qty in group_sum.items():
+            inventory[sku] = inventory.get(sku, 0) + qty
     if body.from_scratch:
         inventory = {}
     try:
@@ -240,6 +263,16 @@ def optimize(body: OptimizeBody) -> dict[str, Any]:
     payload = result.as_dict()
     shop = payload.get("shopping") or {}
     payload["inventory_status"] = inventory_status(inventory, used=shop.get("owned_used") or shop.get("used"), missing=shop.get("missing"), leftover=shop.get("leftover"), track_id=payload.get("track_id"), accuracy_level=payload.get("accuracy_level"))
+    if body.group_members:
+        payload["group"] = {
+            "count": len(body.group_members),
+            "members": [
+                {"initials": m.initials, "inventory": dict(m.inventory or {}), "piece_count": sum(int(v or 0) for v in (m.inventory or {}).values())}
+                for m in body.group_members
+            ],
+            "pooled_inventory": group_sum,
+            "note": "Black pieces are missing from the pooled boxes. They are the parts on the shopping list.",
+        }
     return payload
 
 @app.post("/export")
